@@ -16,7 +16,7 @@ export default function Home() {
         </div>
 
       </div>
-      <div className="flex flex-col basis-1/4 p-5">
+      <div className="flex flex-col basis-1/4 p-5 bg-slate-200">
         <div className='flex'>
         <div className="flex items-center justify-center flex-row basis-1/2">
             <img src="https://img.cuescore.com/image/6/4/6acba9414773fd2d369779e04d6a538e.png" className='w-12 '></img>
