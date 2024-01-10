@@ -3,7 +3,7 @@ import Image from 'next/image'
 export default function Home() {
   const items = [1,2,3,4,5,6,7,8,9,]
   return (
-    <main className="flex flex-col h-screen text-3xl">
+    <main className="flex flex-col h-screen font-normal text-black">
       <div className="flex flex-row basis-1/12 bg-green-200 p-1 pl-3 text-2xl">
         <div className='flex flex-cols items-center justify-left'>
           <div><img src="https://img.cuescore.com/image/3/2/31bf20bde717adc6cb934d7b8fddd79d.png" className='w-13'/></div>
@@ -20,10 +20,10 @@ export default function Home() {
         <div className='flex'>
         <div className="flex items-center justify-center flex-row basis-1/2">
             <img src="https://img.cuescore.com/image/6/4/6acba9414773fd2d369779e04d6a538e.png" className='w-12 '></img>
-            <div className="flex items-center justify-center text-center p-2 text-2xl font-bold">Ferdinand Velkomozny</div>
+            <div className="flex items-center justify-center text-center p-2 text-xl font-bold">Ferdinand Velkomozny</div>
           </div>
           <div className="flex flex-row items-center justify-center basis-1/2">
-          <div className="flex items-center justify-center text-center p-2 text-2xl">Maximilian Augustin Bezpredmetny</div>
+          <div className="flex items-center justify-center text-center p-2 text-xl">Maximilian Augustin Bezpredmetny</div>
           <img src="https://img.cuescore.com/image/e/4/e2024a3843fcb9a6de719bfb66d8ca0d.png" className='w-12 '></img>
           </div>
         </div>
@@ -45,13 +45,11 @@ export default function Home() {
         </div>
           
         </div>
-      <div className="basis-2/3">
-        <div className="grid grid-cols-3 gap-1 h-1/6">
-          <div className="flex items-center justify-center border-2 font-bold text-white bg-orange-700 hover:bg-orange-400">UNDO</div>
+      <div className="basis-2/3 text-3xl">
+        <div className="grid grid-cols-3 gap-1 w-screen h-full">
+        <div className="flex items-center justify-center border-2 font-bold text-white bg-orange-700 hover:bg-orange-400">UNDO</div>
           <div className="flex items-center justify-center border-2 font-bold text-6xl text-white bg-slate-700  ">105</div>
           <div className="flex items-center justify-center border-2 font-bold text-white bg-yellow-700 hover:bg-yellow-400">REM</div>
-        </div>
-        <div className="grid grid-cols-3 gap-1 w-screen h-5/6">
           { items.map((item) => ( <div key={item} className='flex items-center justify-center border-2 bg-blue-700 font-bold text-white hover:bg-blue-400'>{item}</div> )) }
           <div key="CLR" className='flex items-center justify-center border-2 bg-red-600 font-bold text-white hover:bg-red-400'>CLR</div>
           <div key="0" className='flex items-center justify-center border-2 bg-blue-700 font-bold text-white hover:bg-blue-400'>0</div>
