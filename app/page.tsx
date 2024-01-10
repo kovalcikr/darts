@@ -20,10 +20,10 @@ export default function Home() {
         <div className='flex'>
         <div className="flex items-center justify-center flex-row basis-1/2">
             <img src="https://img.cuescore.com/image/6/4/6acba9414773fd2d369779e04d6a538e.png" className='w-12 '></img>
-            <div className="flex items-center justify-center text-center p-2 text-xl font-bold">Ferdinand Velkomozny</div>
+            <div className="flex items-center justify-center text-center p-2 text-lg font-bold">Ferdinand Velkomozny</div>
           </div>
           <div className="flex flex-row items-center justify-center basis-1/2">
-          <div className="flex items-center justify-center text-center p-2 text-xl">Maximilian Augustin Bezpredmetny</div>
+          <div className="flex items-center justify-center text-center p-2 text-lg">Maximilian Augustin Bezpredmetny</div>
           <img src="https://img.cuescore.com/image/e/4/e2024a3843fcb9a6de719bfb66d8ca0d.png" className='w-12 '></img>
           </div>
         </div>
