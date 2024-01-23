@@ -6,7 +6,6 @@ export default function GamepadButton({
 }) {
   return (
     <button
-      key={name}
       className={
         "flex items-center justify-center border-2 font-bold text-white " +
         color +

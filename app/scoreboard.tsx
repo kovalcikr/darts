@@ -40,7 +40,7 @@ export default function ScoreBoard({ currentPlayer, onSubmit=() => {}, onUndo=()
       <GamepadButton name="REM" color="bg-yellow-700" hover="bg-yellow-400" onClick={handleSubmit} />
 
       {items.map((item) => (
-        <GamepadButton name={item} color="bg-blue-700" hover="bg-blue-400" onClick={handleNumber} />
+        <GamepadButton key={item} name={item} color="bg-blue-700" hover="bg-blue-400" onClick={handleNumber} />
       ))}
       <GamepadButton name="CLR" color="bg-red-600" hover="bg-red-400" onClick={handleClr} />
       <GamepadButton name="0" color="bg-blue-700" hover="bg-blue-400" onClick={handleNumber}/>
