@@ -1,4 +1,4 @@
-export default function PlayerName({player, active}) {
+export default function PlayerName({player, active} : { player: Player, active: boolean}) {
   return (
     <div className="flex items-center justify-center flex-row basis-1/2">
       <img src={player.image} className="w-12 "></img>

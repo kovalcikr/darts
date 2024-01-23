@@ -1,9 +1,11 @@
+import { MouseEventHandler } from "react";
+
 export default function GamepadButton({
   name,
   color,
   hover,
   onClick = () => {},
-}) {
+} : {name: string, color: string, hover: string, onClick: MouseEventHandler<HTMLButtonElement>}) {
   return (
     <button
       className={

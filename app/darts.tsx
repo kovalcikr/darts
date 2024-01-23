@@ -8,27 +8,27 @@ import ScoreBoard from "./scoreboard";
 import TournamentHeader from "./tournament-header";
 
 export default function Darts() {
-  const [player1, setPlayer1] = useState({
+  const [player1, setPlayer1] = useState<Player>({
     name: "Player 1",
     image:
       "https://img.cuescore.com/image/6/4/6acba9414773fd2d369779e04d6a538e.png",
     score: 501,
     lastThrow: 0,
     legs: 0,
-    previousState: undefined
+    previousState: undefined,
   });
-  const [player2, setPlayer2] = useState({
+  const [player2, setPlayer2] = useState<Player>({
     name: "Player 2",
     image:
       "https://img.cuescore.com/image/e/4/e2024a3843fcb9a6de719bfb66d8ca0d.png",
     score: 501,
     lastThrow: 0,
     legs: 0,
-    previousState: undefined
+    previousState: undefined,
   });
   const [currentPlayer, setCurrentPlayer] = useState(1);
 
-  function handleSubmit(score) {
+  function handleSubmit(score: number) {
     if (currentPlayer == 1) {
       if (player1.score - score < 0) return;
       player1.previousState = Object.assign({}, player1);
@@ -41,13 +41,13 @@ export default function Darts() {
         player2.score = 501;
         player2.lastThrow = 0;
         setPlayer2(player2);
-        setCurrentPlayer((player1.legs + player2.legs) % 2 + 1)
+        setCurrentPlayer(((player1.legs + player2.legs) % 2) + 1);
       } else {
         player1.score = player1.score - score;
         player1.lastThrow = score;
         setPlayer1(player1);
         setCurrentPlayer(2);
-      }      
+      }
     } else if (currentPlayer == 2) {
       if (player2.score - score < 0) return;
       player2.previousState = Object.assign({}, player2);
@@ -60,7 +60,7 @@ export default function Darts() {
         player1.score = 501;
         player1.lastThrow = 0;
         setPlayer1(player1);
-        setCurrentPlayer((player1.legs + player2.legs) % 2 + 1)
+        setCurrentPlayer(((player1.legs + player2.legs) % 2) + 1);
       } else {
         player2.score = player2.score - score;
         setPlayer2(player2);
@@ -95,7 +95,7 @@ export default function Darts() {
       score: 501,
       lastThrow: 0,
       legs: 0,
-      previousState: undefined
+      previousState: undefined,
     });
     setPlayer2({
       name: "Player 2",
@@ -104,7 +104,7 @@ export default function Darts() {
       score: 501,
       lastThrow: 0,
       legs: 0,
-      previousState: undefined
+      previousState: undefined,
     });
     setCurrentPlayer(1);
   }
@@ -127,7 +127,11 @@ export default function Darts() {
         </div>
       </div>
       <div className="basis-2/3 text-3xl">
-        <ScoreBoard currentPlayer={currentPlayer == 1 ? player1 : player2 } onSubmit={handleSubmit} onUndo={handleUndo} />
+        <ScoreBoard
+          currentPlayer={currentPlayer == 1 ? player1 : player2}
+          onSubmit={handleSubmit}
+          onUndo={handleUndo}
+        />
       </div>
     </main>
   );
