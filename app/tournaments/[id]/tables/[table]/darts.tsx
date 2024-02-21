@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import PlayerLegs from "./player-legs";
-import PlayerName from "./player-name";
-import PlayerScore from "./player-score";
-import ScoreBoard from "./scoreboard";
-import TournamentHeader from "./tournament-header";
+import { useEffect, useState } from "react";
+import PlayerLegs from "../../../../tournaments/[id]/tables/[table]/player-legs";
+import PlayerName from "../../../../tournaments/[id]/tables/[table]/player-name";
+import PlayerScore from "../../../../tournaments/[id]/tables/[table]/player-score";
+import ScoreBoard from "../../../../tournaments/[id]/tables/[table]/scoreboard";
+import TournamentHeader from "../../../../tournaments/[id]/tables/[table]/tournament-header";
+import { Cookie } from "next/font/google";
 
-export default function Darts() {
+export default function Darts({ tournament, table } : {tournament: number, table: number}) {
+  const [data, setData] = useState(null);
+  const [isLoading, setLoading] = useState(true);
+  const [match, setMatch] = useState(null);
+
   const [player1, setPlayer1] = useState<Player>({
     name: "Player 1",
     image:
@@ -109,13 +114,31 @@ export default function Darts() {
     setCurrentPlayer(1);
   }
 
+  useEffect(() => {
+    fetch("/api/tournaments/" + tournament)
+      .then((res) => res.json())
+      .then((json) => {
+        console.log(json)
+        setData(json);
+        setLoading(false);
+        for (let m of json.matches) {
+          if (m?.table.name == table) setMatch(m)
+        }
+      });
+  }, []);
+
+  if (isLoading) return <p>Loading...</p>;
+  if (!data) return <p>No tournament data</p>;
+  if (!match) return <p>No match in progress</p>;
+  console.log(match);
+
   return (
     <main className="flex flex-col h-dvh font-normal text-black">
-      <TournamentHeader onReset={handleReset} />
+      <TournamentHeader tournament={data?.name} round={match?.roundName} format={match?.raceTo} onReset={handleReset} />
       <div className="flex flex-col basis-1/4 p-5 bg-slate-200">
         <div className="flex">
-          <PlayerName player={player1} active={currentPlayer == 1} />
-          <PlayerName player={player2} active={currentPlayer == 2} />
+          <PlayerName player={match.playerA} active={currentPlayer == 1} />
+          <PlayerName player={match.playerB} active={currentPlayer == 2} />
         </div>
         <div className="flex">
           <PlayerScore score={player1.score} />
