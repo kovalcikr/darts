@@ -1,6 +1,6 @@
 import { MouseEventHandler } from "react";
 
-export default function TournamentHeader({tournament, round, format, onReset} : { onReset : MouseEventHandler<HTMLButtonElement> }) {
+export default function TournamentHeader({tournament, round, format, onReset} : { tournament: string, round: string, format: string, onReset : MouseEventHandler<HTMLButtonElement> }) {
   return (
     <div className="flex flex-row basis-1/12 bg-green-200 p-1 pl-3 text-2xl">
       <div className="flex flex-cols items-center justify-left">

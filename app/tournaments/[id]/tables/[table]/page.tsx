@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Darts from "./darts";
-import Tournament from "./tournament";
 
 export default function Page({
   params,

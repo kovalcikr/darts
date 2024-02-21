@@ -8,10 +8,10 @@ import ScoreBoard from "../../../../tournaments/[id]/tables/[table]/scoreboard";
 import TournamentHeader from "../../../../tournaments/[id]/tables/[table]/tournament-header";
 import { Cookie } from "next/font/google";
 
-export default function Darts({ tournament, table } : {tournament: number, table: number}) {
-  const [data, setData] = useState(null);
-  const [isLoading, setLoading] = useState(true);
-  const [match, setMatch] = useState(null);
+export default function Darts({ tournament, table } : {tournament: string, table: string}) {
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setLoading] = useState<boolean>(true);
+  const [match, setMatch] = useState<any>(null);
 
   const [player1, setPlayer1] = useState<Player>({
     name: "Player 1",
@@ -134,7 +134,7 @@ export default function Darts({ tournament, table } : {tournament: number, table
 
   return (
     <main className="flex flex-col h-dvh font-normal text-black">
-      <TournamentHeader tournament={data?.name} round={match?.roundName} format={match?.raceTo} onReset={handleReset} />
+      <TournamentHeader tournament={data.name} round={match.roundName} format={match.raceTo} onReset={handleReset} />
       <div className="flex flex-col basis-1/4 p-5 bg-slate-200">
         <div className="flex">
           <PlayerName player={match.playerA} active={currentPlayer == 1} />
