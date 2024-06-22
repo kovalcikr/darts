@@ -29,7 +29,7 @@ export default async function Page({
   return (
     <>
       <Suspense fallback={<div>Loading...</div>}>
-        <Darts tournament={params.id} table={table} match={match.id} />
+        <Darts tournament={params.id} table={table} matchId={match.id} />
       </Suspense>
     </>
   );

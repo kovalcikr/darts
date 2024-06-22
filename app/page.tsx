@@ -4,6 +4,6 @@ import Tournament from './tournament'
 
 export default function Home() {
   return (
-    <Tournament/>
+    <Tournament props={null}/>
   )
 }
