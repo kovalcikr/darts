@@ -8,7 +8,7 @@ import ScoreBoard from "../../../../tournaments/[id]/tables/[table]/scoreboard";
 import TournamentHeader from "../../../../tournaments/[id]/tables/[table]/tournament-header";
 import { Cookie } from "next/font/google";
 
-export default function Darts({ tournament, table } : {tournament: string, table: string}) {
+export default async function Darts({ tournament, table, matchId } : {tournament: string, table: string, matchId: string }) {
   const [data, setData] = useState<any>(null);
   const [isLoading, setLoading] = useState<boolean>(true);
   const [match, setMatch] = useState<any>(null);

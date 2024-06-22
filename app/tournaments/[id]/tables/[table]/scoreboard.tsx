@@ -52,11 +52,8 @@ export default function ScoreBoard({
         onClick={handleUndo}
       />
       <ScoreBox currentScore={Number(currentScore)} />
-      <GamepadButton
-        name="REM"
+      <div
         color="bg-yellow-700"
-        hover="bg-yellow-400"
-        onClick={handleSubmit}
       />
 
       {items.map((item) => (

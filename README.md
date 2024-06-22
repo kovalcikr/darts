@@ -39,6 +39,8 @@ MVP:
 - tablet mode
 - store score to DB (move calculation to server)
 - reset match
+- darts used count
+- double darts count
 
 Tablet mode:
 1. enter tournament ID
@@ -51,3 +53,8 @@ Post MVP:
 - update scores on CueScore
 - video dashboard
 - stats
+- authorefresh
+
+Logic:
+refresh:
+-
