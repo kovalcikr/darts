@@ -1,13 +1,13 @@
+'use client'
+
 import { MouseEventHandler, useState } from "react";
 import ScoreBox from "./scorebox";
 import GamepadButton from "./gamepad-button";
 
 export default function ScoreBoard({
-  currentPlayer,
   onSubmit = (score: number) => {},
   onUndo = () => {},
 }: {
-  currentPlayer: Player;
   onSubmit: Function;
   onUndo: Function;
 }) {
@@ -37,10 +37,9 @@ export default function ScoreBoard({
 
   function handleSubmit(e: any) {
     const value = (e.target as HTMLInputElement).value;
-    const score = value == "REM" ? currentPlayer.score : currentScore;
-    if (Number(score) > 180) return;
+    if (Number(currentScore) > 180) return;
     setCurrentScore("0");
-    onSubmit(score);
+    onSubmit(currentScore);
   }
 
   return (

@@ -1,6 +1,9 @@
+'use server'
+
 import { db } from "@vercel/postgres"
 import getTournamentInfo from "./cuescore"
 import prisma from "./db";
+import { revalidatePath } from "next/cache";
 
 interface CueScorePlayer {
   playerId: number;
@@ -27,7 +30,10 @@ export async function getCuescoreMatch(tournamentId : string, tableName: string)
 }
 
 export async function getMatch(matchId) {
-  return prisma.match.findUnique({where: {id: matchId}})
+  return prisma.match.findUnique({
+    where: {id: matchId},
+    include: {tournament: true}
+  })
 }
 
 export async function createMatch(match) {
@@ -58,4 +64,17 @@ export async function createMatch(match) {
       id: String(match.matchId)
     }
   });
+}
+
+export async function setStartingPlayer(matchId, playerId) {
+  return await prisma.match.update({data: {
+    firstPlayer: playerId
+  }, where: {
+    id: matchId
+  }});
+}
+
+export async function startMatch(formData) {
+  await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
+  revalidatePath('/tournaments/[id//tables/[table]')        
 }

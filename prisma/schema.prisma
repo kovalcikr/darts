@@ -25,8 +25,8 @@ model Throw {
   playerId     String
   time         DateTime @default(now())
   score        Int
-  darts        Int
-  doubles      Int
+  darts        Int      @default(3)
+  doubles      Int?
 
   match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
 }
