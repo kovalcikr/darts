@@ -76,5 +76,19 @@ export async function setStartingPlayer(matchId, playerId) {
 
 export async function startMatch(formData) {
   await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
-  revalidatePath('/tournaments/[id//tables/[table]')        
+  revalidatePath('/tournaments/[id//tables/[table]');
+}
+
+export async function resetMatch(formData) {
+  await prisma.match.update({
+    data: {
+      firstPlayer: null,
+      playerALegs: 0,
+      playerBlegs: 0
+    },
+    where: {
+      id: formData.get('matchId')
+    }
+  })
+  revalidatePath('/tournaments/[id//tables/[table]');
 }

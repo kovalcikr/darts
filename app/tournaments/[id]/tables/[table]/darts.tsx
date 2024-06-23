@@ -15,7 +15,7 @@ export default async function Darts({ tournament, table, matchId } : {tournament
   
   return (
     <main className="flex flex-col h-dvh font-normal text-black">
-      <TournamentHeader tournament={match.tournament.name} round={match.round} format={String(match.runTo)} onReset={null} />
+      <TournamentHeader tournament={match.tournament.name} round={match.round} format={String(match.runTo)} table={table} matchId={matchId} />
       <div className="flex flex-col basis-1/4 p-5 bg-slate-200">
         <Players match={match}/>
         <div className="flex">

@@ -1,6 +1,8 @@
+import { resetMatch } from "@/app/lib/match";
+import Link from "next/link";
 import { MouseEventHandler } from "react";
 
-export default function TournamentHeader({tournament, round, format, onReset} : { tournament: string, round: string, format: string, onReset : MouseEventHandler<HTMLButtonElement> }) {
+export default function TournamentHeader({tournament, round, format, table, matchId} : { tournament: string, round: string, format: string, table: string, matchId: string }) {
   return (
     <div className="flex flex-row basis-1/12 bg-green-200 p-1 pl-3 text-2xl">
       <div className="flex flex-cols items-center justify-left">
@@ -15,9 +17,15 @@ export default function TournamentHeader({tournament, round, format, onReset} : 
           <div className="flex p-1 text-xl">{ round }</div>
           <div className="flex p-1 text-lg">First to { format } legs</div>
         </div>
-        <button className="flex absolute right-0 mr-1 p-2 pl-4 pr-4 border border-green-700 bg-green-500 hover:bg-green-400" onClick={onReset}>
+        <div className="flex absolute right-0 mr-1 p-2 pl-4 pr-4">
+        <form action={resetMatch}>
+          <input type="hidden" name="matchId" value={matchId}/>
+          <button className="p-2 pl-4 pr-4 border border-red-700 bg-red-500 hover:bg-red-400" type="submit">Reset</button>
+          </form>
+        <Link  className=" p-2 pl-4 pr-4 border border-green-700 bg-green-500 hover:bg-green-400" href={`/tournament/${tournament}/tables/${table}`}>
           Exit
-        </button>
+        </Link>
+        </div >        
       </div>
     </div>
   );
