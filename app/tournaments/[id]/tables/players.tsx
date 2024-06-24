@@ -3,9 +3,9 @@ import PlayerName from "./[table]/player-name";
 import { revalidatePath } from "next/cache";
 import { Match } from "@prisma/client";
 
-export default async function Players({ match } : { match : Match }) {
+export default async function Players({ match, nextPlayer } : { match : Match, nextPlayer: string }) {
 
-    const activeAPlayer = match.firstPlayer === match.playerAId;
+    const activeAPlayer = nextPlayer === match.playerAId;
 
     if (!match.firstPlayer) 
     {

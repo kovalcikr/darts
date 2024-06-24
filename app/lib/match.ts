@@ -92,3 +92,63 @@ export async function resetMatch(formData) {
   })
   revalidatePath('/tournaments/[id//tables/[table]');
 }
+
+export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
+  return await prisma.playerThrow.groupBy({
+    by: ['playerId'],
+    _sum: {
+      score: true
+    },
+    _count: {
+      score: true
+    },
+    where: {
+      matchId: matchId,
+      leg: leg,
+      playerId: {
+        in: [playerA, playerB]
+      }
+    }
+  });
+}
+
+export async function getScores(matchId: string, leg: number, playerA: string, playerB: string, firstPlayer: string) {
+  const playerThrows = await getThrows(matchId, leg, playerA, playerB);
+  if (playerThrows.length == 0) {
+    return({
+      playerA: 501,
+      playerB: 501,
+      nextPlayer: await nextPlayer(leg, 0,0, playerA, playerB, firstPlayer)
+    })
+  }
+  const playerAScore = await findScore(playerThrows, playerA);
+  const playerBScore = await findScore(playerThrows, playerB);
+  return {
+    playerA: 501 - playerAScore._sum.score,
+    playerB: 501 - playerBScore._sum.soure,
+    nextPlayer: await nextPlayer(leg, playerAScore._count.score, playerBScore._count.score, playerA, playerB, firstPlayer)
+  }
+}
+
+export async function findScore(playerThrows, player) {
+  for (var playerThrow of playerThrows) {
+    if (playerThrow.playerId == player)
+      return playerThrow;
+  }
+  throw Error('no player throw found');
+}
+
+/**
+ * Calculate next player
+ * @param leg 
+ * @param throwsA 
+ * @param throwsB 
+ * @returns 0 if next is playerA, 1 if next is playerB
+ */
+export async function nextPlayer(leg: number, throwsA: number, throwsB: number, playerA: string, playerB: string, firstPlayer: string) {
+  if ((leg + throwsA + throwsB) % 2 == 1) {
+    return firstPlayer;
+  } else {
+    return firstPlayer == playerA ? playerB : playerA;
+  }
+}
