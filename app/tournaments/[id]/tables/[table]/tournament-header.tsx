@@ -5,18 +5,18 @@ import { MouseEventHandler } from "react";
 
 export default function TournamentHeader({tournament, round, format, table, matchId} : { tournament: Tournament, round: string, format: string, table: string, matchId: string }) {
   return (
-    <div className="flex flex-row basis-1/12 bg-green-200 p-1 pl-3 text-2xl">
+    <div className="flex flex-row basis-1/12 bg-green-200 p-1 pl-3 text-xl">
       <div className="flex flex-cols items-center justify-left">
         <div>
           <img
             src="https://img.cuescore.com/image/3/2/31bf20bde717adc6cb934d7b8fddd79d.png"
-            className="w-13"
+            className="w-12"
           />
         </div>
         <div className="flex flex-col pl-3">
           <div className="flex p-1 font-bold"> { tournament.name }</div>
-          <div className="flex p-1 text-xl">{ round }</div>
-          <div className="flex p-1 text-lg">First to { format } legs</div>
+          <div className="flex p-1 text-lg">{ round }</div>
+          <div className="flex p-1 text-sm">First to { format } legs</div>
         </div>
         <div className="flex absolute right-0 mr-1 p-2 pl-4 pr-4">
         <form action={resetMatch}>
