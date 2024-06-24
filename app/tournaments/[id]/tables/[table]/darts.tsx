@@ -4,7 +4,7 @@ import PlayerScore from "../../../../tournaments/[id]/tables/[table]/player-scor
 import ScoreBoard from "../../../../tournaments/[id]/tables/[table]/scoreboard";
 import TournamentHeader from "../../../../tournaments/[id]/tables/[table]/tournament-header";
 import { Cookie } from "next/font/google";
-import { getMatch, getScores } from "@/app/lib/match";
+import { getMatch, getScores, nextPlayer } from "@/app/lib/match";
 import Players from "../players";
 import { findLastThrow, findMatchAvg } from "@/app/lib/playerThrow";
 
@@ -36,8 +36,8 @@ export default async function Darts({ tournament, table, matchId } : {tournament
       <div className="flex flex-col basis-1/4 p-5 bg-slate-200">
         <Players match={match} nextPlayer={scores.nextPlayer}/>
         <div className="flex">
-          <PlayerScore score={scores.playerA} />
-          <PlayerScore score={scores.playerB} />
+          <PlayerScore score={scores.playerA} active={scores.nextPlayer == match.playerAId} />
+          <PlayerScore score={scores.playerB} active={scores.nextPlayer != match.playerAId} />
         </div>
         <div className="flex">
           <PlayerLegs last={playerALast?.score} darts={scores.playerADarts} avg={playerAAvg} />
