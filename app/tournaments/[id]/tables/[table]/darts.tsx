@@ -19,6 +19,17 @@ export default async function Darts({ tournament, table, matchId } : {tournament
   const playerAAvg = Math.round(await findMatchAvg(match.id, match.playerAId));
   const playerBAvg = Math.round(await findMatchAvg(match.id, match.playerBId));
   
+  if (!match.firstPlayer) {
+    return (
+      <main className="flex flex-col h-dvh font-normal text-black">
+      <TournamentHeader tournament={match.tournament} round={match.round} format={String(match.runTo)} table={table} matchId={matchId} />
+      <div className="flex flex-col basis-1/4 p-5 bg-slate-200">
+        <Players match={match} nextPlayer={scores.nextPlayer}/>
+      </div>
+    </main>
+    )
+  }
+
   return (
     <main className="flex flex-col h-dvh font-normal text-black">
       <TournamentHeader tournament={match.tournament} round={match.round} format={String(match.runTo)} table={table} matchId={matchId} />
