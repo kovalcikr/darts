@@ -3,15 +3,15 @@
 import { MouseEventHandler, useState } from "react";
 import ScoreBox from "./scorebox";
 import GamepadButton from "./gamepad-button";
-import { addThrowAction } from "@/app/lib/playerThrow";
+import { addThrowAction, undoThrow } from "@/app/lib/playerThrow";
 
 export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
   const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [currentScore, setCurrentScore] = useState("0");
 
-  function handleUndo() {
+  async function handleUndo() {
+    await undoThrow(matchId, leg);
     setCurrentScore("0");
-// TODO
   }
 
   function handleClr() {

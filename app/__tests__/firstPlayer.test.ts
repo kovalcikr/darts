@@ -22,14 +22,14 @@ describe('first player', () => {
 })
 
 describe('score test', () => {
-    test('find score', () => {
+    test('find score', async () => {
         const data = [
             { _sum: { score: 140 }, _count: { score: 2 }, playerId: 'A' },
             { _sum: { score: 10 }, _count: { score: 1 }, playerId: 'B' }
           ]
 
-          expect(findScore(data, "A")._sum.score).toBe(140);
-          expect(findScore(data, "B")._count.score).toBe(1);
-          expect(() => findScore(data, "C")).toThrow(Error)
+          expect((await findScore(data, "A"))._sum.score).toBe(140);
+          expect((await findScore(data, "B"))._count.score).toBe(1);
+          expect(async() => (await findScore(data, "C"))).toThrow(Error)
     })
 })
