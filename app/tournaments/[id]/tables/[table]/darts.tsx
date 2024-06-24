@@ -29,9 +29,7 @@ export default async function Darts({ tournament, table, matchId } : {tournament
         </div>
       </div>
       <div className="basis-2/3 text-3xl">
-        <ScoreBoard
-          onSubmit={null}
-          onUndo={null}
+        <ScoreBoard tournamentId={match.tournament.id} matchId={match.id} leg={leg} player={scores.nextPlayer}
         />
       </div>
     </main>

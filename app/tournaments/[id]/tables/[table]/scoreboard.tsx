@@ -3,20 +3,15 @@
 import { MouseEventHandler, useState } from "react";
 import ScoreBox from "./scorebox";
 import GamepadButton from "./gamepad-button";
+import { addThrowAction } from "@/app/lib/playerThrow";
 
-export default function ScoreBoard({
-  onSubmit = (score: number) => {},
-  onUndo = () => {},
-}: {
-  onSubmit: Function;
-  onUndo: Function;
-}) {
+export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
   const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [currentScore, setCurrentScore] = useState("0");
 
   function handleUndo() {
     setCurrentScore("0");
-    onUndo();
+// TODO
   }
 
   function handleClr() {
@@ -38,8 +33,6 @@ export default function ScoreBoard({
   function handleSubmit(e: any) {
     const value = (e.target as HTMLInputElement).value;
     if (Number(currentScore) > 180) return;
-    setCurrentScore("0");
-    onSubmit(currentScore);
   }
 
   return (
@@ -80,7 +73,10 @@ export default function ScoreBoard({
         name="OK"
         color="bg-green-700"
         hover="bg-green-400"
-        onClick={handleSubmit}
+        onClick={async () => {
+          await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore));
+          setCurrentScore("0")
+        }}
       />
     </div>
   );

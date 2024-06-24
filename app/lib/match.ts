@@ -4,6 +4,7 @@ import { db } from "@vercel/postgres"
 import getTournamentInfo from "./cuescore"
 import prisma from "./db";
 import { revalidatePath } from "next/cache";
+import { PlayerThrow } from "@prisma/client";
 
 interface CueScorePlayer {
   playerId: number;
@@ -84,7 +85,11 @@ export async function resetMatch(formData) {
     data: {
       firstPlayer: null,
       playerALegs: 0,
-      playerBlegs: 0
+      playerBlegs: 0,
+      throwsList: {
+        deleteMany: {
+        }
+      }
     },
     where: {
       id: formData.get('matchId')
@@ -121,12 +126,13 @@ export async function getScores(matchId: string, leg: number, playerA: string, p
       nextPlayer: await nextPlayer(leg, 0,0, playerA, playerB, firstPlayer)
     })
   }
+  console.log(playerThrows)
   const playerAScore = await findScore(playerThrows, playerA);
   const playerBScore = await findScore(playerThrows, playerB);
   return {
-    playerA: 501 - playerAScore._sum.score,
-    playerB: 501 - playerBScore._sum.soure,
-    nextPlayer: await nextPlayer(leg, playerAScore._count.score, playerBScore._count.score, playerA, playerB, firstPlayer)
+    playerA: 501 - (playerAScore?._sum.score ? playerAScore?._sum.score : 0),
+    playerB: 501 - (playerBScore?._sum.score ? playerBScore?._sum.score : 0),
+    nextPlayer: await nextPlayer(leg, playerAScore?._count.score, playerBScore?._count.score, playerA, playerB, firstPlayer)
   }
 }
 
@@ -135,7 +141,6 @@ export async function findScore(playerThrows, player) {
     if (playerThrow.playerId == player)
       return playerThrow;
   }
-  throw Error('no player throw found');
 }
 
 /**
@@ -146,7 +151,7 @@ export async function findScore(playerThrows, player) {
  * @returns 0 if next is playerA, 1 if next is playerB
  */
 export async function nextPlayer(leg: number, throwsA: number, throwsB: number, playerA: string, playerB: string, firstPlayer: string) {
-  if ((leg + throwsA + throwsB) % 2 == 1) {
+  if ((leg + (throwsA ? throwsA : 0) + (throwsB ? throwsB : 0)) % 2 == 1) {
     return firstPlayer;
   } else {
     return firstPlayer == playerA ? playerB : playerA;
