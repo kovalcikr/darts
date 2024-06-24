@@ -23,7 +23,8 @@ export default async function getTournamentInfo(tournametId : string) {
       });
       const tournament = await axios.get("https://api.cuescore.com/tournament/?id=" + tournametId, {
         headers: {
-            Cookie: res.headers.getSetCookie()
+            Cookie: res.headers.getSetCookie(),
+            cache: 'no-store'
         }
       });
       return tournament.data;

@@ -21,7 +21,7 @@ export default async function Page({
     console.log(e);
     return (
       <>
-        <Link href={`/tournaments/${params.id}/tables/${params.table}`} >Reload</Link>
+        <a href={`/tournaments/${params.id}/tables/${params.table}`} >Reload</a>
       </>
     );
   }
