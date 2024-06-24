@@ -115,3 +115,28 @@ export async function undoThrow(matchId, leg) {
     });
     revalidatePath('/tournaments/[id//tables/[table]');
 }
+
+export async function findLastThrow(matchId, leg, player) {
+    return  await prisma.playerThrow.findFirst({
+        where: {
+            matchId: matchId,
+            leg: leg,
+            playerId: player
+        },
+        orderBy: {
+            time: 'desc'
+        }
+    })
+}
+
+export async function findMatchAvg(matchId, player) {
+    return (await prisma.playerThrow.aggregate({
+        _avg: {
+            score: true
+        },
+        where: {
+            matchId: matchId,
+            playerId: player
+        },
+    }))._avg.score;
+}

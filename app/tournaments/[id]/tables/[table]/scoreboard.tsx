@@ -44,10 +44,16 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
         onClick={handleUndo}
       />
       <ScoreBox currentScore={Number(currentScore)} />
-      <div
-        color="bg-yellow-700"
+      <GamepadButton
+        name="<"
+        color="bg-orange-600"
+        hover="bg-orange-400"
+        onClick={() => {
+          if (currentScore.length != 0) {
+            setCurrentScore(currentScore.substring(0, currentScore.length - 1))
+          }
+        }}
       />
-
       {items.map((item) => (
         <GamepadButton
           key={item}
