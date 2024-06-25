@@ -16,7 +16,9 @@ export default async function getTournamentInfo(tournamentId : string) {
 
 export async function setScore(tournamentId, matchId, playerAlegs, playerBlegs) {
   const cookie = await auth();
-  const res = await axios.get(`https://cuescore.com/ajax/tournament/match.php?tournamentId=${tournamentId}&matchId=${matchId}&scoreA=${playerAlegs}&scoreB=${playerBlegs}&matchstatus=1`, {
+  const url = `https://cuescore.com/ajax/tournament/match.php?tournamentId=${tournamentId}&matchId=${matchId}&scoreA=${playerAlegs}&scoreB=${playerBlegs}&matchstatus=1`;
+  console.log(url);
+  const res = await axios.get(url, {
     headers: {
         Cookie: cookie,
     }
@@ -28,13 +30,15 @@ export async function setScore(tournamentId, matchId, playerAlegs, playerBlegs) 
 
 export async function finishMatch(tournamentId, matchId, playerAlegs, playerBlegs) {
   const cookie = await auth();
-  const res = await axios.get(`https://cuescore.com/ajax/tournament/match.php?tournamentId=${tournamentId}&matchId=${matchId}&scoreA=${playerAlegs}&scoreB=${playerBlegs}&matchstatus=2`, {
+  const url = `https://cuescore.com/ajax/tournament/match.php?tournamentId=${tournamentId}&matchId=${matchId}&scoreA=${playerAlegs}&scoreB=${playerBlegs}&matchstatus=2`;
+  console.log(url)
+  const res = await axios.get(url, {
     headers: {
         Cookie: cookie,
     }
   });
   if (res.data != "OK") {
-    throw new Error('Cannot update score');
+    throw new Error('Cannot finish match');
   }
   revalidatePath('/tournaments/[id//tables/[table]');
 }
