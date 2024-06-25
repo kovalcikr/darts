@@ -1,9 +1,46 @@
 'use server'
 
 import axios from "axios";
+import { revalidatePath } from "next/cache";
 
-export default async function getTournamentInfo(tournametId : string) {
-    const res = await fetch("https://cuescore.com/ajax/user/login.php", {
+export default async function getTournamentInfo(tournamentId : string) {
+    const cookie = await auth();
+    const tournament = await axios.get("https://api.cuescore.com/tournament/?id=" + tournamentId, {
+      headers: {
+          Cookie: cookie,
+          cache: 'no-store'
+      }
+    });
+    return tournament.data;
+}
+
+export async function setScore(tournamentId, matchId, playerAlegs, playerBlegs) {
+  const cookie = await auth();
+  const res = await axios.get(`https://cuescore.com/ajax/tournament/match.php?tournamentId=${tournamentId}&matchId=${matchId}&scoreA=${playerAlegs}&scoreB=${playerBlegs}&matchstatus=1`, {
+    headers: {
+        Cookie: cookie,
+    }
+  });
+  if (res.data != "OK") {
+    throw new Error('Cannot update score');
+  }
+}
+
+export async function finishMatch(tournamentId, matchId, playerAlegs, playerBlegs) {
+  const cookie = await auth();
+  const res = await axios.get(`https://cuescore.com/ajax/tournament/match.php?tournamentId=${tournamentId}&matchId=${matchId}&scoreA=${playerAlegs}&scoreB=${playerBlegs}&matchstatus=2`, {
+    headers: {
+        Cookie: cookie,
+    }
+  });
+  if (res.data != "OK") {
+    throw new Error('Cannot update score');
+  }
+  revalidatePath('/tournaments/[id//tables/[table]');
+}
+
+async function auth() {
+  const res = await fetch("https://cuescore.com/ajax/user/login.php", {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
@@ -21,11 +58,5 @@ export default async function getTournamentInfo(tournametId : string) {
           remember: "on",
         }),
       });
-      const tournament = await axios.get("https://api.cuescore.com/tournament/?id=" + tournametId, {
-        headers: {
-            Cookie: res.headers.getSetCookie(),
-            cache: 'no-store'
-        }
-      });
-      return tournament.data;
+    return res.headers.getSetCookie()
 }

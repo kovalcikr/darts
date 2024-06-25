@@ -38,16 +38,12 @@ export default async function Darts({ tournament, table, matchId } : {tournament
       <div className="flex flex-col basis-1/4 p-5 bg-slate-200">
         <Players match={match} nextPlayer={scores.nextPlayer}/>
         <div className="flex">
-          <PlayerScore score={scores.playerA} active={scores.nextPlayer == match.playerAId} />
-          <PlayerScore score={scores.playerB} active={scores.nextPlayer != match.playerAId} />
-        </div>
-        <div className="flex">
           <PlayerLegs last={playerALast?.score} darts={scores.playerADarts} avg={playerAAvg} />
           <PlayerLegs last={playerBLast?.score} darts={scores.playerBDarts} avg={playerBAvg} />
         </div>
       </div>
       <div className="basis-2/3 text-3xl">
-        <Winner player={match.playerAName} image={match.playerAImage}/>
+        <Winner player={match.playerAName} image={match.playerAImage} match={match} leg={leg}/>
       </div>
     </main>
     )
@@ -60,16 +56,12 @@ export default async function Darts({ tournament, table, matchId } : {tournament
       <div className="flex flex-col basis-1/4 p-5 bg-slate-200">
         <Players match={match} nextPlayer={scores.nextPlayer}/>
         <div className="flex">
-          <PlayerScore score={scores.playerA} active={scores.nextPlayer == match.playerAId} />
-          <PlayerScore score={scores.playerB} active={scores.nextPlayer != match.playerAId} />
-        </div>
-        <div className="flex">
           <PlayerLegs last={playerALast?.score} darts={scores.playerADarts} avg={playerAAvg} />
           <PlayerLegs last={playerBLast?.score} darts={scores.playerBDarts} avg={playerBAvg} />
         </div>
       </div>
       <div className="basis-2/3 text-3xl">
-        <Winner player={match.playerBName} image={match.playerBImage}/>
+        <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={leg}/>
       </div>
     </main>
     )

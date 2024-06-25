@@ -5,9 +5,11 @@ import prisma from "./db";
 import { SourceTextModule } from "vm";
 import { Tsukimi_Rounded, Uncial_Antiqua } from "next/font/google";
 import { resetMatch } from "./match";
+import { setScore } from "./cuescore";
 
 export async function addThrowAction(tournamentId, matchId, leg, playerId, score) {
     let closeLeg = false;
+    let match = null;
     await prisma.$transaction(async (tx) => {
         const currentScore = await tx.playerThrow.aggregate({
             _sum: {
@@ -35,8 +37,8 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
             }
         })
         if (closeLeg) {
-            const match = await tx.match.findUnique({where: {id: matchId}});
-            await tx.match.update({
+            match = await tx.match.findUnique({where: {id: matchId}});
+            match = await tx.match.update({
                 data: {
                     playerALegs: match.playerALegs + (match.playerAId == playerId ? 1 : 0),
                     playerBlegs: match.playerBlegs + (match.playerBId == playerId ? 1 : 0)
@@ -48,7 +50,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
         }
     })
     if (closeLeg) {
-        // TODO: close leg in cue score
+        setScore(match.tournamentId, match.id, match.playerAlegs, match.playerBlegs);
     }
     
     revalidatePath('/tournaments/[id//tables/[table]');
@@ -56,6 +58,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
 
 export async function undoThrow(matchId, leg) {
     let undoCloseLeg = false;
+    let match = null;
      await prisma.$transaction(async (tx) => {
         const lastThrow = await tx.playerThrow.findFirst({
             where: {
@@ -84,8 +87,8 @@ export async function undoThrow(matchId, leg) {
                         id: previousLegLastThrow.id
                     }
                 })
-                const match = await tx.match.findUnique({where: {id: matchId}});
-                await tx.match.update({
+                match = await tx.match.findUnique({where: {id: matchId}});
+                match = await tx.match.update({
                     data: {
                         playerALegs: match.playerALegs - (match.playerAId == previousLegLastThrow.playerId ? 1 : 0),
                         playerBlegs: match.playerBlegs - (match.playerBId == previousLegLastThrow.playerId ? 1 : 0)
@@ -95,8 +98,8 @@ export async function undoThrow(matchId, leg) {
                     }
                 })
             } else {
-                console.log("no prev prev")
-                await tx.match.update({
+                undoCloseLeg = false;
+                match = await tx.match.update({
                     data: {
                         firstPlayer: null
                     },
@@ -113,6 +116,9 @@ export async function undoThrow(matchId, leg) {
             })
         }
     });
+    if (undoCloseLeg) {
+        setScore(match.tournamentId, match.id, match.playerAlegs, match.playerBlegs);
+    }
     revalidatePath('/tournaments/[id//tables/[table]');
 }
 

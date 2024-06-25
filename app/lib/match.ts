@@ -135,7 +135,7 @@ export async function getScores(matchId: string, leg: number, playerA: string, p
     playerA: 501 - (playerAScore?._sum.score ? playerAScore?._sum.score : 0),
     playerB: 501 - (playerBScore?._sum.score ? playerBScore?._sum.score : 0),
     playerADarts: playerAScore?._count.score ? playerAScore._count.score * 3 : 0,
-    playerBDarts: playerBScore._count.score ? playerBScore._count.score * 3 : 0,
+    playerBDarts: playerBScore?._count.score ? playerBScore._count.score * 3 : 0,
     nextPlayer: await nextPlayer(leg, playerAScore?._count.score, playerBScore?._count.score, playerA, playerB, firstPlayer)
   }
 }

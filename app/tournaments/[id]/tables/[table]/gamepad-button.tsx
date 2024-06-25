@@ -5,7 +5,7 @@ export default function GamepadButton({
   color,
   hover,
   onClick = () => {},
-} : {name: string, color: string, hover: string, onClick: MouseEventHandler<HTMLButtonElement>}) {
+} : {name: string, color: string, hover: string, onClick: any}) {
   return (
     <button
       className={
