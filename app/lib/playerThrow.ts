@@ -50,7 +50,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
         }
     })
     if (closeLeg) {
-        setScore(match.tournamentId, match.id, match.playerAlegs, match.playerBlegs);
+        setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
     
     revalidatePath('/tournaments/[id//tables/[table]');
@@ -117,7 +117,7 @@ export async function undoThrow(matchId, leg) {
         }
     });
     if (undoCloseLeg) {
-        setScore(match.tournamentId, match.id, match.playerAlegs, match.playerBlegs);
+        setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
     revalidatePath('/tournaments/[id//tables/[table]');
 }
