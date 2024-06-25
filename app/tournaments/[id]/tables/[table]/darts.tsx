@@ -17,8 +17,8 @@ export default async function Darts({ tournament, table, matchId } : {tournament
   const scores = await getScores(match.id, leg, match.playerAId, match.playerBId, match.firstPlayer);
   const playerALast = await findLastThrow(match.id, leg, match.playerAId);
   const playerBLast = await findLastThrow(match.id, leg, match.playerBId);
-  const playerAAvg = Math.round(await findMatchAvg(match.id, match.playerAId));
-  const playerBAvg = Math.round(await findMatchAvg(match.id, match.playerBId));
+  const playerAAvg = (await findMatchAvg(match.id, match.playerAId))?.toFixed(2);
+  const playerBAvg = (await findMatchAvg(match.id, match.playerBId))?.toFixed(2);
   
   if (!match.firstPlayer) {
     return (
@@ -73,8 +73,8 @@ export default async function Darts({ tournament, table, matchId } : {tournament
       <div className="flex flex-col basis-1/4 p-5 bg-slate-200">
         <Players match={match} nextPlayer={scores.nextPlayer}/>
         <div className="flex">
-          <PlayerScore score={scores.playerA} active={scores.nextPlayer == match.playerAId} />
-          <PlayerScore score={scores.playerB} active={scores.nextPlayer != match.playerAId} />
+          <PlayerScore score={scores.playerA} legs={match.playerALegs} active={scores.nextPlayer == match.playerAId} />
+          <PlayerScore score={scores.playerB} legs={match.playerBlegs} active={scores.nextPlayer != match.playerAId} />
         </div>
         <div className="flex">
           <PlayerLegs last={playerALast?.score} darts={scores.playerADarts} avg={playerAAvg} />

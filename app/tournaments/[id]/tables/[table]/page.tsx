@@ -4,6 +4,7 @@ import { createMatch, getCuescoreMatch } from "@/app/lib/match";
 import { Suspense, useActionState } from "react";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
+import Wait from "./wait";
 
 export default async function Page({
   params,
@@ -20,15 +21,13 @@ export default async function Page({
   } catch (e) {
     console.log(e);
     return (
-      <>
-        <a href={`/tournaments/${params.id}/tables/${params.table}`} >Reload</a>
-      </>
+      <Wait id={params.id} table={params.table}/>
     );
   }
 
   return (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div className="flex h-dvh bg-slate-300 text-center text-2xl text-blue-700"><div className="m-auto">Loading...</div></div>}>
         <Darts tournament={params.id} table={table} matchId={match.id} />
       </Suspense>
     </>

@@ -10,30 +10,34 @@ export default async function Players({ match, nextPlayer } : { match : Match, n
 
     if (!match.firstPlayer) 
     {
-        return (<>
-        <div className="flex">
-         Choose starting player:
+        return (<div className="flex flex-col text-center">
+        <div className="text-2xl text-gray-800">
+         First to play:
         </div>
-        <div className="flex">
+        <div className="flex flex-col">
+          <div className="p-10">
           <form action={startMatch}>
             <input type="hidden" name="firstPlayer" value={match.playerAId} />
             <input type="hidden" name="matchId" value={match.id} />
-            <button type="submit"><PlayerName playerName={match.playerAName} playerImage={match.playerAImage} playerLegs="" active={false} /></button>
+            <button type="submit"><PlayerName playerName={match.playerAName} playerImage={match.playerAImage} active={false} /></button>
             </form>
+          </div>
+          <div className="p-10">
           <form action={startMatch}>
             <input type="hidden" name="firstPlayer" value={match.playerBId} />
             <input type="hidden" name="matchId" value={match.id} />
             <button type="submit">
-            <PlayerName playerName={match.playerBName} playerImage={match.playerBImage} playerLegs="" active={false} />
+            <PlayerName playerName={match.playerBName} playerImage={match.playerBImage} active={false} />
             </button>
             </form>
+          </div>
         </div>
-        </>)
+        </div>)
     }
     return (
         <div className="flex">
-            <PlayerName playerName={match.playerAName} playerImage={match.playerAImage} playerLegs={`(${match.playerALegs})`} active={activeAPlayer}/>
-            <PlayerName playerName={match.playerBName} playerImage={match.playerBImage} playerLegs={`(${match.playerBlegs})`} active={!activeAPlayer} />
+            <PlayerName playerName={match.playerAName} playerImage={match.playerAImage} active={activeAPlayer}/>
+            <PlayerName playerName={match.playerBName} playerImage={match.playerBImage} active={!activeAPlayer} />
         </div>
     )
     

@@ -48,7 +48,7 @@ export async function createMatch(match) {
       playerBId: String(match.playerB.playerId),
       playerBName: match.playerB.name,
       playerBImage: match.playerB.image,
-      round: `${match.roundName} (${match.round})`,
+      round: match.roundName,
       runTo: match.raceTo
     },
     update: {
@@ -58,7 +58,7 @@ export async function createMatch(match) {
       playerBId: String(match.playerB.playerId),
       playerBName: match.playerB.name,
       playerBImage: match.playerB.image,
-      round: `${match.roundName} (${match.round})`,
+      round: match.roundName,
       runTo: match.raceTo
     },
     where: {

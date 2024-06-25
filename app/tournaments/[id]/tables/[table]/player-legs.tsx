@@ -1,4 +1,4 @@
-export default function PlayerLegs({ last, avg, darts } : { last : number, avg: number, darts: number}) {
+export default function PlayerLegs({ last, avg, darts } : { last : number, avg: string, darts: number}) {
   return (
     <div className="flex flex-col basis-1/2">
       <div className="flex flex-col items-center justify-center text-center p-2 text-1xl">

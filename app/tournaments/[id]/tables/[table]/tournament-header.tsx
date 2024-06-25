@@ -19,10 +19,10 @@ export default function TournamentHeader({tournament, round, format, table, matc
           <div className="flex p-1 text-sm">First to { format } legs</div>
         </div>
         <div className="flex absolute right-0 mr-1 p-2 pl-4 pr-4">
-        <form action={resetMatch}>
+        {/* <form action={resetMatch}>
           <input type="hidden" name="matchId" value={matchId}/>
           <button className="p-2 pl-4 pr-4 border border-red-700 bg-red-500 hover:bg-red-400" type="submit">Reset</button>
-          </form>
+          </form> */}
         <a  className=" p-2 pl-4 pr-4 border border-green-700 bg-green-500 hover:bg-green-400" href={`/tournaments/${tournament.id}/tables/${table}`}>
           Exit
         </a>
