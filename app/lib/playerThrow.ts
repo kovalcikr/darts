@@ -53,7 +53,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
         setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
     
-    revalidatePath('/tournaments/[id//tables/[table]');
+    revalidatePath('/tournaments/[id]/tables/[table]');
 }
 
 export async function undoThrow(matchId, leg) {
@@ -119,7 +119,7 @@ export async function undoThrow(matchId, leg) {
     if (undoCloseLeg) {
         setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
-    revalidatePath('/tournaments/[id//tables/[table]');
+    revalidatePath('/tournaments/[id]/tables/[table]');
 }
 
 export async function findLastThrow(matchId, leg, player) {

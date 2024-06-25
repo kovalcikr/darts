@@ -77,7 +77,7 @@ export async function setStartingPlayer(matchId, playerId) {
 
 export async function startMatch(formData) {
   await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
-  revalidatePath('/tournaments/[id//tables/[table]');
+  revalidatePath('/tournaments/[id]/tables/[table]');
 }
 
 export async function resetMatch(formData) {
@@ -95,7 +95,7 @@ export async function resetMatch(formData) {
       id: formData.get('matchId')
     }
   })
-  revalidatePath('/tournaments/[id//tables/[table]');
+  revalidatePath('/tournaments/[id]/tables/[table]');
 }
 
 export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
