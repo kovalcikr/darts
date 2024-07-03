@@ -1,9 +1,11 @@
-export default function PlayerName({playerName, playerImage, active} : { playerName: string, playerImage: string, active: boolean}) {
+import { Player } from "@/app/lib/model/fullmatch";
+
+export default function PlayerName({player} : { player : Player}) {
   return (
     <div className="flex items-center justify-center flex-row basis-1/2">
-      <img src={playerImage} className="w-12 "></img>
-      <div className={"flex items-center justify-center text-center p-2 text-lg font-bold" + (active ? " text-blue-700" : "")}>
-        {playerName}
+      <img src={player.imageUrl} className="w-12 "></img>
+      <div className={"flex items-center justify-center text-center p-2 text-lg font-bold" + (player.active ? " text-blue-700" : "")}>
+        {player.name}
       </div>
     </div>
   );

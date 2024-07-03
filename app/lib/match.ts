@@ -5,7 +5,7 @@ import getTournamentInfo from "./cuescore"
 import prisma from "./db";
 import { revalidatePath } from "next/cache";
 import { PlayerThrow } from "@prisma/client";
-import { FullMatch, PlayerScore } from "./model/fullmatch";
+import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
 
 interface CueScorePlayer {
@@ -41,20 +41,26 @@ export async function getFullMatch(matchId) {
   const playerAAvg = (await findMatchAvg(match.id, match.playerAId));
   const playerBAvg = (await findMatchAvg(match.id, match.playerBId));
 
-  const playerA : PlayerScore = {
+  const playerA : Player = {
+    name: match.playerAName,
+    imageUrl: match.playerAImage,
     score: scores.playerA,
     dartsCount: scores.playerADarts,
     lastThrow: playerALast,
-    matchAvg: playerAAvg
-
-
+    matchAvg: playerAAvg,
+    legCount: match.playerALegs,
+    active: scores.nextPlayer == match.playerAId
   }
 
-  const playerB : PlayerScore = {
+  const playerB : Player = {
+    name: match.playerBName,
+    imageUrl: match.playerBImage,
     score: scores.playerB,
     dartsCount: scores.playerBDarts,
     lastThrow: playerBLast,
-    matchAvg: playerBAvg
+    matchAvg: playerBAvg,
+    legCount: match.playerBlegs,
+    active: scores.nextPlayer == match.playerBId
   }
 
   const fullMatch : FullMatch = {

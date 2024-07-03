@@ -5,14 +5,18 @@ export type FullMatch = {
     tournament: Tournament
     currentLeg: number
     nextPlayer: string
-    playerA: PlayerScore
-    playerB: PlayerScore
+    playerA: Player
+    playerB: Player
 
 }
 
-export type PlayerScore = {
+export type Player = {
+    name: string
+    imageUrl: string
     score: number
     dartsCount: number
     lastThrow: number
     matchAvg: number
+    legCount: number
+    active: boolean;
 }

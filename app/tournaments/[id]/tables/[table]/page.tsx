@@ -26,10 +26,8 @@ export default async function Page({
   }
 
   return (
-    <>
-      <Suspense fallback={<div className="flex h-dvh bg-slate-300 text-center text-2xl text-blue-700"><div className="m-auto">Loading...</div></div>}>
-        <Darts tournament={params.id} table={table} matchId={match.id} />
-      </Suspense>
-    </>
+    <Suspense fallback={<div className="flex h-dvh bg-slate-300 text-center text-2xl text-blue-700"><div className="m-auto">Loading...</div></div>}>
+      <Darts table={table} matchId={match.id} />
+    </Suspense>
   );
 }
