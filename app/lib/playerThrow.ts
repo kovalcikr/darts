@@ -8,6 +8,7 @@ import { resetMatch } from "./match";
 import { setScore } from "./cuescore";
 
 export async function addThrowAction(tournamentId, matchId, leg, playerId, score) {
+    await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
     let closeLeg = false;
     let match = null;
     await prisma.$transaction(async (tx) => {
@@ -53,10 +54,11 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
         setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
     
-    revalidatePath('/tournaments/[id]/tables/[table]');
+    revalidatePath('/tournaments/[id]/tables/[table]', 'page');
 }
 
 export async function undoThrow(matchId, leg) {
+    await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
     let undoCloseLeg = false;
     let match = null;
      await prisma.$transaction(async (tx) => {
@@ -119,7 +121,7 @@ export async function undoThrow(matchId, leg) {
     if (undoCloseLeg) {
         setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
-    revalidatePath('/tournaments/[id]/tables/[table]');
+    revalidatePath('/tournaments/[id]/tables/[table]', 'page');
 }
 
 export async function findLastThrow(matchId, leg, player) {

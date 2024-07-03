@@ -1,9 +1,9 @@
 'use client'
 
 import { MouseEventHandler, useState } from "react";
-import ScoreBox from "./scorebox";
 import GamepadButton from "./gamepad-button";
 import { addThrowAction, undoThrow } from "@/app/lib/playerThrow";
+import { useFormStatus } from "react-dom";
 
 export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
   const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -40,14 +40,15 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
       <GamepadButton
         name="UNDO"
         color="bg-orange-700"
-        hover="bg-orange-400"
         onClick={handleUndo}
       />
-      <ScoreBox currentScore={Number(currentScore)} />
+          <input type="text" autoFocus={true} required={true} value={Number(currentScore)} onChange={e => {
+            const value = Number(e.target.value);
+            if (value >= 0 && value <= 180) setCurrentScore(e.target.value)
+          }} className="flex items-center text-center  justify-center border-2 font-bold text-6xl text-white bg-slate-700  "/>
       <GamepadButton
         name="<"
         color="bg-orange-600"
-        hover="bg-orange-400"
         onClick={() => {
           if (currentScore.length != 0) {
             setCurrentScore(currentScore.substring(0, currentScore.length - 1))
@@ -59,31 +60,31 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
           key={item}
           name={String(item)}
           color="bg-blue-700"
-          hover="bg-blue-400"
           onClick={handleNumber}
         />
       ))}
       <GamepadButton
         name="CLR"
         color="bg-red-600"
-        hover="bg-red-400"
         onClick={handleClr}
       />
       <GamepadButton
         name="0"
         color="bg-blue-700"
-        hover="bg-blue-400"
         onClick={handleNumber}
       />
-      <GamepadButton
-        name="OK"
-        color="bg-green-700"
-        hover="bg-green-400"
-        onClick={async () => {
-          await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore));
-          setCurrentScore("0")
-        }}
-      />
+      <form action={async() => {
+        await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore));
+        setCurrentScore("0")
+      }}>
+        <GamepadButton
+          name="OK"
+          color="bg-green-700"
+          onClick={async () => {
+            
+          }}
+        />
+      </form>
     </div>
   );
 }

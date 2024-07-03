@@ -33,6 +33,7 @@ export async function getCuescoreMatch(tournamentId : string, tableName: string)
 }
 
 export async function getFullMatch(matchId) {
+  await new Promise(resolve => setTimeout(resolve, 2000));  // TODO: remove
   const match = await getMatch(matchId);
   const leg = match.playerALegs + match.playerBlegs + 1;
   const scores = await getScores(match.id, leg, match.playerAId, match.playerBId, match.firstPlayer);
@@ -121,7 +122,7 @@ export async function setStartingPlayer(matchId, playerId) {
 
 export async function startMatch(formData) {
   await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
-  revalidatePath('/tournaments/[id]/tables/[table]');
+  revalidatePath('/tournaments/[id]/tables/[table]', 'page');
 }
 
 export async function resetMatch(formData) {
@@ -139,7 +140,7 @@ export async function resetMatch(formData) {
       id: formData.get('matchId')
     }
   })
-  revalidatePath('/tournaments/[id]/tables/[table]');
+  revalidatePath('/tournaments/[id]/tables/[table]', 'page');
 }
 
 export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
