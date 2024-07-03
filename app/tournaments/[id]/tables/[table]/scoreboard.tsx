@@ -42,7 +42,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
         color="bg-orange-700"
         onClick={handleUndo}
       />
-          <input type="text" autoFocus={true} required={true} value={Number(currentScore)} onChange={e => {
+          <input type="number" autoFocus={true} required={true} value={Number(currentScore)} onChange={e => {
             const value = Number(e.target.value);
             if (value >= 0 && value <= 180) setCurrentScore(e.target.value)
           }} className="flex items-center text-center  justify-center border-2 font-bold text-6xl text-white bg-slate-700  "/>
