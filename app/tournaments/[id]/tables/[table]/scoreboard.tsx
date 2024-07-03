@@ -5,9 +5,11 @@ import GamepadButton from "./gamepad-button";
 import { addThrowAction, undoThrow } from "@/app/lib/playerThrow";
 import GamepadServerButton from "./gamepad-server-button";
 
-export default function ScoreBoard({ tournamentId, matchId, leg, player, slow }) {
+export default function ScoreBoard({ tournamentId, matchId, leg, player, currentPlayerScore, slow }) {
   const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const impossibleScore = [163,166,169,172,173,175,176,178,179];
   const [currentScore, setCurrentScore] = useState("0");
+  const [disabledOK, setDisabledOK] = useState(false);
 
   async function handleUndo() {
     await undoThrow(matchId, leg, slow);
@@ -20,13 +22,30 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, slow })
 
   function handleNumber(e: any) {
     const value = (e.target as HTMLInputElement).value;
+    if (Number(currentScore + value) > 180) {
+      return;
+    }
+    const newScore = Number(currentScore + value);
+    if (impossibleScore.includes(newScore)) {
+      return;
+    }
+    if (currentPlayerScore - newScore == 1) {
+      return;
+    }
+    if (currentPlayerScore < newScore) {
+      return;
+    }
+    if (currentPlayerScore == 2 && newScore == 1) {
+      return;
+    }
+    if (currentPlayerScore == newScore && newScore % 2 != 0) {
+      return;
+    }
     if (currentScore === "0") {
       setCurrentScore(value);
       return;
     }
-    if (Number(currentScore + value) > 180) {
-      return;
-    }
+
     setCurrentScore(currentScore + value);
   }
 
@@ -43,7 +62,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, slow })
         color="bg-orange-700"
         formAction={handleUndo}
       />
-          <input type="number" autoFocus={true} required={true} value={Number(currentScore)} onChange={e => {
+          <input type="text" disabled required value={Number(currentScore)} onChange={e => {
             const value = Number(e.target.value);
             if (value >= 0 && value <= 180) setCurrentScore(e.target.value)
           }} className="flex items-center text-center  justify-center border-2 font-bold text-6xl text-white bg-slate-700  "/>
@@ -77,11 +96,11 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, slow })
         <GamepadServerButton
           name="OK"
           color="bg-green-700"
+          disabled={disabledOK}
           formAction={async() => {
             await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), slow);
             setCurrentScore("0")
           }}
-          disabled={true}
         />
     </form>
   );

@@ -9,8 +9,8 @@ export default async function Players({ playerA, playerB } : { playerA: Player, 
 
     return (
         <div className="flex">
-            <PlayerName playerName={playerA.name} playerImage={playerA.imageUrl} active={playerA.active}/>
-            <PlayerName playerName={playerB.name} playerImage={playerB.imageUrl} active={playerB.active} />
+            <PlayerName player={playerA} />
+            <PlayerName player={playerB} />
         </div>
     )
     

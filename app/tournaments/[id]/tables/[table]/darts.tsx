@@ -18,6 +18,8 @@ export default async function Darts({ table, matchId, slow } : { table: string, 
 
   const playerLeft = match.firstPlayer == match.playerAId ? fullMatch.playerA : fullMatch.playerB ;
   const playerRight = playerLeft == fullMatch.playerA ? fullMatch.playerB : fullMatch.playerA ;
+
+  const currentPlayerScore = fullMatch.playerA.active ? fullMatch.playerA.score : fullMatch.playerB.score;
   
   return (
     <main className="flex flex-col h-dvh font-normal text-black">
@@ -51,7 +53,7 @@ export default async function Darts({ table, matchId, slow } : { table: string, 
             match.runTo == match.playerBlegs ? 
             <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={fullMatch.currentLeg} slow={slow} />
             : 
-            <ScoreBoard tournamentId={fullMatch.tournament.id} matchId={match.id} leg={fullMatch.currentLeg} player={fullMatch.nextPlayer} slow={slow} />
+            <ScoreBoard tournamentId={fullMatch.tournament.id} matchId={match.id} leg={fullMatch.currentLeg} player={fullMatch.nextPlayer} currentPlayerScore={currentPlayerScore} slow={slow} />
           )
         }
       </div>
