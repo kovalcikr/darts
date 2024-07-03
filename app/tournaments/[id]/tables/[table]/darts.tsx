@@ -15,6 +15,9 @@ export default async function Darts({ table, matchId } : { table: string, matchI
   const match = fullMatch.match;
   const playerAAvg = fullMatch.playerA.matchAvg;
   const playerBAvg = fullMatch.playerB.matchAvg;
+
+  const playerLeft = match.firstPlayer == match.playerAId ? fullMatch.playerA : fullMatch.playerB ;
+  const playerRight = playerLeft == fullMatch.playerA ? fullMatch.playerB : fullMatch.playerA ;
   
   return (
     <main className="flex flex-col h-dvh font-normal text-black">
@@ -25,16 +28,16 @@ export default async function Darts({ table, matchId } : { table: string, matchI
          : 
          <>
           <div className="flex">
-            <PlayerName player={fullMatch.playerA} />
-            <PlayerName player={fullMatch.playerB} />
+            <PlayerName player={playerLeft} />
+            <PlayerName player={playerRight} />
           </div>
           <div className="flex">
-            <PlayerScore player={fullMatch.playerA} />
-            <PlayerScore player={fullMatch.playerB} />
+            <PlayerScore player={playerLeft} />
+            <PlayerScore player={playerRight} />
           </div>
           <div className="flex">
-          <PlayerLegs player={fullMatch.playerA} />
-          <PlayerLegs player={fullMatch.playerB} />
+          <PlayerLegs player={playerLeft} />
+          <PlayerLegs player={playerRight} />
         </div>
         </>
         }
