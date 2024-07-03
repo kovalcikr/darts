@@ -5,6 +5,8 @@ import getTournamentInfo from "./cuescore"
 import prisma from "./db";
 import { revalidatePath } from "next/cache";
 import { PlayerThrow } from "@prisma/client";
+import { FullMatch, PlayerScore } from "./model/fullmatch";
+import { findLastThrow, findMatchAvg } from "./playerThrow";
 
 interface CueScorePlayer {
   playerId: number;
@@ -28,6 +30,42 @@ export async function getCuescoreMatch(tournamentId : string, tableName: string)
       if (match.matchstatus == 'playing' && match?.table.name == tableName) return match;
     }
     throw Error(`No match in progress on table ${tableName}`);
+}
+
+export async function getFullMatch(matchId) {
+  const match = await getMatch(matchId);
+  const leg = match.playerALegs + match.playerBlegs + 1;
+  const scores = await getScores(match.id, leg, match.playerAId, match.playerBId, match.firstPlayer);
+  const playerALast = (await findLastThrow(match.id, leg, match.playerAId))?.score;
+  const playerBLast = (await findLastThrow(match.id, leg, match.playerBId))?.score;
+  const playerAAvg = (await findMatchAvg(match.id, match.playerAId));
+  const playerBAvg = (await findMatchAvg(match.id, match.playerBId));
+
+  const playerA : PlayerScore = {
+    score: scores.playerA,
+    dartsCount: scores.playerADarts,
+    lastThrow: playerALast,
+    matchAvg: playerAAvg
+
+
+  }
+
+  const playerB : PlayerScore = {
+    score: scores.playerB,
+    dartsCount: scores.playerBDarts,
+    lastThrow: playerBLast,
+    matchAvg: playerBAvg
+  }
+
+  const fullMatch : FullMatch = {
+    match: match,
+    tournament: match.tournament,
+    currentLeg: leg,
+    nextPlayer: scores.nextPlayer,
+    playerA: playerA,
+    playerB: playerB
+  }
+  return fullMatch;
 }
 
 export async function getMatch(matchId) {
