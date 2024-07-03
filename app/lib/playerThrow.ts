@@ -2,13 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "./db";
-import { SourceTextModule } from "vm";
-import { Tsukimi_Rounded, Uncial_Antiqua } from "next/font/google";
-import { resetMatch } from "./match";
 import { setScore } from "./cuescore";
 
-export async function addThrowAction(tournamentId, matchId, leg, playerId, score) {
-    await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
+export async function addThrowAction(tournamentId, matchId, leg, playerId, score, slow) {
+    if (slow) {
+        await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
+    }
     let closeLeg = false;
     let match = null;
     await prisma.$transaction(async (tx) => {
@@ -57,8 +56,10 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
     revalidatePath('/tournaments/[id]/tables/[table]', 'page');
 }
 
-export async function undoThrow(matchId, leg) {
-    await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
+export async function undoThrow(matchId, leg, slow) {
+    if (slow) {
+        await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
+    }
     let undoCloseLeg = false;
     let match = null;
      await prisma.$transaction(async (tx) => {

@@ -32,8 +32,10 @@ export async function getCuescoreMatch(tournamentId : string, tableName: string)
     throw Error(`No match in progress on table ${tableName}`);
 }
 
-export async function getFullMatch(matchId) {
-  await new Promise(resolve => setTimeout(resolve, 2000));  // TODO: remove
+export async function getFullMatch(matchId, slow) {
+  if (slow) {
+    await new Promise(resolve => setTimeout(resolve, 2000));  // TODO: remove
+  }
   const match = await getMatch(matchId);
   const leg = match.playerALegs + match.playerBlegs + 1;
   const scores = await getScores(match.id, leg, match.playerAId, match.playerBId, match.firstPlayer);
@@ -43,6 +45,7 @@ export async function getFullMatch(matchId) {
   const playerBAvg = (await findMatchAvg(match.id, match.playerBId));
 
   const playerA : Player = {
+    id: match.playerAId,
     name: match.playerAName,
     imageUrl: match.playerAImage,
     score: scores.playerA,
@@ -54,6 +57,7 @@ export async function getFullMatch(matchId) {
   }
 
   const playerB : Player = {
+    id: match.playerBId,
     name: match.playerBName,
     imageUrl: match.playerBImage,
     score: scores.playerB,

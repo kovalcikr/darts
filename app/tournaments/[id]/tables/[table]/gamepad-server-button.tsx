@@ -4,7 +4,7 @@ export default function GamepadServerButton({
   name,
   color,
   formAction
-} : {name: string, color: string, disabled?: boolean, formAction?: any}) {
+} : {name: string, color: string, formAction?: any}) {
 
   const { pending } = useFormStatus();
   
@@ -17,6 +17,9 @@ export default function GamepadServerButton({
       formAction={formAction}
     >
       {name}
+      <div className={`${!pending && "hidden"}`}>
+        <span class="loader"></span>
+      </div>
     </button>
   );
 }

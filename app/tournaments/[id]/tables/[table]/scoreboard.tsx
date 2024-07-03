@@ -5,12 +5,12 @@ import GamepadButton from "./gamepad-button";
 import { addThrowAction, undoThrow } from "@/app/lib/playerThrow";
 import GamepadServerButton from "./gamepad-server-button";
 
-export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
+export default function ScoreBoard({ tournamentId, matchId, leg, player, slow }) {
   const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [currentScore, setCurrentScore] = useState("0");
 
   async function handleUndo() {
-    await undoThrow(matchId, leg);
+    await undoThrow(matchId, leg, slow);
     setCurrentScore("0");
   }
 
@@ -78,7 +78,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
           name="OK"
           color="bg-green-700"
           formAction={async() => {
-            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore));
+            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), slow);
             setCurrentScore("0")
           }}
           disabled={true}

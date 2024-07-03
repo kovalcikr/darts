@@ -5,7 +5,7 @@ import GamepadButton from "./gamepad-button";
 import { finishMatch } from "@/app/lib/cuescore";
 import { Match } from "@prisma/client";
 
-export default function Winner({ player, image, match, leg }: { player: string, image: string, match: Match, leg: number }) {
+export default function Winner({ player, image, match, leg, slow }: { player: string, image: string, match: Match, leg: number, slow: boolean }) {
     return (
         <div className="flex flex-col text-center justify-center items-center content-center">
         Winner: 
@@ -16,7 +16,7 @@ export default function Winner({ player, image, match, leg }: { player: string, 
   <div className="flex flex-col p-1 m-1">  <GamepadButton
         name="Undo"
         color="bg-orange-700 p-8 border flex felx-col"
-        onClick={async () => await undoThrow(match.id, leg)}
+        onClick={async () => await undoThrow(match.id, leg, slow)}
       /></div>
         <GamepadButton
         name="Finish Match"

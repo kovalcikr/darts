@@ -8,9 +8,9 @@ import ChoosePlayer from "./choose-player";
 import PlayerName from "./player-name";
 
 
-export default async function Darts({ table, matchId } : { table: string, matchId: string }) {
+export default async function Darts({ table, matchId, slow } : { table: string, matchId: string, slow: boolean }) {
 
-  const fullMatch = await getFullMatch(matchId);
+  const fullMatch = await getFullMatch(matchId, slow);
 
   const match = fullMatch.match;
   const playerAAvg = fullMatch.playerA.matchAvg;
@@ -45,13 +45,13 @@ export default async function Darts({ table, matchId } : { table: string, matchI
       { match.firstPlayer && 
         <div className="basis-2/3 text-3xl">
         { match.runTo == match.playerALegs ? 
-          <Winner player={match.playerAName} image={match.playerAImage} match={match} leg={fullMatch.currentLeg}/> 
+          <Winner player={match.playerAName} image={match.playerAImage} match={match} leg={fullMatch.currentLeg} slow={slow} /> 
           : 
           (
             match.runTo == match.playerBlegs ? 
-            <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={fullMatch.currentLeg}/>
+            <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={fullMatch.currentLeg} slow={slow} />
             : 
-            <ScoreBoard tournamentId={fullMatch.tournament.id} matchId={match.id} leg={fullMatch.currentLeg} player={fullMatch.nextPlayer}/>
+            <ScoreBoard tournamentId={fullMatch.tournament.id} matchId={match.id} leg={fullMatch.currentLeg} player={fullMatch.nextPlayer} slow={slow} />
           )
         }
       </div>
