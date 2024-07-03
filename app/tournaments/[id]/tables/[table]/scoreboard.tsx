@@ -1,9 +1,9 @@
 'use client'
 
-import { MouseEventHandler, useState } from "react";
+import { useState } from "react";
 import GamepadButton from "./gamepad-button";
 import { addThrowAction, undoThrow } from "@/app/lib/playerThrow";
-import { useFormStatus } from "react-dom";
+import GamepadServerButton from "./gamepad-server-button";
 
 export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
   const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -36,11 +36,12 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-1 w-screen h-full">
-      <GamepadButton
+    <form className="grid grid-cols-3 gap-1 w-screen h-full">
+
+      <GamepadServerButton
         name="UNDO"
         color="bg-orange-700"
-        onClick={handleUndo}
+        formAction={handleUndo}
       />
           <input type="number" autoFocus={true} required={true} value={Number(currentScore)} onChange={e => {
             const value = Number(e.target.value);
@@ -73,18 +74,15 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player }) {
         color="bg-blue-700"
         onClick={handleNumber}
       />
-      <form action={async() => {
-        await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore));
-        setCurrentScore("0")
-      }}>
-        <GamepadButton
+        <GamepadServerButton
           name="OK"
           color="bg-green-700"
-          onClick={async () => {
-            
+          formAction={async() => {
+            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore));
+            setCurrentScore("0")
           }}
+          disabled={true}
         />
-      </form>
-    </div>
+    </form>
   );
 }
