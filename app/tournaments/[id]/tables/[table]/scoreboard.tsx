@@ -84,7 +84,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
       <input type="text" disabled required value={Number(currentScore)} onChange={e => {
         const value = Number(e.target.value);
         if (value >= 0 && value <= 180) setCurrentScore(e.target.value)
-      }} className="flex items-center text-center  justify-center border-2 font-bold text-6xl text-white bg-slate-700  " />
+      }} className="flex items-center text-center  justify-center border-2 font-bold text-6xl text-white bg-slate-800  " />
       <GamepadButton
         name="<"
         color="bg-blue-800"
