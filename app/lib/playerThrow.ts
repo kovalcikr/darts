@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import prisma from "./db";
 import { setScore } from "./cuescore";
 
-export async function addThrowAction(tournamentId, matchId, leg, playerId, score, slow) {
+export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, slow) {
     if (slow) {
         await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
     }
@@ -34,6 +34,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
                 leg: leg,
                 playerId: playerId,
                 score: score,
+                darts: dartsCount,
             }
         })
         if (closeLeg) {
@@ -139,13 +140,15 @@ export async function findLastThrow(matchId, leg, player) {
 }
 
 export async function findMatchAvg(matchId, player) {
-    return (await prisma.playerThrow.aggregate({
-        _avg: {
-            score: true
+    const data = await prisma.playerThrow.aggregate({
+        _sum: {
+            score: true,
+            darts: true,
         },
         where: {
             matchId: matchId,
             playerId: player
         },
-    }))._avg.score;
+    });
+    return data._sum.score / data._sum.darts * 3;
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import GamepadButton from "./gamepad-button";
 import { addThrowAction, undoThrow } from "@/app/lib/playerThrow";
 import GamepadServerButton from "./gamepad-server-button";
@@ -10,6 +10,8 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
   const impossibleScore = [163,166,169,172,173,175,176,178,179];
   const [currentScore, setCurrentScore] = useState("0");
   const [disabledOK, setDisabledOK] = useState(false);
+  const [dartsCount, setDartsCount] = useState(false);
+  const darts3ref = useRef(null);
 
   async function handleUndo() {
     await undoThrow(matchId, leg, slow);
@@ -56,7 +58,24 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
 
   return (
     <form className="grid grid-cols-3 gap-1 w-screen h-full">
-
+      <div className={`absolute text-center mx-auto w-full h-full flex-col border-black border-2 bg-gray-400 text-4xl ${ dartsCount ? "flex" : "hidden" } `}>
+      <div>Darts used:</div>
+        <label className="m-10"><input className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={1} /><span className="w-full ml-4 text-gray-800">1</span></label>
+        <label className="m-10"><input className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={2} /><span className="w-full ml-4 text-gray-800">2</span></label>
+        <label className="m-10"><input ref={darts3ref} className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={3} defaultChecked /><span className="w-full ml-4 text-gray-800">3</span></label>
+        <GamepadServerButton
+          name="OK"
+          color="bg-green-700 h-20"
+          disabled={disabledOK}
+          formAction={async(formData : FormData) => {
+            const dartsCount = Number(formData.get('darts'));
+            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), dartsCount, slow);
+            setCurrentScore("0")
+            setDartsCount(false);
+            darts3ref.current.checked = true;
+          }}
+        />
+      </div>
       <GamepadServerButton
         name="UNDO"
         color="bg-orange-700"
@@ -98,7 +117,11 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
           color="bg-green-700"
           disabled={disabledOK}
           formAction={async() => {
-            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), slow);
+            if (currentPlayerScore == Number(currentScore)) {
+              setDartsCount(true);
+              return;
+            }
+            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), 3, slow);
             setCurrentScore("0")
           }}
         />
