@@ -11,7 +11,7 @@ export default function GamepadServerButton({
 
   return (
     <button
-      className={`flex items-center justify-center border-2 font-bold text-white ${color} disabled:opacity-25 `}
+      className={`flex items-center justify-center border-2 rounded font-bold text-white ${color} disabled:opacity-25 `}
       value={name}
       disabled={pending || disabled}
       type="submit"

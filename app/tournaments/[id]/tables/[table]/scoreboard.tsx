@@ -57,7 +57,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
   }
 
   return (
-    <form className="grid grid-cols-3 gap-1 w-screen h-full">
+    <form className="grid grid-cols-3 w-screen h-full">
       <div className={`absolute text-center mx-auto w-full h-full flex-col border-black border-2 bg-gray-400 text-4xl ${dartsCount ? "flex" : "hidden"} `}>
         <div>Darts used:</div>
         <label className="m-10"><input className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={1} /><span className="w-full ml-4 text-gray-800">1</span></label>
