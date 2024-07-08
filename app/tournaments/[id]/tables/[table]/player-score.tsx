@@ -1,10 +1,11 @@
 import { Player } from "@/app/lib/model/fullmatch";
 
-export default function PlayerScore({ player } : { player: Player }) {
+export default function PlayerScore({ player }: { player: Player }) {
   return (
     <div className="flex flex-col basis-1/2">
-      <div className={`flex items-center justify-center text-center p-2 text-5xl border-gray-700 border-spacing-1 border  ${player.active ? "bg-green-400 font-bold" : "bg-green-200 text-slate-600"}`}>
-        {player.score} <span className="text-2xl pl-4">({player.legCount})</span>
+      <div className="text-center"> <span className="text-xl pl-4">Legs: {player.legCount}</span></div>
+      <div className={`flex items-center justify-center text-center p-1 m-1 border-gray-700 bg-blue-600   ${player.active ? "text-8xl text-white font-bold rounded border-1" : "text-7xl text-slate-300"}`}>
+        {player.score}
       </div>
     </div>
   );

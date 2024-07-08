@@ -5,10 +5,10 @@ export default function GamepadServerButton({
   color,
   disabled = false,
   formAction
-} : {name: string, color: string, disabled?: boolean, formAction?: any}) {
+}: { name: string, color: string, disabled?: boolean, formAction?: any }) {
 
   const { pending } = useFormStatus();
-  
+
   return (
     <button
       className={`flex items-center justify-center border-2 font-bold text-white ${color} disabled:opacity-25 `}
