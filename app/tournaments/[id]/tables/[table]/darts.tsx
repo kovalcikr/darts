@@ -22,7 +22,7 @@ export default async function Darts({ table, matchId, slow, reset }: { table: st
   const currentPlayerScore = fullMatch.playerA.active ? fullMatch.playerA.score : fullMatch.playerB.score;
 
   return (
-    <main className="flex flex-col h-dvh font-normal text-black bg-blue-100">
+    <main className="flex flex-col h-dvh font-normal text-black bg-blue-100 overflow-hidden">
       <TournamentHeader tournament={fullMatch.tournament} round={match.round} format={String(match.runTo)} table={table} matchId={matchId} reset={reset} />
       <div className="flex flex-col basis-1/4">
         {!match.firstPlayer ?
