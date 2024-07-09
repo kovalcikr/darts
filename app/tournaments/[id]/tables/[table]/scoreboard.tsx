@@ -37,12 +37,6 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
     if (currentPlayerScore < newScore) {
       return;
     }
-    if (currentPlayerScore == 2 && newScore == 1) {
-      return;
-    }
-    if (currentPlayerScore == newScore && newScore % 2 != 0) {
-      return;
-    }
     if (currentScore === "0") {
       setCurrentScore(value);
       return;
