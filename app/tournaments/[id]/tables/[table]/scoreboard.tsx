@@ -54,9 +54,9 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
     <form className="grid grid-cols-3 w-screen h-full">
       <div className={`absolute text-center mx-auto w-full flex-col border-black border-2 bg-gray-400 text-4xl ${dartsCount ? "flex" : "hidden"} `}>
         <div>Darts used:</div>
-        <label className="m-7"><input className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={1} /><span className="w-full ml-4 text-gray-800">1</span></label>
-        <label className="m-7"><input className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={2} /><span className="w-full ml-4 text-gray-800">2</span></label>
-        <label className="m-7"><input ref={darts3ref} className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={3} defaultChecked /><span className="w-full ml-4 text-gray-800">3</span></label>
+        <label className="m-6"><input className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={1} /><span className="w-full ml-4 text-gray-800">1</span></label>
+        <label className="m-6"><input className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={2} /><span className="w-full ml-4 text-gray-800">2</span></label>
+        <label className="m-6"><input ref={darts3ref} className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={3} defaultChecked /><span className="w-full ml-4 text-gray-800">3</span></label>
         <GamepadServerButton
           name="OK"
           color="bg-green-500 h-20"
