@@ -17,6 +17,9 @@ export default function Page({ params }: { params: { id: string } }) {
           <Link className="border-slate-800 rounded bg-blue-200 p-1 px-8" href={`/tournaments/${params.id}/tables/1${item}`}>Table {item}</Link>
         </div>
       ))}
+      <div key="back" className="m-4">
+        <Link className="border-slate-800 rounded bg-red-200 p-1 px-8" href={"/"}>Back</Link>
+      </div>
     </div>
   );
 }
