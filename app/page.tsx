@@ -39,6 +39,18 @@ export default async function Home() {
     }
   })
 
+  const throw171count = await prisma.playerThrow.aggregate({
+    _count: {
+      id: true
+    },
+    where: {
+      tournamentId: {
+        in: tournaments
+      },
+      score: 171
+    }
+  })
+
   const throws = await prisma.playerThrow.aggregate({
     _count: {
       id: true
@@ -105,7 +117,7 @@ export default async function Home() {
   playersB.forEach(value => players.set(value.playerBId, value.playerBName))
 
   const legs = await prisma.playerThrow.groupBy({
-    by: ["tournamentId", "leg", "playerId"],
+    by: ["tournamentId", "matchId", "leg", "playerId"],
     where: {
       tournamentId: {
         in: tournaments
@@ -130,7 +142,7 @@ export default async function Home() {
       <div className="max-w-screen-md rounded overflow-hidden shadow-lg">
         <div className="px-6 py-4">
           <div className="font-bold text-xl mb-2">Relax darts cup</div>
-          <p className="text-gray-700 text-base">
+          <div className="text-gray-700 text-base">
             <div>Season: Leto 2024</div>
             <div>Players: {players.size}</div>
             <div>Tournaments: 12</div>
@@ -138,6 +150,7 @@ export default async function Home() {
             <div>Legs: {matchesCount._sum.playerALegs + matchesCount._sum.playerBlegs}</div>
             <div>Throws: {throws._count.id}</div>
             <div>180: {throw180count._count.id}</div>
+            <div>171: {throw171count._count.id}</div>
             <div>Average: {(throws._sum.score / throws._sum.darts * 3).toFixed(2)} </div>
             <div>Best average: {(sortedThrows[0]._sum.score / sortedThrows[0]._sum.darts * 3).toFixed(2)} ({players.get(sortedThrows[0].playerId)})</div>
             <div>Highest checkout: </div>
@@ -146,7 +159,7 @@ export default async function Home() {
                 <span key={leg.tournamentId.toString().concat(leg.leg.toString(), leg.playerId)}>({players.get(leg.playerId)}) </span>
               ))
             }</div>
-          </p>
+          </div>
         </div>
       </div>
     </div>
