@@ -137,9 +137,21 @@ export default async function Home() {
   })
   const legsSorted = legs.sort((a, b) => a._sum.darts - b._sum.darts)
 
+  const bestCheckout = await prisma.playerThrow.findMany({
+    where: {
+      checkout: true,
+      tournamentId: {
+        in: tournaments
+      }
+    },
+    orderBy: {
+      score: "desc"
+    }
+  })
+
   return (
     <div className="flex flex-col h-dvh font-normal text-black bg-slate-300">
-      <div className="max-w-screen-md rounded overflow-hidden shadow-lg">
+      <div className="max-w-screen-md rounded shadow-lg">
         <div className="px-6 py-4">
           <div className="font-bold text-xl mb-2">Relax darts cup</div>
           <div className="text-gray-700 text-base">
@@ -153,7 +165,11 @@ export default async function Home() {
             <div>171: {throw171count._count.id}</div>
             <div>Average: {(throws._sum.score / throws._sum.darts * 3).toFixed(2)} </div>
             <div>Best average: {(sortedThrows[0]._sum.score / sortedThrows[0]._sum.darts * 3).toFixed(2)} ({players.get(sortedThrows[0].playerId)})</div>
-            <div>Highest checkout: </div>
+            <div>Best checkout: { bestCheckout[0].score } - { 
+              bestCheckout.filter(checkout => bestCheckout[0].score == checkout.score).map(checkout => (
+                <span key={checkout.id}>({ players.get(checkout.playerId) }) </span>
+              ))
+            } </div>
             <div>Best leg: {legs[0]._sum.darts} - {
               legsSorted.filter(leg => leg._sum.darts == legs[0]._sum.darts).map(leg => (
                 <span key={leg.tournamentId.toString().concat(leg.leg.toString(), leg.playerId)}>({players.get(leg.playerId)}) </span>

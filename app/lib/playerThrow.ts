@@ -35,6 +35,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
                 playerId: playerId,
                 score: score,
                 darts: dartsCount,
+                checkout: (currentScore._sum.score + score == 501)
             }
         })
         if (closeLeg) {
