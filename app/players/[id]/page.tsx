@@ -135,20 +135,20 @@ export default async function Player({ params }: { params: { id: string } }) {
         <div className="flex flex-col h-dvh font-normal text-black bg-slate-300">
             <div className="max-w-screen-md rounded shadow-lg">
                 <div className="px-6 py-4">
-                    <div className="font-bold text-xl mb-2">Relax darts cup</div>
+                    <div className="font-bold text-xl mb-2">Relax darts cup: štatistiky hráča { players.get(params.id) }</div>
                     <div className="text-gray-700 text-base">
-                        <div>Season: Leto 2024</div>
-                        <div>Player: {players.get(params.id)}</div>
-                        <div>Tournaments: {playerTournaments.size} / {tournamentIds.length} ({(playerTournaments.size / tournamentIds.length * 100).toFixed(1)}%)</div>
-                        <div>Matches: {matchesWon} / {matches.length} ({(matchesWon / matches.length * 100).toFixed(1)}%)</div>
-                        <div>Legs: {wonLegs} / {playerLegs} ({(wonLegs / playerLegs * 100).toFixed(1)}%)</div>
-                        <div>Throws: {throws._count.id}</div>
-                        <div>Average (season): {((throws._sum?.score || 0) / (throws._sum?.darts || 0) * 3).toFixed(2)} </div>
-                        <div>Best throw: {throws._max.score} </div>
-                        <div>Best leg: { (legsSorted[0]?._sum?.darts || 0)}</div>
-                        <div>Best checkout: {bestCheckout[0]?.score || 0}</div>
-                        <div>Best average: { ((bestAvg[0]._sum?.score || 0) / (bestAvg[0]._sum?.darts || 0) * 3).toFixed(2) } </div>
-                        <div>Frequent opponent: {frequentOpponents[0][1]} - {
+                        <div>Sezóna: Jeseň 2024</div>
+                        <div>Počet odohratých turnajov: {playerTournaments.size} / {tournamentIds.length} ({(playerTournaments.size / tournamentIds.length * 100).toFixed(1)}%)</div>
+                        <div>Počet vyhraných/všetkých zápasov: {matchesWon} / {matches.length} ({(matchesWon / matches.length * 100).toFixed(1)}%)</div>
+                        <div>Počet vyhraných/všetkých legov: {wonLegs} / {playerLegs} ({(wonLegs / playerLegs * 100).toFixed(1)}%)</div>
+                        <div>Počet hodov: {throws._count.id}</div>
+                        <div>Počet šípok: { throws._sum.darts }</div>
+                        <div>Priemer za sezónu: {((throws._sum?.score || 0) / (throws._sum?.darts || 0) * 3).toFixed(2)} </div>
+                        <div>Najlepší hod: {throws._max.score} </div>
+                        <div>Najlepší leg: { (legsSorted[0]?._sum?.darts || 0)}</div>
+                        <div>Najlepší checkout: {bestCheckout[0]?.score || 0}</div>
+                        <div>Najlepší priemer v zápase: { ((bestAvg[0]._sum?.score || 0) / (bestAvg[0]._sum?.darts || 0) * 3).toFixed(2) } </div>
+                        <div>Najčastejší protihráč: {frequentOpponents[0][1]} - {
                             frequentOpponents.filter(o => o[1] == frequentOpponents[0][1]).map(oppoenent => (
                                 <span key={oppoenent[0]}>({players.get(oppoenent[0])}) </span>
                             ))
