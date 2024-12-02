@@ -1,17 +1,11 @@
 import prisma from "./lib/db";
+import { getPlayers } from "./lib/players";
+import { getTournaments } from "./lib/tournament";
 
 export const revalidate = false
 
 export default async function Home() {
-  const tournamentNames = generateTournamentNames(13, 24);
-  const tournamentIds = await prisma.tournament.findMany({
-    where: {
-      name: {
-        in: tournamentNames
-      }
-    }
-  });
-  const tournaments = tournamentIds.map(tourament => tourament.id);
+  const tournaments = await getTournaments()
   const matchesCount = await prisma.match.aggregate({
     _count: {
       id: true
@@ -80,41 +74,7 @@ export default async function Home() {
   });
   const sortedThrows = throwsPerPlayer.sort((a, b) => a._sum.score / a._sum.darts - b._sum.score / b._sum.darts).reverse()
 
-  function generateTournamentNames(start, end) {
-    const names = [];
-    for (let i = start; i <= end; i++) {
-      names.push("Relax Darts CUP " + i + " 2024")
-    }
-    return names;
-  }
-
-  const playersA = await prisma.match.findMany({
-    where: {
-      tournamentId: {
-        in: tournaments
-      }
-    },
-    distinct: ["playerAId"],
-    select: {
-      playerAId: true,
-      playerAName: true
-    }
-  })
-  const playersB = await prisma.match.findMany({
-    where: {
-      tournamentId: {
-        in: tournaments
-      }
-    },
-    distinct: ["playerBId"],
-    select: {
-      playerBId: true,
-      playerBName: true
-    }
-  })
-  const players = new Map();
-  playersA.forEach(value => players.set(value.playerAId, value.playerAName))
-  playersB.forEach(value => players.set(value.playerBId, value.playerBName))
+  const players = await getPlayers(tournaments);
 
   const legs = await prisma.playerThrow.groupBy({
     by: ["tournamentId", "matchId", "leg", "playerId"],
@@ -170,8 +130,8 @@ export default async function Home() {
                 <span key={checkout.id}>({ players.get(checkout.playerId) }) </span>
               ))
             } </div>
-            <div>Best leg: {legs[0]._sum.darts} - {
-              legsSorted.filter(leg => leg._sum.darts == legs[0]._sum.darts).map(leg => (
+            <div>Best leg: {legsSorted[0]._sum.darts} - {
+              legsSorted.filter(leg => leg._sum.darts == legsSorted[0]._sum.darts).map(leg => (
                 <span key={leg.tournamentId.toString().concat(leg.leg.toString(), leg.playerId)}>({players.get(leg.playerId)}) </span>
               ))
             }</div>
