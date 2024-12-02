@@ -114,7 +114,7 @@ export default async function Player({ params }: { params: { id: string } }) {
             }
         }
     })
-    const legsSorted = legs.sort((a, b) => a._sum.darts - b._sum.darts)
+    const legsSorted = legs.sort((a, b) => (a._sum?.darts || 0) - (b._sum?.darts || 0))
 
     const matchSums = await prisma.playerThrow.groupBy({
         by: ["tournamentId", "matchId"],
@@ -129,7 +129,7 @@ export default async function Player({ params }: { params: { id: string } }) {
             darts: true
         }
     })
-    const bestAvg = matchSums.sort((a, b) => a._sum.score / a._sum.darts - b._sum.score / b._sum.darts).reverse();
+    const bestAvg = matchSums.sort((a, b) => (a._sum?.score || 0) / (a._sum?.darts || 0) - (b._sum.score || 0) / (b._sum.darts || 0)).reverse();
 
     return (
         <div className="flex flex-col h-dvh font-normal text-black bg-slate-300">
@@ -143,11 +143,11 @@ export default async function Player({ params }: { params: { id: string } }) {
                         <div>Matches: {matchesWon} / {matches.length} ({(matchesWon / matches.length * 100).toFixed(1)}%)</div>
                         <div>Legs: {wonLegs} / {playerLegs} ({(wonLegs / playerLegs * 100).toFixed(1)}%)</div>
                         <div>Throws: {throws._count.id}</div>
-                        <div>Average (season): {(throws._sum.score / throws._sum.darts * 3).toFixed(2)} </div>
+                        <div>Average (season): {((throws._sum?.score || 0) / (throws._sum?.darts || 0) * 3).toFixed(2)} </div>
                         <div>Best throw: {throws._max.score} </div>
-                        {<div>Best leg: {legsSorted[0]._sum.darts}</div>}
+                        <div>Best leg: { (legsSorted[0]?._sum?.darts || 0)}</div>
                         <div>Best checkout: {bestCheckout[0]?.score || 0}</div>
-                        <div>Best average: { (bestAvg[0]._sum.score / bestAvg[0]._sum.darts * 3).toFixed(2) } </div>
+                        <div>Best average: { ((bestAvg[0]._sum?.score || 0) / (bestAvg[0]._sum?.darts || 0) * 3).toFixed(2) } </div>
                         <div>Frequent opponent: {frequentOpponents[0][1]} - {
                             frequentOpponents.filter(o => o[1] == frequentOpponents[0][1]).map(oppoenent => (
                                 <span key={oppoenent[0]}>({players.get(oppoenent[0])}) </span>
