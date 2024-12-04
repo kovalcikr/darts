@@ -200,7 +200,7 @@ export default async function Player({ params }: { params: { id: string } }) {
                                 <div>Best leg</div>
                                 <div className="grid grid-cols-12">
                                     { checkoutDarts.map(co => (
-                                        <div>{co}: { legs.filter(leg => leg._sum.darts == co).reduce((p, c) => p + 1, 0) }</div>
+                                        <div key={co}>{co}: { legs.filter(leg => leg._sum.darts == co).reduce((p, c) => p + 1, 0) }</div>
                                     ))}
                                 </div>
                             </div>
