@@ -43,6 +43,17 @@ export async function finishMatch(tournamentId, matchId, playerALegs, playerBleg
   revalidatePath('/tournaments/[id/]tables/[table]', 'page');
 }
 
+export async function getRankings(rankingId: string) {
+  const cookie = await auth();
+  const url = `https://api.cuescore.com/ranking/?id=${rankingId}`;
+  const res = await axios.get(url, {
+    headers: {
+        Cookie: cookie,
+    }
+  });
+  return res.data
+}
+
 async function auth() {
   const res = await fetch("https://cuescore.com/ajax/user/login.php", {
         headers: {

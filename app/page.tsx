@@ -1,6 +1,8 @@
+import { randomUUID } from "crypto";
 import prisma from "./lib/db";
 import { getPlayers } from "./lib/players";
 import { getTournaments } from "./lib/tournament";
+import Link from "next/link";
 
 export const revalidate = false
 
@@ -33,7 +35,7 @@ export default async function Home() {
     }
   })
 
-  const throw171count = await prisma.playerThrow.aggregate({
+  const throw171plusCount = await prisma.playerThrow.aggregate({
     _count: {
       id: true
     },
@@ -41,7 +43,10 @@ export default async function Home() {
       tournamentId: {
         in: tournaments
       },
-      score: 171
+      score: {
+        gte: 171,
+        lt: 180
+      }
     }
   })
 
@@ -96,6 +101,7 @@ export default async function Home() {
     }
   })
   const legsSorted = legs.sort((a, b) => a._sum.darts - b._sum.darts)
+  const bestLeg = legsSorted.filter(leg => leg._sum.darts == legsSorted[0]._sum.darts);
 
   const bestCheckout = await prisma.playerThrow.findMany({
     where: {
@@ -109,36 +115,72 @@ export default async function Home() {
     }
   })
 
+  function Stat({ name, value }) {
+    return (<div className="my-1"><span className="font-bold">{name}: </span>{value}</div>)
+  }
+  
+  function StatWithNames({ name, value, playerIds }) {
+    return (
+      <div className="flex flex-row my-1">
+        <div className="font-bold">{name}: </div><div className="mx-1">{value}</div>
+        {playerIds.map(pid =>
+        (
+          <Link href={`/players/${pid}`}>
+            <div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200" key={randomUUID()}>{players.get(pid)}</div>
+          </Link>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col h-dvh font-normal text-black bg-slate-300">
-      <div className="max-w-screen-md rounded shadow-lg">
-        <div className="px-6 py-4">
-          <div className="font-bold text-xl mb-2">Relax darts cup</div>
-          <div className="text-gray-700 text-base">
-            <div>Sezóna: Jeseň 2024</div>
-            <div>Počet hráčov: {players.size}</div>
-            <div>Počet turnajov: 12</div>
-            <div>Počet zápasov: {matchesCount._count.id}</div>
-            <div>Počet legov: {matchesCount._sum.playerALegs + matchesCount._sum.playerBlegs}</div>
-            <div>Počet hodov: { throws._count.id }</div>
-            <div>Počet šípok: { throwsPerPlayer.reduceRight((total, t) => total + t._sum.darts, 0) }</div>
-            <div>Počet 180: {throw180count._count.id}</div>
-            <div>Počet 171: {throw171count._count.id}</div>
-            <div>Priemer všetkých hráčov: {(throws._sum.score / throws._sum.darts * 3).toFixed(2)} </div>
-            <div>Najlepší priemer hráča: {(sortedThrows[0]._sum.score / sortedThrows[0]._sum.darts * 3).toFixed(2)} ({players.get(sortedThrows[0].playerId)})</div>
-            <div>Najlepší checkout: { bestCheckout[0].score } - { 
-              bestCheckout.filter(checkout => bestCheckout[0].score == checkout.score).map(checkout => (
-                <span key={checkout.id}>({ players.get(checkout.playerId) }) </span>
-              ))
-            } </div>
-            <div>Najlepší leg: {legsSorted[0]._sum.darts} - {
-              legsSorted.filter(leg => leg._sum.darts == legsSorted[0]._sum.darts).map(leg => (
-                <span key={leg.tournamentId.toString().concat(leg.leg.toString(), leg.playerId)}>({players.get(leg.playerId)}) </span>
-              ))
-            }</div>
+    <div className="fixed w-full min-h-full text-gray-900 bg-white overflow-x-scroll">
+      <header className="sticky top-0 z-40 w-full backdrop-blur flex-none">
+        <div className="max-w-7xl mx-auto">
+          <div className="py-4 px-4">
+            <div className="relative flex items-center">
+              <div className="font-bold text-xl">Relax darts cup</div>
+              <div className="relative flex items-center ml-auto">
+                <nav className="text-sm leading-6 font-semibold text-slate-700">
+                  <ul className="flex space-x-8">
+                    <li>
+                      <Link className="hover:text-sky-500" href="/players">Štatistiky hráčov</Link>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
+      <main className="flex-auto relative border-t border-gray-200 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto py-4 px-4">
+          <div className="text-gray-700 text-base">
+            <Stat name="Sezóna" value="Jeseň 2024" />
+            <Stat name="Počet hráčov" value={players.size} />
+            <Stat name="Počet turnajov" value="12" />
+            <Stat name="Počet zápasov" value={matchesCount._count.id} />
+            <Stat name="Počet legov" value={matchesCount._sum.playerALegs + matchesCount._sum.playerBlegs} />
+            <Stat name="Počet hodov" value={throws._count.id} />
+            <Stat name="Počet šípok" value={throwsPerPlayer.reduceRight((total, t) => total + t._sum.darts, 0)} />
+            <Stat name="Počet 180" value={throw180count._count.id} />
+            <Stat name="Počet 171+" value={throw171plusCount._count.id} />
+            <Stat name="Priemer všetkých hráčov" value={(throws._sum.score / throws._sum.darts * 3).toFixed(2)} />
+            <StatWithNames name="Najlepší sezónny priemer" value={(sortedThrows[0]._sum.score / sortedThrows[0]._sum.darts * 3).toFixed(2)} playerIds={[sortedThrows[0].playerId]} />
+            <StatWithNames name="Najlepší checkout" value={bestCheckout[0].score}
+              playerIds={bestCheckout.filter(checkout => bestCheckout[0].score == checkout.score).map(checkout => checkout.playerId)} />
+
+            {/* <StatWithNames name="Najlepší leg" value={legsSorted[0]._sum.darts}
+              names={bestLeg.map(leg => players.get(leg.playerId))} /> */}
+            <div className="flex flex-row">
+              <div className="font-bold">Najlepší leg: </div><div className="mx-1">15</div>
+              <Link href="/players/45506878"><div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200">Marián - Lalky Lalkovič (3x)</div></Link>
+              <Link href="/players/39928879"><div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200">Ľubo Lechman</div></Link>
+              <Link href="/players/2472554"><div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200">Tomas Klobusnik</div></Link>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }

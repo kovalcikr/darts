@@ -1,6 +1,8 @@
 import prisma from "@/app/lib/db"
 import { getPlayers } from "@/app/lib/players"
 import { getTournaments } from "@/app/lib/tournament"
+import { randomUUID } from "crypto"
+import Link from "next/link"
 
 export async function generateStaticParams() {
     const tournamentIds = await getTournaments()
@@ -70,7 +72,7 @@ export default async function Player({ params }: { params: { id: string } }) {
             playerId: params.id
         },
         _count: {
-            id: true
+            id: true,
         },
         _sum: {
             score: true,
@@ -148,72 +150,136 @@ export default async function Player({ params }: { params: { id: string } }) {
     const matchAverages = matchSums.map(match => (match._sum.score || 0) / match._sum.darts * 3)
     const bestAvg = matchAverages.sort().reverse();
 
-    const checkoutDarts = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+    function Stat({ name, value }) {
+        return (<div className="my-1"><span className="font-bold">{name}: </span>{value}</div>)
+    }
+
+    function StatWithNames({ name, value, playerIds }) {
+        return (
+            <div className="flex flex-row my-1">
+                <div className="font-bold">{name}: </div><div className="mx-1">{value}</div>
+                {playerIds.map(pid =>
+                (
+                    <Link key={randomUUID()} href={`/players/${pid}`}>
+                        <div className="rounded border border-slate-600 px-2 mx-1 hover:bg-sky-300 bg-slate-200" key={randomUUID()}>{players.get(pid)}</div>
+                    </Link>
+                ))}
+            </div>
+        )
+    }
 
     return (
-        <div className="flex flex-col h-dvh font-normal text-black bg-slate-300">
-            <div className="max-w-screen-md rounded shadow-lg">
-                <div className="px-6 py-4">
-                    <div className="font-bold text-xl mb-2">Relax darts cup: štatistiky hráča {players.get(params.id)}</div>
+        <div className="fixed w-full min-h-full text-gray-900 bg-white overflow-auto">
+            <header className="sticky top-0 z-40 w-full backdrop-blur flex-none">
+                <div className="max-w-7xl mx-auto">
+                    <div className="py-4 px-4">
+                        <div className="relative flex items-center">
+                            <div className="font-bold text-xl">Relax darts cup: štatistiky hráča {players.get(params.id)}</div>
+                            <div className="relative flex items-center ml-auto">
+                                <nav className="text-sm leading-6 font-semibold text-slate-700">
+                                    <ul className="flex space-x-8">
+                                        <li>
+                                            <Link className="hover:text-sky-500" href="/">Domov</Link>
+                                        </li>
+                                        <li>
+                                            <Link className="hover:text-sky-500" href="/players">Späť</Link>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main className="flex-auto relative border-t border-gray-200 dark:border-gray-800">
+                <div className="max-w-7xl mx-auto py-4 px-4">
                     <div className="text-gray-700 text-base">
-                        <div>Sezóna: Jeseň 2024</div>
-                        <div>Počet odohratých turnajov: {playerTournaments.size} / {tournamentIds.length} ({(playerTournaments.size / tournamentIds.length * 100).toFixed(1)}%)</div>
-                        <div>Počet vyhraných/všetkých zápasov: {matchesWon} / {matches.length} ({(matchesWon / matches.length * 100).toFixed(1)}%)</div>
-                        <div>Počet vyhraných/všetkých legov: {wonLegs} / {playerLegs} ({(wonLegs / playerLegs * 100).toFixed(1)}%)</div>
-                        <div>Počet hodov: {throws._count.id}</div>
-                        <div>Počet šípok: {throws._sum.darts}</div>
-                        <div>Priemer za sezónu: {((throws._sum?.score || 0) / (throws._sum?.darts || 0) * 3).toFixed(2)} </div>
-                        <div>Najlepší hod: {throws._max.score} </div>
-                        <div>Najlepší leg: {(legsSorted[0]?._sum?.darts || 0)}</div>
-                        <div>Najlepší checkout: {checkouts[0]?.score || 0}</div>
-                        <div>Najlepší priemer v zápase: {(bestAvg[0]).toFixed(2)} </div>
-                        <div>Najčastejší protihráč: {frequentOpponents[0][1]} - {
-                            frequentOpponents.filter(o => o[1] == frequentOpponents[0][1]).map(oppoenent => (
-                                <span key={oppoenent[0]}>({players.get(oppoenent[0])}) </span>
-                            ))
-                        }</div>
-                        <div className="grid grid-rows-4">
-                            <div className="grid grid-cols-6">
-                                <div>Priemer</div>
-                                <div>45+: { countAverages(matchAverages, 45, 50) } </div>
-                                <div>50+: { countAverages(matchAverages, 50, 55) }</div>
-                                <div>55+: { countAverages(matchAverages, 55, 60) }</div>
-                                <div>60+: { countAverages(matchAverages, 60, 180) }</div>
+                        <Stat name="Sezóna" value="Jeseň 2024" />
+                        <Stat name="Počet odohratých turnajov" value={`${playerTournaments.size} / ${tournamentIds.length} (${(playerTournaments.size / tournamentIds.length * 100).toFixed(1)}%)`} />
+                        <Stat name="Počet vyhraných/všetkých zápasov" value={`${matchesWon} / ${matches.length} (${(matchesWon / matches.length * 100).toFixed(1)}%)`} />
+                        <Stat name="Počet vyhraných/všetkých legov" value={`${wonLegs} / ${playerLegs} (${(wonLegs / playerLegs * 100).toFixed(1)}%)`} />
+                        <Stat name="Počet hodov" value={throws._count.id} />
+                        <Stat name="Počet šípok" value={throws._sum.darts} />
+                        <Stat name="Priemer za sezónu" value={((throws._sum?.score || 0) / (throws._sum?.darts || 0) * 3).toFixed(2)} />
+                        <Stat name="Najlepší hod" value={throws._max.score} />
+                        <Stat name="Najlepší leg" value={(legsSorted[0]?._sum?.darts || 0)} />
+                        <Stat name="Najlepší checkout" value={checkouts[0]?.score || 0} />
+                        <Stat name="Najlepší priemer v zápase" value={(bestAvg[0]).toFixed(2)} />
+                        <StatWithNames name="Najčastejší protihráč" value={frequentOpponents[0][1]} playerIds={frequentOpponents.filter(o => o[1] == frequentOpponents[0][1]).map(o => o[0])} />
+                        <div>
+                            <div className="my-1 flex flex-col-2">
+                                <div className="font-bold">Priemery:</div>
+                                <ul className="mx-1 flex flex-col-4">
+                                    <li><VerticalStat name="45+" value={countAverages(matchAverages, 45, 50)} /></li>
+                                    <li><VerticalStat name="50+" value={countAverages(matchAverages, 50, 55)} /></li>
+                                    <li><VerticalStat name="55+" value={countAverages(matchAverages, 55, 60)} /></li>
+                                    <li><VerticalStat name="60+" value={countAverages(matchAverages, 60, 180)} /></li>
+                                </ul>
                             </div>
-                            <div className="grid grid-cols-6">
-                                <div>Skore</div>
-                                <div>80+: { countThrows(throwsOver80, 80, 100) }</div>
-                                <div>100+: { countThrows(throwsOver80, 100, 133) }</div>
-                                <div>133+: { countThrows(throwsOver80, 133, 171) }</div>
-                                <div>171+: { countThrows(throwsOver80, 171, 180) }</div>
-                                <div>180: { countThrows(throwsOver80, 180, 200) }</div>
+                            <div className="my-1 flex flex-col-2">
+                                <div className="font-bold">Skóre:</div>
+                                <ul className="mx-1 flex flex-col-5">
+                                    <li><VerticalStat name="80+" value={countThrows(throwsOver80, 80, 100)} /></li>
+                                    <li><VerticalStat name="100+" value={countThrows(throwsOver80, 100, 133)} /></li>
+                                    <li><VerticalStat name="133+" value={countThrows(throwsOver80, 133, 171)} /></li>
+                                    <li><VerticalStat name="171+" value={countThrows(throwsOver80, 171, 180)} /></li>
+                                    <li><VerticalStat name="180+" value={countThrows(throwsOver80, 180, 200)} /></li>
+                                </ul>
                             </div>
-                            <div className="grid grid-cols-6">
-                                <div>Checkout</div>
-                                <div>41+: { countCheckouts(checkouts, 41, 60) }</div>
-                                <div>60+: { countCheckouts(checkouts, 60, 80) }</div>
-                                <div>80+: { countCheckouts(checkouts, 80, 90) }</div>
-                                <div>90+: { countCheckouts(checkouts, 90, 100) }</div>
-                                <div>100+: { countCheckouts(checkouts, 100, 180) }</div>
+                            <div className="my-1 flex flex-col-2">
+                                <div className="font-bold">Checkout:</div>
+                                <ul className="mx-1 flex flex-col-5">
+                                    <li><VerticalStat name="41+" value={countCheckouts(checkouts, 41, 60)} /></li>
+                                    <li><VerticalStat name="60+" value={countCheckouts(checkouts, 60, 80)} /></li>
+                                    <li><VerticalStat name="80+" value={countCheckouts(checkouts, 80, 90)} /></li>
+                                    <li><VerticalStat name="90+" value={countCheckouts(checkouts, 90, 100)} /></li>
+                                    <li><VerticalStat name="100+" value={countCheckouts(checkouts, 100, 180)} /></li>
+                                </ul>
                             </div>
-                            <div className="flex flex-col">
-                                <div>Best leg</div>
-                                <div className="grid grid-cols-12">
-                                    { checkoutDarts.map(co => (
-                                        <div key={co}>{co}: { legs.filter(leg => leg._sum.darts == co).reduce((p, c) => p + 1, 0) }</div>
-                                    ))}
+                            <div className="my-1 flex">
+                                <div className="font-bold">Najlepší leg:</div>
+                                <div>
+                                    <ul className="mx-1 flex flex-col sm:flex-row">
+                                        <li><BigVerticalStat name="5" value={[13, 14, 15]} /></li>
+                                        <li><BigVerticalStat name="6" value={[16, 17, 18]} /></li>
+                                        <li><BigVerticalStat name="7" value={[19, 20, 21]} /></li>
+                                        <li><BigVerticalStat name="8" value={[22, 23, 24]} /></li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     )
+
+    function BigVerticalStat({ name, value }) {
+        return (
+            <VerticalStat name={name} value={(
+                <ul className="flex flex-col-3">
+                    {value.map(co => (
+                        <li key={co}><VerticalStat name={co} value={legs.filter(leg => leg._sum.darts == co).reduce((p, c) => p + 1, 0)} extraClass="my-2 sm:my-2" /></li>
+                    ))}
+                </ul>
+            )} />
+        )
+    }
+
+    function VerticalStat({ name, value, extraClass = "" }) {
+        return (
+            <div className={`bg-slate-200 flex-row-2 text-center border rounded border-slate-600 mx-2 my-1 sm:my-0 px-3 ${extraClass}`}>
+                <div className="border-b border-b-slate-600">{name}</div>
+                <div>{value}</div>
+            </div>
+        )
+    }
 }
 
-function countThrows(throwsOver80, min, max) {
-    return throwsOver80.filter(t => t.score >= min && t.score < max).reduce((p, t) => p + t._count.score, 0)
+function countThrows(throwsOver80: any[], min: number, max: number) {
+    return throwsOver80
+        .filter((t: { score: number }) => t.score >= min && t.score < max)
+        .reduce((p: number, t: { _count: { score: number } }) => p + t._count.score, 0)
 }
 
 function countCheckouts(checkouts: { id: string; tournamentId: string; matchId: string; leg: number; playerId: string; time: Date; score: number; darts: number; doubles: number; checkout: boolean }[], min, max) {
