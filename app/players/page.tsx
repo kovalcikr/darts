@@ -8,10 +8,10 @@ export default async function Players() {
     const players = await getRankings("43953514");
 
     return (
-        <div className="fixed w-full min-h-full text-gray-900 bg-white overflow-x-scroll">
+        <div className="w-full min-h-page text-gray-900 bg-white">
             <header className="sticky top-0 z-40 w-full backdrop-blur flex-none">
                 <div className="max-w-7xl mx-auto">
-                    <div className="py-4 px-4">
+                    <div className="py-4 px-4 border-b border-gray-200 dark:border-gray-800">
                         <div className="relative flex items-center">
                             <div className="font-bold text-xl">Relax darts cup</div>
                             <div className="relative flex items-center ml-auto">
@@ -27,7 +27,7 @@ export default async function Players() {
                     </div>
                 </div>
             </header>
-            <main className="flex-auto relative border-t border-gray-200 dark:border-gray-800">
+            <main className="flex-auto">
                 <div className="max-w-7xl mx-auto py-4 px-4">
                     <div className="text-gray-700 text-base">
                         <ul>
