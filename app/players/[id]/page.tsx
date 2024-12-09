@@ -207,33 +207,42 @@ export default async function Player({ params }: { params: { id: string } }) {
                         <Stat name="Najlepší priemer v zápase" value={(bestAvg[0]).toFixed(2)} />
                         <StatWithNames name="Najčastejší protihráč" value={frequentOpponents[0][1]} playerIds={frequentOpponents.filter(o => o[1] == frequentOpponents[0][1]).map(o => o[0])} />
                         <div>
-                            <div className="my-1 flex flex-col-2">
+                            <div className="my-1 flex">
                                 <div className="font-bold">Priemery:</div>
-                                <ul className="mx-1 flex flex-col-4">
+                                <ul className="mx-1 flex">
                                     <li><VerticalStat name="45+" value={countAverages(matchAverages, 45, 50)} /></li>
                                     <li><VerticalStat name="50+" value={countAverages(matchAverages, 50, 55)} /></li>
                                     <li><VerticalStat name="55+" value={countAverages(matchAverages, 55, 60)} /></li>
-                                    <li><VerticalStat name="60+" value={countAverages(matchAverages, 60, 180)} /></li>
+                                    <li><VerticalStat name="60+" value={countAverages(matchAverages, 60, 65)} /></li>
+                                    <li><VerticalStat name="65+" value={countAverages(matchAverages, 65, 70)} /></li>
+                                    <li><VerticalStat name="70+" value={countAverages(matchAverages, 70, 75)} /></li>
+                                    <li><VerticalStat name="75+" value={countAverages(matchAverages, 75, 80)} /></li>
+                                    <li><VerticalStat name="80+" value={countAverages(matchAverages, 80, 85)} /></li>
+                                    <li><VerticalStat name="85+" value={countAverages(matchAverages, 85, 180)} /></li>
                                 </ul>
                             </div>
-                            <div className="my-1 flex flex-col-2">
+                            <div className="my-1 flex">
                                 <div className="font-bold">Skóre:</div>
-                                <ul className="mx-1 flex flex-col-5">
+                                <ul className="mx-1 flex">
                                     <li><VerticalStat name="80+" value={countThrows(throwsOver80, 80, 100)} /></li>
                                     <li><VerticalStat name="100+" value={countThrows(throwsOver80, 100, 133)} /></li>
-                                    <li><VerticalStat name="133+" value={countThrows(throwsOver80, 133, 171)} /></li>
+                                    <li><VerticalStat name="133+" value={countThrows(throwsOver80, 133, 151)} /></li>
+                                    <li><VerticalStat name="151+" value={countThrows(throwsOver80, 151, 171)} /></li>
                                     <li><VerticalStat name="171+" value={countThrows(throwsOver80, 171, 180)} /></li>
-                                    <li><VerticalStat name="180+" value={countThrows(throwsOver80, 180, 200)} /></li>
+                                    <li><VerticalStat name="180" value={countThrows(throwsOver80, 180, 200)} /></li>
                                 </ul>
                             </div>
-                            <div className="my-1 flex flex-col-2">
+                            <div className="my-1 flex">
                                 <div className="font-bold">Checkout:</div>
-                                <ul className="mx-1 flex flex-col-5">
+                                <ul className="mx-1 flex">
                                     <li><VerticalStat name="41+" value={countCheckouts(checkouts, 41, 60)} /></li>
                                     <li><VerticalStat name="60+" value={countCheckouts(checkouts, 60, 80)} /></li>
                                     <li><VerticalStat name="80+" value={countCheckouts(checkouts, 80, 90)} /></li>
                                     <li><VerticalStat name="90+" value={countCheckouts(checkouts, 90, 100)} /></li>
-                                    <li><VerticalStat name="100+" value={countCheckouts(checkouts, 100, 180)} /></li>
+                                    <li><VerticalStat name="100+" value={countCheckouts(checkouts, 100, 120)} /></li>
+                                    <li><VerticalStat name="120+" value={countCheckouts(checkouts, 120, 140)} /></li>
+                                    <li><VerticalStat name="140+" value={countCheckouts(checkouts, 140, 160)} /></li>
+                                    <li><VerticalStat name="160+" value={countCheckouts(checkouts, 160, 180)} /></li>
                                 </ul>
                             </div>
                             <div className="my-1 flex">
