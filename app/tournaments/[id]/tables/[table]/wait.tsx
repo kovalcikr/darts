@@ -23,7 +23,7 @@ export default function Wait({ id, table }) {
         </div>
       </div>
       <div>
-          <a className="text-red-400" href={`/`} >Exit Tournament</a>
+          <a className="text-red-400" href={`/tournaments`} >Exit Tournament</a>
         </div>
     </div>
   )

@@ -144,7 +144,7 @@ export async function resetMatch(formData) {
       id: formData.get('matchId')
     }
   })
-  revalidatePath('/tournaments/[id]/tables/[table]', 'page');
+  revalidatePath('/tournaments/[id]/tables/[table]', 'layout');
 }
 
 export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
