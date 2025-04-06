@@ -309,7 +309,7 @@ async function getHighScore(params: { id: string; }, players: Map<string, string
     return hss;
 }
 
-export function Header({ text }) {
+function Header({ text }) {
     return (
         <span className="flex items-center">
             <span className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-300"></span>
@@ -322,7 +322,7 @@ export function Header({ text }) {
     )
 }
 
-export async function BestCheckoutTable({ bestCoc }) {
+function BestCheckoutTable({ bestCoc }) {
     return (
         <div className="overflow-x-auto">
             <Header text={"Najlepšie zatvorenie"} />
@@ -356,7 +356,7 @@ export async function BestCheckoutTable({ bestCoc }) {
     )
 }
 
-export async function HighScoreTable({ highScores }) {
+function HighScoreTable({ highScores }) {
 
     return (
         <div className="overflow-x-auto">
@@ -393,7 +393,7 @@ export async function HighScoreTable({ highScores }) {
     )
 }
 
-export function BestLegTable({ bestLeg }) {
+function BestLegTable({ bestLeg }) {
     return (
         <div className="overflow-x-auto">
             <Header text={"Najlepší leg"} />
@@ -443,7 +443,7 @@ export function BestLegTable({ bestLeg }) {
     )
 }
 
-export function AveragesTable({ avgPP }) {
+function AveragesTable({ avgPP }) {
     return (
         <div className="overflow-x-auto">
             <Header text={"Najvyšší priemer v zápase"} />
