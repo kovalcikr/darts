@@ -51,7 +51,7 @@ export default async function TournamentStats({ params }: { params: { id: string
             },
             darts: {
                 _sum: {
-                    lte: 24
+                    lte: 27
                 }
             }
         },
@@ -67,16 +67,21 @@ export default async function TournamentStats({ params }: { params: { id: string
     bestLeg.forEach(leg => {
         const player = legMap.get(leg.playerId)
         const darts = leg._sum.darts;
+        const round = Math.ceil(darts / 3);
         if (!player) {
             legMap.set(leg.playerId, {
                 player: players.get(leg.playerId),
-                [darts]: 1
+                best: darts,
+                [round]: 1
             })
         } else {
-            if (!player[darts]) {
-                player[darts] = 1
+            if (player.best >= darts) {
+                player.best = darts;
+            }
+            if (!player[round]) {
+                player[round] = 1
             } else {
-                player[darts]++;
+                player[round]++;
             }
         }
     })
@@ -87,7 +92,7 @@ export default async function TournamentStats({ params }: { params: { id: string
             a.set(v.playerId, 1)
         } else (a.set(v.playerId, a.get(v.playerId) + 1))
         return a;
-    }), new Map())).map(l => players.get(l[0]) + " (" + l[1] + "x)")
+    }), new Map())).map(l => players.get(l[0]) + (l[1] == 1 ? "" : " (" + l[1] + "x)"))
 
     function avg(match) {
         return (match._sum.score || 0) / match._sum.darts * 3;
@@ -131,7 +136,7 @@ export default async function TournamentStats({ params }: { params: { id: string
                 <div className="max-w-7xl mx-auto">
                     <div className="py-4 px-4 border-b border-gray-200 dark:border-gray-800">
                         <div className="relative flex items-center">
-                            <div className="font-bold text-xl">Relax darts cup: štatistiky turnaja { tournament.name }</div>
+                            <div className="font-bold text-xl">Relax darts cup: štatistiky turnaja {tournament.name}</div>
                             <div className="relative flex items-center ml-auto">
                                 <nav className="text-sm leading-6 font-semibold text-slate-700">
                                     <ul className="flex space-x-8">
@@ -154,15 +159,15 @@ export default async function TournamentStats({ params }: { params: { id: string
                         <div>
                             <div className="flex">
                                 <Image src="/icons8-gold-medal-40.png" alt="gold medal icons" width={40} height={40} />
-                                <span className="text-2xl">{ results[1][0].name }</span>
+                                <span className="text-2xl">{results[1][0].name}</span>
                             </div>
                             <div className="flex">
                                 <Image src="/icons8-silver-medal-40.png" alt="gold medal icons" width={40} height={40} />
-                                <span className="text-2xl">{ results[2][0].name }</span>
+                                <span className="text-2xl">{results[2][0].name}</span>
                             </div>
                             <div className="flex">
                                 <Image src="/icons8-bronze-medal-40.png" alt="gold medal icons" width={40} height={40} />
-                                <span className="text-2xl">{ results[3][0].name } a { results[3][1].name }</span>
+                                <span className="text-2xl">{results[3][0].name} a {results[3][1].name}</span>
                             </div>
                         </div>
                         <Stat name={"Počet hráčov"} value={players.size} />
@@ -295,6 +300,7 @@ async function getHighScore(params: { id: string; }, players: Map<string, string
                 s100: sc.score >= 100 && sc.score < 133 ? 1 : 0,
                 s133: sc.score >= 133 && sc.score < 170 ? 1 : 0,
                 s170: sc.score >= 170 && sc.score < 180 ? 1 : 0,
+                b170: sc.score > 140 && sc.score <= 180 ? [sc.score] : [],
                 s180: sc.score == 180 ? 1 : 0
             });
         } else {
@@ -303,6 +309,9 @@ async function getHighScore(params: { id: string; }, players: Map<string, string
                 data.s133 += sc.score >= 133 && sc.score < 170 ? 1 : 0,
                 data.s170 += sc.score >= 170 && sc.score < 180 ? 1 : 0,
                 data.s180 += sc.score == 180 ? 1 : 0;
+                if (sc.score > 140 && sc.score <= 180) {
+                    data.b170.push(sc.score);
+                }
         }
     });
     const hss = Array.from(hs).map(hs => hs[1]);
@@ -330,6 +339,7 @@ function BestCheckoutTable({ bestCoc }) {
             <table className="min-w-full divide-y-2 divide-gray-200">
                 <thead className="text-left ltr:text-left rtl:text-right">
                     <tr className="*:font-medium *:text-gray-900">
+                        <th className="px-1x     py-2 whitespace-nowrap"></th>
                         <th className="px-3 py-2 whitespace-nowrap">Meno</th>
                         <th className="px-3 py-2 whitespace-nowrap">60+</th>
                         <th className="px-3 py-2 whitespace-nowrap">80+</th>
@@ -340,8 +350,9 @@ function BestCheckoutTable({ bestCoc }) {
 
                 <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
                     {
-                        bestCoc.map(co => (
+                        bestCoc.map((co, index) => (
                             <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
+                                <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.player}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.c60}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.c80}</td>
@@ -365,25 +376,29 @@ function HighScoreTable({ highScores }) {
             <table className="min-w-full divide-y-2 divide-gray-200">
                 <thead className="text-left ltr:text-left rtl:text-right">
                     <tr className="*:font-medium *:text-gray-900">
+                        <th className="px-1 py-2 whitespace-nowrap"></th>
                         <th className="px-3 py-2 whitespace-nowrap">Meno</th>
                         <th className="px-3 py-2 whitespace-nowrap">80+</th>
                         <th className="px-3 py-2 whitespace-nowrap">100+</th>
                         <th className="px-3 py-2 whitespace-nowrap">133+</th>
                         <th className="px-3 py-2 whitespace-nowrap">170+</th>
                         <th className="px-3 py-2 whitespace-nowrap">180</th>
+                        <th className="px-3 py-2 whitespace-nowrap">Hody 141+</th>
                     </tr>
                 </thead>
 
                 <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
                     {
-                        highScores.map(co => (
+                        highScores.map((co, index) => (
                             <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
+                                <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.player}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.s80}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.s100}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.s133}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.s170}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.s180}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co.b170.join(", ")}</td>
                             </tr>
                         ))
                     }
@@ -399,44 +414,31 @@ function BestLegTable({ bestLeg }) {
             <Header text={"Najlepší leg"} />
 
             <table className="min-w-full divide-y-2 divide-gray-200">
-                <thead className="ltr:text-left rtl:text-right">
+                <thead className="text-left ltr:text-left rtl:text-right">
                     <tr className="*:font-medium *:text-gray-900">
+                        <th className="px-1 py-2 whitespace-nowrap"></th>
                         <th className="px-3 py-2 whitespace-nowrap text-right">Kolo</th>
                         <th className="px-3 py-2 whitespace-nowrap">5</th>
-                        <th colSpan={3} className="px-3 py-2 whitespace-nowrap">6</th>
-                        <th colSpan={3} className="px-3 py-2 whitespace-nowrap">7</th>
-                        <th colSpan={3} className="px-3 py-2 whitespace-nowrap">8</th>
-                    </tr>
-                    <tr className="text-left *:font-medium *:text-gray-900">
-                        <th className="px-3 py-2 whitespace-nowrap text-right">Sipka</th>
-                        <th className="px-3 py-2 whitespace-nowrap">15</th>
-                        <th className="px-3 py-2 whitespace-nowrap">16</th>
-                        <th className="px-3 py-2 whitespace-nowrap">17</th>
-                        <th className="px-3 py-2 whitespace-nowrap">18</th>
-                        <th className="px-3 py-2 whitespace-nowrap">19</th>
-                        <th className="px-3 py-2 whitespace-nowrap">20</th>
-                        <th className="px-3 py-2 whitespace-nowrap">21</th>
-                        <th className="px-3 py-2 whitespace-nowrap">22</th>
-                        <th className="px-3 py-2 whitespace-nowrap">23</th>
-                        <th className="px-3 py-2 whitespace-nowrap">24</th>
+                        <th className="px-3 py-2 whitespace-nowrap">6</th>
+                        <th className="px-3 py-2 whitespace-nowrap">7</th>
+                        <th className="px-3 py-2 whitespace-nowrap">8</th>
+                        <th className="px-3 py-2 whitespace-nowrap">9</th>
+                        <th className="px-3 py-2 whitespace-nowrap">Top</th>
                     </tr>
                 </thead>
 
                 <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
                     {
-                        bestLeg.map(co => (
+                        bestLeg.map((co, index) => (
                             <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
+                                <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.player}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[15] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[16] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[17] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[18] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[19] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[20] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[21] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[22] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[23] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[24] || 0}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co[5] || 0}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co[6] || 0}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co[7] || 0}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co[8] || 0}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co[9] || 0}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co.best}</td>
                             </tr>
                         ))
                     }
@@ -454,6 +456,7 @@ function AveragesTable({ avgPP }) {
             <table className="min-w-full divide-y-2 divide-gray-200">
                 <thead className="text-left ltr:text-left rtl:text-right">
                     <tr className="*:font-medium *:text-gray-900">
+                        <th className="px-1 py-2 whitespace-nowrap"></th>
                         <th className="px-3 py-2 whitespace-nowrap">Meno</th>
                         <th className="px-3 py-2 whitespace-nowrap">40-</th>
                         <th className="px-3 py-2 whitespace-nowrap">40+</th>
@@ -468,8 +471,9 @@ function AveragesTable({ avgPP }) {
 
                 <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
                     {
-                        avgPP.map(co => (
+                        avgPP.map((co, index) => (
                             <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
+                                <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.player}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.u40}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.o40}</td>
