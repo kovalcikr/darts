@@ -54,6 +54,17 @@ export async function getRankings(rankingId: string) {
   return res.data
 }
 
+export async function getResults(tournamentId: string) {
+  const cookie = await auth();
+  const url = `https://api.cuescore.com/tournament/?id=${tournamentId}}&results=Result+list`;
+  const res = await axios.get(url, {
+    headers: {
+        Cookie: cookie,
+    }
+  });
+  return res.data
+}
+
 async function auth() {
   const res = await fetch("https://cuescore.com/ajax/user/login.php", {
         headers: {

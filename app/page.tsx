@@ -146,6 +146,9 @@ export default async function Home() {
                     <li>
                       <Link className="hover:text-sky-500" href="/players">Štatistiky hráčov</Link>
                     </li>
+                    <li>
+                      <Link className="hover:text-sky-500" href="/stats/tournaments">Štatistiky turnajov</Link>
+                    </li>
                   </ul>
                 </nav>
               </div>
