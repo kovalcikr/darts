@@ -51,7 +51,7 @@ export default async function TournamentStats({ params }: { params: { id: string
             },
             darts: {
                 _sum: {
-                    lte: 21
+                    lte: 24
                 }
             }
         },
@@ -402,14 +402,13 @@ function BestLegTable({ bestLeg }) {
                 <thead className="ltr:text-left rtl:text-right">
                     <tr className="*:font-medium *:text-gray-900">
                         <th className="px-3 py-2 whitespace-nowrap text-right">Kolo</th>
-                        <th colSpan={3} className="px-3 py-2 whitespace-nowrap">5</th>
+                        <th className="px-3 py-2 whitespace-nowrap">5</th>
                         <th colSpan={3} className="px-3 py-2 whitespace-nowrap">6</th>
                         <th colSpan={3} className="px-3 py-2 whitespace-nowrap">7</th>
+                        <th colSpan={3} className="px-3 py-2 whitespace-nowrap">8</th>
                     </tr>
                     <tr className="text-left *:font-medium *:text-gray-900">
                         <th className="px-3 py-2 whitespace-nowrap text-right">Sipka</th>
-                        <th className="px-3 py-2 whitespace-nowrap">13</th>
-                        <th className="px-3 py-2 whitespace-nowrap">14</th>
                         <th className="px-3 py-2 whitespace-nowrap">15</th>
                         <th className="px-3 py-2 whitespace-nowrap">16</th>
                         <th className="px-3 py-2 whitespace-nowrap">17</th>
@@ -417,6 +416,9 @@ function BestLegTable({ bestLeg }) {
                         <th className="px-3 py-2 whitespace-nowrap">19</th>
                         <th className="px-3 py-2 whitespace-nowrap">20</th>
                         <th className="px-3 py-2 whitespace-nowrap">21</th>
+                        <th className="px-3 py-2 whitespace-nowrap">22</th>
+                        <th className="px-3 py-2 whitespace-nowrap">23</th>
+                        <th className="px-3 py-2 whitespace-nowrap">24</th>
                     </tr>
                 </thead>
 
@@ -425,8 +427,6 @@ function BestLegTable({ bestLeg }) {
                         bestLeg.map(co => (
                             <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
                                 <td className="px-3 py-2 whitespace-nowrap">{co.player}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[13] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[14] || 0}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co[15] || 0}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co[16] || 0}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co[17] || 0}</td>
@@ -434,6 +434,9 @@ function BestLegTable({ bestLeg }) {
                                 <td className="px-3 py-2 whitespace-nowrap">{co[19] || 0}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co[20] || 0}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co[21] || 0}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co[22] || 0}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co[23] || 0}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{co[24] || 0}</td>
                             </tr>
                         ))
                     }
@@ -454,6 +457,7 @@ function AveragesTable({ avgPP }) {
                         <th className="px-3 py-2 whitespace-nowrap">Meno</th>
                         <th className="px-3 py-2 whitespace-nowrap">40-</th>
                         <th className="px-3 py-2 whitespace-nowrap">40+</th>
+                        <th className="px-3 py-2 whitespace-nowrap">50+</th>
                         <th className="px-3 py-2 whitespace-nowrap">55+</th>
                         <th className="px-3 py-2 whitespace-nowrap">60+</th>
                         <th className="px-3 py-2 whitespace-nowrap">65+</th>
