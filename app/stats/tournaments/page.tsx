@@ -1,16 +1,17 @@
 import prisma from "@/app/lib/db";
 import { getTournaments } from "@/app/lib/tournament"
+import { Baloo_Tamma_2 } from "next/font/google";
 import Link from "next/link";
 
 export default async function Tournaments() {
 
-    const tournaments = await prisma.tournament.findMany({
+    const tournaments = (await prisma.tournament.findMany({
         where: {
             name: {
                 contains: "2025"
             }
         }
-    });
+    })).sort((t1, t2) => t1.name.localeCompare(t2.name));
 
     return (
         <div className="w-full min-h-screen text-gray-900 bg-white">
