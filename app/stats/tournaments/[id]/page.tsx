@@ -296,8 +296,8 @@ async function getHighScore(params: { id: string; }, players: Map<string, string
         if (!data) {
             hs.set(sc.playerId, {
                 player: players.get(sc.playerId),
-                s80: sc.score >= 80 && sc.score < 100 ? 1 : 0,
-                s100: sc.score >= 100 && sc.score < 133 ? 1 : 0,
+                s80: sc.score >= 80 && sc.score < 95 ? 1 : 0,
+                s100: sc.score >= 95 && sc.score < 133 ? 1 : 0,
                 s133: sc.score >= 133 && sc.score < 170 ? 1 : 0,
                 s170: sc.score >= 170 && sc.score < 180 ? 1 : 0,
                 b170: sc.score > 140 && sc.score <= 180 ? [sc.score] : [],
@@ -323,7 +323,7 @@ function Header({ text }) {
         <span className="flex items-center">
             <span className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-300"></span>
 
-            <span className="shrink-0 px-4 text-gray-900">{text}</span>
+            <span className="text-2xl shrink-0 px-4 text-gray-900">{text}</span>
 
             <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-300"></span>
         </span>
@@ -379,7 +379,7 @@ function HighScoreTable({ highScores }) {
                         <th className="px-1 py-2 whitespace-nowrap"></th>
                         <th className="px-3 py-2 whitespace-nowrap">Meno</th>
                         <th className="px-3 py-2 whitespace-nowrap">80+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">100+</th>
+                        <th className="px-3 py-2 whitespace-nowrap">95+</th>
                         <th className="px-3 py-2 whitespace-nowrap">133+</th>
                         <th className="px-3 py-2 whitespace-nowrap">170+</th>
                         <th className="px-3 py-2 whitespace-nowrap">180</th>
