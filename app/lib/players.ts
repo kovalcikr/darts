@@ -1,4 +1,3 @@
-import { stringify } from "querystring";
 import prisma from "./db";
 
 export async function getPlayers(tournaments) : Promise<any> {

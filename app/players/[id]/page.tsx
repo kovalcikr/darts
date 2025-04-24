@@ -161,7 +161,7 @@ export default async function Player({ params }: { params: { id: string } }) {
                 {playerIds.map(pid =>
                 (
                     <Link key={randomUUID()} href={`/players/${pid}`}>
-                        <div className="rounded border border-slate-600 px-2 mx-1 hover:bg-sky-300 bg-slate-200" key={randomUUID()}>{players.get(pid)}</div>
+                        <div className="rounded border border-slate-600 px-2 mx-1 hover:bg-sky-300 bg-slate-200" key={randomUUID()}>{players[pid]}</div>
                     </Link>
                 ))}
             </div>
@@ -174,7 +174,7 @@ export default async function Player({ params }: { params: { id: string } }) {
                 <div className="max-w-7xl mx-auto">
                     <div className="py-4 px-4 border-b border-gray-200 dark:border-gray-800">
                         <div className="relative flex items-center">
-                            <div className="font-bold text-xl">Relax darts cup: štatistiky hráča {players.get(params.id)}</div>
+                            <div className="font-bold text-xl">Relax darts cup: štatistiky hráča {players[params.id]}</div>
                             <div className="relative flex items-center ml-auto">
                                 <nav className="text-sm leading-6 font-semibold text-slate-700">
                                     <ul className="flex space-x-8">

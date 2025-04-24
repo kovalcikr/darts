@@ -107,7 +107,7 @@ const cachedBestLeg = unstable_cache(async (tournamentId) => {
 
     const bLeg = Object.values(legMap)
     const bestLegDarts = bestLeg[0]._sum.darts
-    return { bLeg, bestLegDarts, bLegPlayers};
+    return { bLeg, bestLegDarts, bLegPlayers };
 });
 
 const cachedMatchAverages = unstable_cache(async (tournamentId, avg) => {
@@ -199,20 +199,22 @@ export default async function TournamentStats({ params }: { params: { id: string
             <main className="flex-auto">
                 <div className="max-w-7xl mx-auto py-4 px-4">
                     <div className="text-gray-700 text-base">
-                        <div>
-                            <div className="flex">
-                                <Image src="/icons8-gold-medal-40.png" alt="gold medal icons" width={40} height={40} />
-                                <span className="text-2xl">{results[1][0].name}</span>
+                        {!results.tournamentId && (
+                            <div>
+                                <div className="flex">
+                                    <Image src="/icons8-gold-medal-40.png" alt="gold medal icons" width={40} height={40} />
+                                    <span className="text-2xl">{results[1][0].name}</span>
+                                </div>
+                                <div className="flex">
+                                    <Image src="/icons8-silver-medal-40.png" alt="gold medal icons" width={40} height={40} />
+                                    <span className="text-2xl">{results[2][0].name}</span>
+                                </div>
+                                <div className="flex">
+                                    <Image src="/icons8-bronze-medal-40.png" alt="gold medal icons" width={40} height={40} />
+                                    <span className="text-2xl">{results[3][0].name} a {results[3][1].name}</span>
+                                </div>
                             </div>
-                            <div className="flex">
-                                <Image src="/icons8-silver-medal-40.png" alt="gold medal icons" width={40} height={40} />
-                                <span className="text-2xl">{results[2][0].name}</span>
-                            </div>
-                            <div className="flex">
-                                <Image src="/icons8-bronze-medal-40.png" alt="gold medal icons" width={40} height={40} />
-                                <span className="text-2xl">{results[3][0].name} a {results[3][1].name}</span>
-                            </div>
-                        </div>
+                        )}
                         <Stat name={"Počet hráčov"} value={Object.keys(players).length} />
                         <StatNames name={180} playerIds={highScore.filter(s => s.s180 > 0).map(p => players[p.player])} />
                         <StatNames name="170+" playerIds={highScore.filter(s => s.s170 > 0).map(p => players[p.player])} />
@@ -315,7 +317,7 @@ async function getBestCheckout(id: string) {
     return { bestCheckout, bestCoc };
 }
 
-async function getHighScore(tournamentId: string) : Promise<{player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number}[]> {
+async function getHighScore(tournamentId: string): Promise<{ player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number }[]> {
     const highScore = await prisma.playerThrow.findMany({
         where: {
             AND: [
@@ -358,7 +360,7 @@ async function getHighScore(tournamentId: string) : Promise<{player: string, s80
         }
     });
     const hss = Object.values(hs);
-    return hss as {player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number}[];
+    return hss as { player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number }[];
 }
 
 function Header({ text }) {

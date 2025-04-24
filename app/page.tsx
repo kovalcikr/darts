@@ -126,7 +126,7 @@ export default async function Home() {
         {playerIds.map(pid =>
         (
           <Link key={randomUUID()} href={`/players/${pid}`}>
-            <div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200" >{players.get(pid)}</div>
+            <div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200" >{players[pid]}</div>
           </Link>
         ))}
       </div>
