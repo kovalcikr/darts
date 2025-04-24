@@ -1,7 +1,7 @@
 import { stringify } from "querystring";
 import prisma from "./db";
 
-export async function getPlayers(tournaments) : Promise<Map<string, string>> {
+export async function getPlayers(tournaments) : Promise<any> {
     const playersA = await prisma.match.findMany({
         where: {
           tournamentId: {
@@ -26,9 +26,9 @@ export async function getPlayers(tournaments) : Promise<Map<string, string>> {
           playerBName: true
         }
       })
-      const players = new Map();
-      playersA.forEach(value => players.set(value.playerAId, value.playerAName))
-      playersB.forEach(value => players.set(value.playerBId, value.playerBName))
+      const players = {};
+      playersA.forEach(value => players[value.playerAId] = value.playerAName)
+      playersB.forEach(value => players[value.playerBId] = value.playerBName)
 
       return players;
 }

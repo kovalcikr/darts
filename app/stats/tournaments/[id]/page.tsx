@@ -1,43 +1,53 @@
 import getTournamentInfo, { getResults } from "@/app/lib/cuescore";
 import prisma from "@/app/lib/db";
 import { getPlayers } from "@/app/lib/players";
+import { getCachedTournaments } from "@/app/lib/tournament";
 import { randomUUID } from "crypto";
+import { unstable_cache } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 
 export async function generateStaticParams() {
-    const tournaments = await prisma.tournament.findMany({
-        where: {
-            name: {
-                contains: "2025"
-            }
-        }
-    });
-
-
-    return tournaments.map((t) => ({
+    return (await getCachedTournaments()).map((t) => ({
         id: t.id,
     }))
 }
 
-export default async function TournamentStats({ params }: { params: { id: string } }) {
-
-    const tournament = await prisma.tournament.findUnique({
+const cachedTournament = unstable_cache(async (tournamentId) => {
+    console.log("Fetching tournament data from DB");
+    return await prisma.tournament.findUnique({
         where: {
-            id: params.id
+            id: tournamentId
         }
     });
+});
 
-    const results = await getResults(params.id)
+const cachedResults = unstable_cache(async (tournmentId) => {
+    console.log("Fetching tournament results from DB");
+    return await getResults(tournmentId);
+});
 
-    const players = await getPlayers([params.id])
-    const highScore = await getHighScore(params, players);
-    const { bestCheckout, bestCoc } = await getBestCheckout(params, players);
+const cachedPlayers = unstable_cache(async (tournamentId) => {
+    console.log("Fetching players data from DB ");
+    return await getPlayers([tournamentId]);
+})
 
+const cachedHighScore = unstable_cache(async (tournamentId) => {
+    console.log("Fetching high scores from DB");
+    return await getHighScore(tournamentId);
+});
+
+const cachedBestCheckout = unstable_cache(async (tournamentId) => {
+    console.log("Fetching best checkout from DB");
+    return await getBestCheckout(tournamentId);
+});
+
+const cachedBestLeg = unstable_cache(async (tournamentId) => {
+    console.log("Fetching best leg from DB");
     const bestLeg = await prisma.playerThrow.groupBy({
         by: ["tournamentId", "matchId", "leg", "playerId"],
         where: {
-            tournamentId: params.id
+            tournamentId: tournamentId
         },
         _sum: {
             score: true,
@@ -70,7 +80,7 @@ export default async function TournamentStats({ params }: { params: { id: string
         const round = Math.ceil(darts / 3);
         if (!player) {
             legMap.set(leg.playerId, {
-                player: players.get(leg.playerId),
+                player: leg.playerId,
                 best: darts,
                 [round]: 1
             })
@@ -86,19 +96,48 @@ export default async function TournamentStats({ params }: { params: { id: string
         }
     })
     const bLeg = Array.from(legMap).map(v => v[1])
+    return { bLeg, bestLeg };
+});
+
+const cachedMatchAverages = unstable_cache(async (tournamentId, avg) => {
+    console.log("Fetching match averages from DB");
+    return await getMatchAverages(tournamentId, avg);
+});
+
+export default async function TournamentStats({ params }: { params: { id: string } }) {
+
+    const tournament = await cachedTournament(params.id);
+
+    if (!tournament) {
+        return (
+            <div className="w-full h-screen flex items-center justify-center bg-white text-black">
+                <h1 className="text-2xl font-bold">Turnaj nenájdený...  </h1>
+            </div>
+        )
+    }
+
+    const results = await cachedResults(params.id);
+
+    const players = await cachedPlayers(params.id);
+
+    const highScore = await cachedHighScore(params.id);
+
+    const { bestCheckout, bestCoc } = await cachedBestCheckout(params.id);
+
+    const { bLeg, bestLeg } = await cachedBestLeg(params.id);
 
     const bLegPlayers = Array.from(bestLeg.filter(l => l._sum.darts == bestLeg[0]._sum.darts).reduce(((a, v) => {
         if (!a.get(v.playerId)) {
             a.set(v.playerId, 1)
         } else (a.set(v.playerId, a.get(v.playerId) + 1))
         return a;
-    }), new Map())).map(l => players.get(l[0]) + (l[1] == 1 ? "" : " (" + l[1] + "x)"))
+    }), new Map())).map(l => players[l[0]] + (l[1] == 1 ? "" : " (" + l[1] + "x)"))
 
     function avg(match) {
         return (match._sum.score || 0) / match._sum.darts * 3;
     }
 
-    const { bestAvg, avgPP } = await getMatchAverages(params, avg, players);
+    const { bestAvg, avgPP } = await cachedMatchAverages(params.id, avg);
 
     function Stat({ name, value }) {
         return (<div className="my-1"><span className="font-bold">{name}: </span>{value}</div>)
@@ -170,20 +209,20 @@ export default async function TournamentStats({ params }: { params: { id: string
                                 <span className="text-2xl">{results[3][0].name} a {results[3][1].name}</span>
                             </div>
                         </div>
-                        <Stat name={"Počet hráčov"} value={players.size} />
-                        <StatNames name={180} playerIds={highScore.filter(s => s.s180 > 0).map(p => p.player)} />
-                        <StatNames name="170+" playerIds={highScore.filter(s => s.s170 > 0).map(p => p.player)} />
-                        <StatWithNames name="Najlepší checkout" value={bestCheckout[0].score} playerIds={[players.get(bestCheckout[0].playerId)]} />
-                        <StatWithNames name="Najlepší priemer v zápase" value={avg(bestAvg[0]).toFixed(2)} playerIds={[players.get(bestAvg[0].playerId)]} />
+                        <Stat name={"Počet hráčov"} value={Object.keys(players).length} />
+                        <StatNames name={180} playerIds={highScore.filter(s => s.s180 > 0).map(p => players[p.player])} />
+                        <StatNames name="170+" playerIds={highScore.filter(s => s.s170 > 0).map(p => players[p.player])} />
+                        <StatWithNames name="Najlepší checkout" value={bestCheckout[0].score} playerIds={[players[bestCheckout[0].playerId]]} />
+                        <StatWithNames name="Najlepší priemer v zápase" value={avg(bestAvg[0]).toFixed(2)} playerIds={[players[bestAvg[0].playerId]]} />
                         <StatWithNames name="Najlepší leg" value={bestLeg[0]._sum.darts} playerIds={bLegPlayers} />
 
-                        <BestCheckoutTable bestCoc={bestCoc} />
+                        <BestCheckoutTable bestCoc={bestCoc} players={players} />
 
-                        <HighScoreTable highScores={highScore} />
+                        <HighScoreTable highScores={highScore} players={players} />
 
-                        <BestLegTable bestLeg={bLeg} />
+                        <BestLegTable bestLeg={bLeg} players={players} />
 
-                        <AveragesTable avgPP={avgPP} />
+                        <AveragesTable avgPP={avgPP} players={players} />
                     </div>
                 </div>
             </main>
@@ -191,11 +230,11 @@ export default async function TournamentStats({ params }: { params: { id: string
     )
 }
 
-async function getMatchAverages(params: { id: string; }, avg: (match: any) => number, players: Map<string, string>) {
+async function getMatchAverages(id: string, avg: (match: any) => number) {
     const matchSums = await prisma.playerThrow.groupBy({
         by: ["tournamentId", "matchId", "playerId"],
         where: {
-            tournamentId: params.id
+            tournamentId: id
         },
         _sum: {
             score: true,
@@ -209,7 +248,7 @@ async function getMatchAverages(params: { id: string; }, avg: (match: any) => nu
         const average = avg(match);
         if (!player) {
             avgPerPlayer.set(match.playerId, {
-                player: players.get(match.playerId),
+                player: match.playerId,
                 max: average,
                 u40: average < 40 ? 1 : 0,
                 o40: average >= 40 && average < 50 ? 1 : 0,
@@ -237,10 +276,10 @@ async function getMatchAverages(params: { id: string; }, avg: (match: any) => nu
     return { bestAvg, avgPP };
 }
 
-async function getBestCheckout(params: { id: string; }, players: Map<string, string>) {
+async function getBestCheckout(id: string) {
     const bestCheckout = await prisma.playerThrow.findMany({
         where: {
-            tournamentId: params.id,
+            tournamentId: id,
             checkout: true,
             score: {
                 gte: 60
@@ -255,7 +294,7 @@ async function getBestCheckout(params: { id: string; }, players: Map<string, str
         const data = bestCo.get(co.playerId);
         if (!data) {
             bestCo.set(co.playerId, {
-                player: players.get(co.playerId),
+                player: co.playerId,
                 c60: co.score >= 60 && co.score < 80 ? 1 : 0,
                 c80: co.score >= 80 && co.score < 100 ? 1 : 0,
                 c100: co.score >= 100 ? 1 : 0,
@@ -272,12 +311,12 @@ async function getBestCheckout(params: { id: string; }, players: Map<string, str
     return { bestCheckout, bestCoc };
 }
 
-async function getHighScore(params: { id: string; }, players: Map<string, string>) {
+async function getHighScore(tournamentId: string) {
     const highScore = await prisma.playerThrow.findMany({
         where: {
             AND: [
                 {
-                    tournamentId: params.id
+                    tournamentId: tournamentId
                 },
                 {
                     score: {
@@ -295,7 +334,7 @@ async function getHighScore(params: { id: string; }, players: Map<string, string
         const data = hs.get(sc.playerId);
         if (!data) {
             hs.set(sc.playerId, {
-                player: players.get(sc.playerId),
+                player: sc.playerId,
                 s80: sc.score >= 80 && sc.score < 95 ? 1 : 0,
                 s100: sc.score >= 95 && sc.score < 133 ? 1 : 0,
                 s133: sc.score >= 133 && sc.score < 170 ? 1 : 0,
@@ -309,9 +348,9 @@ async function getHighScore(params: { id: string; }, players: Map<string, string
                 data.s133 += sc.score >= 133 && sc.score < 170 ? 1 : 0,
                 data.s170 += sc.score >= 170 && sc.score < 180 ? 1 : 0,
                 data.s180 += sc.score == 180 ? 1 : 0;
-                if (sc.score > 140 && sc.score <= 180) {
-                    data.b170.push(sc.score);
-                }
+            if (sc.score > 140 && sc.score <= 180) {
+                data.b170.push(sc.score);
+            }
         }
     });
     const hss = Array.from(hs).map(hs => hs[1]);
@@ -331,7 +370,7 @@ function Header({ text }) {
     )
 }
 
-function BestCheckoutTable({ bestCoc }) {
+function BestCheckoutTable({ bestCoc, players }) {
     return (
         <div className="overflow-x-auto">
             <Header text={"Najlepšie zatvorenie"} />
@@ -353,7 +392,7 @@ function BestCheckoutTable({ bestCoc }) {
                         bestCoc.map((co, index) => (
                             <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
                                 <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.player}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{players[co.player]}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.c60}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.c80}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.c100}</td>
@@ -367,7 +406,7 @@ function BestCheckoutTable({ bestCoc }) {
     )
 }
 
-function HighScoreTable({ highScores }) {
+function HighScoreTable({ highScores, players }) {
 
     return (
         <div className="overflow-x-auto">
@@ -392,7 +431,7 @@ function HighScoreTable({ highScores }) {
                         highScores.map((co, index) => (
                             <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
                                 <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.player}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{players[co.player]}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.s80}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.s100}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.s133}</td>
@@ -408,7 +447,7 @@ function HighScoreTable({ highScores }) {
     )
 }
 
-function BestLegTable({ bestLeg }) {
+function BestLegTable({ bestLeg, players }) {
     return (
         <div className="overflow-x-auto">
             <Header text={"Najlepší leg"} />
@@ -432,7 +471,7 @@ function BestLegTable({ bestLeg }) {
                         bestLeg.map((co, index) => (
                             <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
                                 <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.player}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{players[co.player]}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co[5] || 0}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co[6] || 0}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co[7] || 0}</td>
@@ -448,7 +487,7 @@ function BestLegTable({ bestLeg }) {
     )
 }
 
-function AveragesTable({ avgPP }) {
+function AveragesTable({ avgPP, players }) {
     return (
         <div className="overflow-x-auto">
             <Header text={"Najvyšší priemer v zápase"} />
@@ -474,7 +513,7 @@ function AveragesTable({ avgPP }) {
                         avgPP.map((co, index) => (
                             <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
                                 <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.player}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{players[co.player]}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.u40}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.o40}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{co.o50}</td>

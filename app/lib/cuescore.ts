@@ -40,6 +40,7 @@ export async function finishMatch(tournamentId, matchId, playerALegs, playerBleg
   if (res.data != "OK") {
     throw new Error('Cannot finish match');
   }
+  revalidatePath(`/stats/tournaments/${tournamentId}`);
   revalidatePath('/tournaments/[id/]tables/[table]', 'page');
 }
 
