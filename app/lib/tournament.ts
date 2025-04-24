@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import prisma from "./db";
 import getTournamentInfo from "./cuescore";
-import { revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 export async function openTournamentForm(prevState: any, data: FormData) {
     const tournamentId = data.get('tournamentId') as string;
@@ -19,6 +19,7 @@ export async function openTournament(tournamentId: string) {
     const tournament = await getTournamentInfo(tournamentId);
     await createTournament(tournament);
     revalidateTag("tournaments");
+    revalidatePath("/stats/tournaments");
 }
 
 export async function createTournament({ tournamentId, name }) {
