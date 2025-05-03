@@ -74,7 +74,7 @@ const cachedBestLeg = unstable_cache(async (tournamentId) => {
         ]
     })
     const legMap = {};
-    bestLeg.forEach(leg => {
+    bestLeg.forEach((leg, index) => {
         const player = legMap[leg.playerId]
         const darts = leg._sum.darts;
         const round = Math.ceil(darts / 3);
@@ -82,7 +82,8 @@ const cachedBestLeg = unstable_cache(async (tournamentId) => {
             legMap[leg.playerId] = {
                 player: leg.playerId,
                 best: darts,
-                [round]: 1
+                [round]: 1,
+                index: index
             }
         } else {
             if (player.best >= darts) {
@@ -105,8 +106,8 @@ const cachedBestLeg = unstable_cache(async (tournamentId) => {
         return a;
     }, {});
 
-    const bLeg = Object.values(legMap)
-    const bestLegDarts = bestLeg[0]._sum.darts
+    const bLeg = Object.values(legMap).sort((a: { index: number }, b: { index: number }) => a.index - b.index);
+    const bestLegDarts = bestLeg[0]?._sum?.darts || 0
     return { bLeg, bestLegDarts, bLegPlayers };
 });
 
@@ -218,9 +219,9 @@ export default async function TournamentStats({ params }: { params: { id: string
                         <Stat name={"Počet hráčov"} value={Object.keys(players).length} />
                         <StatNames name={180} playerIds={highScore.filter(s => s.s180 > 0).map(p => players[p.player])} />
                         <StatNames name="170+" playerIds={highScore.filter(s => s.s170 > 0).map(p => players[p.player])} />
-                        <StatWithNames name="Najlepší checkout" value={bestCheckout[0].score} playerIds={[players[bestCheckout[0].playerId]]} />
+                        { bestCheckout[0] && <StatWithNames name="Najlepší checkout" value={bestCheckout[0].score} playerIds={[players[bestCheckout[0].playerId]]} /> }
                         <StatWithNames name="Najlepší priemer v zápase" value={avg(bestAvg[0]).toFixed(2)} playerIds={[players[bestAvg[0].playerId]]} />
-                        <StatWithNames name="Najlepší leg" value={bestLegDarts} playerIds={Object.entries(bLegPlayers).map(([k, v]) => players[k] + (v == 1 ? "" : " (" + v + "x)"))} />
+                        { bestLegDarts && <StatWithNames name="Najlepší leg" value={bestLegDarts} playerIds={Object.entries(bLegPlayers).map(([k, v]) => players[k] + (v == 1 ? "" : " (" + v + "x)"))} /> }
 
                         <BestCheckoutTable bestCoc={bestCoc} players={players} />
 
@@ -277,7 +278,7 @@ async function getMatchAverages(id: string, avg: (match: any) => number) {
                 player.o75 += average >= 75 ? 1 : 0;
         }
     });
-    const avgPP = Object.values(avgPerPlayer);
+    const avgPP = Object.values(avgPerPlayer).sort((a: { max: number }, b: { max: number }) => a.max - b.max);;
 
     return { bestAvg, avgPP };
 }
@@ -296,7 +297,7 @@ async function getBestCheckout(id: string) {
         }
     });
     const bestCo = {};
-    bestCheckout.forEach(co => {
+    bestCheckout.forEach((co, index) => {
         const data = bestCo[co.playerId];
         if (!data) {
             bestCo[co.playerId] = {
@@ -304,7 +305,8 @@ async function getBestCheckout(id: string) {
                 c60: co.score >= 60 && co.score < 80 ? 1 : 0,
                 c80: co.score >= 80 && co.score < 100 ? 1 : 0,
                 c100: co.score >= 100 ? 1 : 0,
-                scores: [co.score]
+                scores: [co.score],
+                index: index
             };
         } else {
             data.c60 += co.score >= 60 && co.score < 80 ? 1 : 0;
@@ -313,7 +315,7 @@ async function getBestCheckout(id: string) {
                 data.scores.push(co.score);
         }
     });
-    const bestCoc = Object.values(bestCo);
+    const bestCoc = Object.values(bestCo).sort((a: { index: number }, b: { index: number }) => a.index - b.index);
     return { bestCheckout, bestCoc };
 }
 
@@ -336,7 +338,7 @@ async function getHighScore(tournamentId: string): Promise<{ player: string, s80
         }
     });
     const hs = {};
-    highScore.forEach(sc => {
+    highScore.forEach((sc, index) => {
         const data = hs[sc.playerId];
         if (!data) {
             hs[sc.playerId] = {
@@ -346,7 +348,8 @@ async function getHighScore(tournamentId: string): Promise<{ player: string, s80
                 s133: sc.score >= 133 && sc.score < 170 ? 1 : 0,
                 s170: sc.score >= 170 && sc.score < 180 ? 1 : 0,
                 b170: sc.score > 140 && sc.score <= 180 ? [sc.score] : [],
-                s180: sc.score == 180 ? 1 : 0
+                s180: sc.score == 180 ? 1 : 0,
+                index: index
             };
         } else {
             data.s80 += sc.score >= 80 && sc.score < 100 ? 1 : 0,
@@ -359,7 +362,7 @@ async function getHighScore(tournamentId: string): Promise<{ player: string, s80
             }
         }
     });
-    const hss = Object.values(hs);
+    const hss = Object.values(hs).sort((a: { index: number }, b: { index: number }) => a.index - b.index);
     return hss as { player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number }[];
 }
 
