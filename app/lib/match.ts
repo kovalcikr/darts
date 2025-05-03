@@ -1,10 +1,8 @@
 'use server'
 
-import { db } from "@vercel/postgres"
 import getTournamentInfo from "./cuescore"
 import prisma from "./db";
 import { revalidatePath } from "next/cache";
-import { PlayerThrow } from "@prisma/client";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
 
@@ -24,12 +22,19 @@ interface CueScoreMatch {
   tournamentId: number
 }
 
-export async function getCuescoreMatch(tournamentId : string, tableName: string) {
-    const tournament = await getTournamentInfo(tournamentId);
-    for (let match of tournament.matches) {
-      if (match.matchstatus == 'playing' && match?.table.name == tableName) return match;
-    }
-    throw Error(`No match in progress on table ${tableName}`);
+export async function getCuescoreMatchCached(tournamentId: string, tableName: string) {
+  const tournament = await getTournamentInfo(tournamentId);
+  for (let match of tournament.matches) {
+    if (match.matchstatus == 'playing' && match?.table.name == tableName) return match;
+  }
+}
+
+export async function getCuescoreMatch(tournamentId: string, tableName: string) {
+  const tournament = await getTournamentInfo(tournamentId);
+  for (let match of tournament.matches) {
+    if (match.matchstatus == 'playing' && match?.table.name == tableName) return match;
+  }
+  throw Error(`No match in progress on table ${tableName}`);
 }
 
 export async function getFullMatch(matchId, slow) {
@@ -44,7 +49,7 @@ export async function getFullMatch(matchId, slow) {
   const playerAAvg = (await findMatchAvg(match.id, match.playerAId));
   const playerBAvg = (await findMatchAvg(match.id, match.playerBId));
 
-  const playerA : Player = {
+  const playerA: Player = {
     id: match.playerAId,
     name: match.playerAName,
     imageUrl: match.playerAImage,
@@ -56,7 +61,7 @@ export async function getFullMatch(matchId, slow) {
     active: scores.nextPlayer == match.playerAId
   }
 
-  const playerB : Player = {
+  const playerB: Player = {
     id: match.playerBId,
     name: match.playerBName,
     imageUrl: match.playerBImage,
@@ -68,7 +73,7 @@ export async function getFullMatch(matchId, slow) {
     active: scores.nextPlayer == match.playerBId
   }
 
-  const fullMatch : FullMatch = {
+  const fullMatch: FullMatch = {
     match: match,
     tournament: match.tournament,
     currentLeg: leg,
@@ -81,8 +86,8 @@ export async function getFullMatch(matchId, slow) {
 
 export async function getMatch(matchId) {
   return prisma.match.findUnique({
-    where: {id: matchId},
-    include: {tournament: true}
+    where: { id: matchId },
+    include: { tournament: true }
   })
 }
 
@@ -117,11 +122,13 @@ export async function createMatch(match) {
 }
 
 export async function setStartingPlayer(matchId, playerId) {
-  return await prisma.match.update({data: {
-    firstPlayer: playerId
-  }, where: {
-    id: matchId
-  }});
+  return await prisma.match.update({
+    data: {
+      firstPlayer: playerId
+    }, where: {
+      id: matchId
+    }
+  });
 }
 
 export async function startMatch(formData) {
@@ -169,12 +176,12 @@ export async function getThrows(matchId: string, leg: number, playerA: string, p
 export async function getScores(matchId: string, leg: number, playerA: string, playerB: string, firstPlayer: string) {
   const playerThrows = await getThrows(matchId, leg, playerA, playerB);
   if (playerThrows.length == 0) {
-    return({
+    return ({
       playerA: 501,
       playerB: 501,
       playerADarts: 0,
       playerBDarts: 0,
-      nextPlayer: await nextPlayer(leg, 0,0, playerA, playerB, firstPlayer)
+      nextPlayer: await nextPlayer(leg, 0, 0, playerA, playerB, firstPlayer)
     })
   }
   console.log(playerThrows)

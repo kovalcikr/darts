@@ -153,3 +153,38 @@ export async function findMatchAvg(matchId, player) {
     });
     return data._sum.score / data._sum.darts * 3;
 }
+
+export async function getPlayerThrowInfo(tournamentId, matchId, leg) {
+    if (!matchId) {
+        return null;
+    }
+
+    const score = await prisma.playerThrow.groupBy({
+        by: ['tournamentId', 'matchId', 'leg', 'playerId'],
+        _sum: {
+            score: true
+        },
+        _count: {
+            score: true
+        },
+        where: {
+            tournamentId: tournamentId,
+            matchId: matchId,
+            leg: leg
+        }
+    });
+
+    const lastThrows = await prisma.playerThrow.findMany({
+        where: {
+            tournamentId: tournamentId,
+            matchId: matchId,
+            leg: leg
+        },
+        orderBy: {
+            time: 'desc'
+        },
+        take: 6
+    });
+
+    return { score, lastThrows };
+}
