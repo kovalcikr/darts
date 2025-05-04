@@ -278,7 +278,7 @@ async function getMatchAverages(id: string, avg: (match: any) => number) {
                 player.o75 += average >= 75 ? 1 : 0;
         }
     });
-    const avgPP = Object.values(avgPerPlayer).sort((a: { max: number }, b: { max: number }) => a.max - b.max);;
+    const avgPP = Object.values(avgPerPlayer).sort((a: { max: number }, b: { max: number }) => b.max - a.max);;
 
     return { bestAvg, avgPP };
 }
