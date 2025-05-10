@@ -5,7 +5,7 @@ import GamepadButton from "./gamepad-button";
 import { addThrowAction, undoThrow } from "@/app/lib/playerThrow";
 import GamepadServerButton from "./gamepad-server-button";
 
-export default function ScoreBoard({ tournamentId, matchId, leg, player, currentPlayerScore, slow }) {
+export default function ScoreBoard({ tournamentId, matchId, leg, player, currentPlayerScore, slow, table }) {
   const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const impossibleScore = [163, 166, 169, 172, 173, 175, 176, 178, 179];
   const [currentScore, setCurrentScore] = useState("0");
@@ -14,7 +14,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
   const darts3ref = useRef(null);
 
   async function handleUndo() {
-    await undoThrow(matchId, leg, slow);
+    await undoThrow(matchId, leg, slow, table);
     setCurrentScore("0");
   }
 
@@ -66,7 +66,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
           disabled={disabledOK}
           formAction={async (formData: FormData) => {
             const dartsCount = Number(formData.get('darts'));
-            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), dartsCount, slow);
+            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), dartsCount, slow, table);
             setCurrentScore("0")
             darts3ref.current.checked = true;
             setDartsCount(false);
@@ -82,7 +82,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
       <>
         <GamepadServerButton
           name="UNDO"
-          color="bg-yellow-600"
+          color="bg-purple-400"
           formAction={handleUndo}
         />
         <input type="text" disabled required value={Number(currentScore)} onChange={e => {
@@ -91,7 +91,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
         }} className="flex items-center text-center  justify-center border-2 font-bold text-6xl text-white bg-slate-800  " />
         <GamepadButton
           name="<"
-          color="bg-blue-800"
+          color="bg-blue-500"
           onClick={() => {
             if (currentScore.length != 0) {
               setCurrentScore(currentScore.substring(0, currentScore.length - 1))
@@ -108,7 +108,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
         ))}
         <GamepadButton
           name="CLR"
-          color="bg-red-500"
+          color="bg-red-400"
           onClick={handleClr}
         />
         <GamepadButton
@@ -118,14 +118,14 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
         />
         <GamepadServerButton
           name="OK"
-          color="bg-green-600"
+          color="bg-green-500"
           disabled={disabledOK}
           formAction={async () => {
             if (currentPlayerScore == Number(currentScore)) {
               setDartsCount(true);
               return;
             }
-            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), 3, slow);
+            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), 3, slow, table);
             setCurrentScore("0")
           }}
         />

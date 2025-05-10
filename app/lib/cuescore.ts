@@ -1,7 +1,8 @@
 'use server'
 
 import axios from "axios";
-import { revalidatePath } from "next/cache";
+import { table } from "console";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export default async function getTournamentInfo(tournamentId : string) {
     const cookie = await auth();
@@ -28,7 +29,7 @@ export async function setScore(tournamentId, matchId, playerALegs, playerBlegs) 
   }
 }
 
-export async function finishMatch(tournamentId, matchId, playerALegs, playerBlegs) {
+export async function finishMatch(tournamentId, matchId, playerALegs, playerBlegs, table) {
   const cookie = await auth();
   const url = `https://cuescore.com/ajax/tournament/match.php?tournamentId=${tournamentId}&matchId=${matchId}&scoreA=${playerALegs}&scoreB=${playerBlegs}&matchstatus=2`;
   console.log(url)
@@ -42,6 +43,7 @@ export async function finishMatch(tournamentId, matchId, playerALegs, playerBleg
   }
   revalidatePath(`/stats/tournaments/${tournamentId}`);
   revalidatePath('/tournaments/[id/]tables/[table]', 'page');
+  revalidateTag('match' + table)
 }
 
 export async function getRankings(rankingId: string) {

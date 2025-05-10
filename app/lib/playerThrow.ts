@@ -1,10 +1,10 @@
 'use server'
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import prisma from "./db";
 import { setScore } from "./cuescore";
 
-export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, slow) {
+export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, slow, table) {
     if (slow) {
         await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
     }
@@ -56,9 +56,10 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
     }
     
     revalidatePath('/tournaments/[id]/tables/[table]', 'page');
+    revalidateTag('match' + table);
 }
 
-export async function undoThrow(matchId, leg, slow) {
+export async function undoThrow(matchId, leg, slow, table) {
     if (slow) {
         await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
     }
@@ -125,6 +126,7 @@ export async function undoThrow(matchId, leg, slow) {
         setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
     revalidatePath('/tournaments/[id]/tables/[table]', 'page');
+    revalidateTag('match' + table);
 }
 
 export async function findLastThrow(matchId, leg, player) {

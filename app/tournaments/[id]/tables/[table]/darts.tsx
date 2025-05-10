@@ -67,13 +67,13 @@ export default async function Darts({ table, matchId, slow, reset }: { table: st
       {match.firstPlayer &&
         <div className="basis-2/3 text-3xl">
           {match.runTo == match.playerALegs ?
-            <Winner player={match.playerAName} image={match.playerAImage} match={match} leg={fullMatch.currentLeg} slow={slow} />
+            <Winner player={match.playerAName} image={match.playerAImage} match={match} leg={fullMatch.currentLeg} slow={slow} table={table} />
             :
             (
               match.runTo == match.playerBlegs ?
-                <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={fullMatch.currentLeg} slow={slow} />
+                <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={fullMatch.currentLeg} slow={slow} table={table} />
                 :
-                <ScoreBoard tournamentId={fullMatch.tournament.id} matchId={match.id} leg={fullMatch.currentLeg} player={fullMatch.nextPlayer} currentPlayerScore={currentPlayerScore} slow={slow} />
+                <ScoreBoard tournamentId={fullMatch.tournament.id} matchId={match.id} leg={fullMatch.currentLeg} player={fullMatch.nextPlayer} currentPlayerScore={currentPlayerScore} slow={slow} table={table} />
             )
           }
         </div>
