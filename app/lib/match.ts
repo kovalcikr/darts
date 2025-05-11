@@ -2,7 +2,7 @@
 
 import getTournamentInfo from "./cuescore"
 import prisma from "./db";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
 
@@ -134,6 +134,7 @@ export async function setStartingPlayer(matchId, playerId) {
 export async function startMatch(formData) {
   await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
   revalidatePath('/tournaments/[id]/tables/[table]', 'page');
+  revalidateTag('match' + formData.get('table'));
 }
 
 export async function resetMatch(formData) {

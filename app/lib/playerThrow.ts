@@ -153,7 +153,7 @@ export async function findMatchAvg(matchId, player) {
             playerId: player
         },
     });
-    return data._sum.score / data._sum.darts * 3;
+    return data._sum.darts ? data._sum.score / data._sum.darts * 3 : 0;
 }
 
 export async function getPlayerThrowInfo(tournamentId, matchId, leg) {

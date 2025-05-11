@@ -1,18 +1,19 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-
-
-async function fetchServerData() {
-    const response = await fetch('/api/dashboard/tournament/53010448');
+async function fetchServerData(tournamentId, test) {
+    const response = await fetch(`/api/dashboard/tournament/${tournamentId}${test ? `?test=${test}` : ''}`);
     if (!response.ok) {
         throw new Error('Failed to fetch server data');
     }
     return response.json();
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({ params }: { params: { tournamentId: string } }) {
+    const searchParams = useSearchParams();
+
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
 
@@ -21,9 +22,8 @@ export default function DashboardPage() {
 
         const fetchData = async () => {
             try {
-                const serverData = await fetchServerData();
+                const serverData = await fetchServerData(params.tournamentId, searchParams.get('test'));
                 setData(serverData);
-                console.log(serverData);
             } catch (err) {
                 setError(err.message);
             }
@@ -111,7 +111,7 @@ function Winner({ player, image }: { player: string, image: string }) {
                 alt={`Winner` + player}
                 className="w-32 h-32 object-cover"
             />
-            <p className="text-2xl font-semibold text-blue-800">{ player }</p>
+            <p className="text-2xl font-semibold text-blue-800">{player}</p>
             <p className="text-xl font-bold text-blue-600">Winner</p>
         </div>
     );

@@ -48,7 +48,7 @@ export default async function Darts({ table, matchId, slow, reset }: { table: st
       <TournamentHeader tournament={fullMatch.tournament} round={match.round} format={String(match.runTo)} table={table} matchId={matchId} reset={reset} />
       <div className="flex flex-col basis-1/4">
         {!match.firstPlayer ?
-          <ChoosePlayer match={match} />
+          <ChoosePlayer match={match} table={table} />
           :
           <div className="flex">
             <div className={`w-1/2 p-1 ${playerLeft.active && "border-2 border-slate-400 rounded bg-yellow-100"}`}>

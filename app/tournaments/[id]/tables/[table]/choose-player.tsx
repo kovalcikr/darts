@@ -4,7 +4,7 @@ import { startMatch } from "@/app/lib/match";
 import { Match } from "@prisma/client";
 import { useFormStatus } from "react-dom";
 
-export default function ChoosePlayer({ match }: { match: Match }) {
+export default function ChoosePlayer({ match, table }: { match: Match, table: string }) {
 
     return (
         <div className="flex flex-col text-center text-gray-800 font-bold">
@@ -13,6 +13,7 @@ export default function ChoosePlayer({ match }: { match: Match }) {
             </div>
             <form action={startMatch}>
                 <input type="hidden" name="matchId" value={match.id} />
+                <input type="hidden" name="table" value={table} />
                 <Players match={match} />
             </form>
         </div >
