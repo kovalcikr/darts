@@ -6,92 +6,92 @@ import { NextRequest } from "next/server";
 const cachedMatch1 = unstable_cache(async (tournamentId: string, table: string) => {
     return await getCuescoreMatchCached(tournamentId, table);
 }, ['cachedMatch1'], {
-    tags: ['match1']
+    tags: ['match11']
 });
 const cachedMatch2 = unstable_cache(async (tournamentId: string, table: string) => {
     return await getCuescoreMatchCached(tournamentId, table);
 }, ['cachedMatch2'], {
-    tags: ['match2']
+    tags: ['match12']
 });
 const cachedMatch3 = unstable_cache(async (tournamentId: string, table: string) => {
     return await getCuescoreMatchCached(tournamentId, table);
 }, ['cachedMatch3'], {
-    tags: ['match3']
+    tags: ['match13']
 });
 const cachedMatch4 = unstable_cache(async (tournamentId: string, table: string) => {
     return await getCuescoreMatchCached(tournamentId, table);
 }, ['cachedMatch4'], {
-    tags: ['match4']
+    tags: ['match14']
 });
 const cachedMatch5 = unstable_cache(async (tournamentId: string, table: string) => {
     return await getCuescoreMatchCached(tournamentId, table);
 }, ['cachedMatch5'], {
-    tags: ['match5']
+    tags: ['match15']
 });
 const cachedMatch6 = unstable_cache(async (tournamentId: string, table: string) => {
     return await getCuescoreMatchCached(tournamentId, table);
 }, ['cachedMatch6'], {
-    tags: ['match6']
+    tags: ['match16']
 });
 const cachedMatchInfo1 = unstable_cache(async (tournamentId: string, matchId: string, leg: number) => {
     return await getPlayerThrowInfo(tournamentId, matchId, leg);
 }, ['cachedMatchInfo1'], {
-    tags: ['match1']
+    tags: ['match11']
 });
 const cachedMatchInfo2 = unstable_cache(async (tournamentId: string, matchId: string, leg: number) => {
     return await getPlayerThrowInfo(tournamentId, matchId, leg);
 }, ['cachedMatchInfo2'], {
-    tags: ['match2']
+    tags: ['match12']
 });
 const cachedMatchInfo3 = unstable_cache(async (tournamentId: string, matchId: string, leg: number) => {
     return await getPlayerThrowInfo(tournamentId, matchId, leg);
 }, ['cachedMatchInfo3'], {
-    tags: ['match3']
+    tags: ['match13']
 });
 const cachedMatchInfo4 = unstable_cache(async (tournamentId: string, matchId: string, leg: number) => {
     return await getPlayerThrowInfo(tournamentId, matchId, leg);
 }, ['cachedMatchInfo4'], {
-    tags: ['match4']
+    tags: ['match14']
 });
 const cachedMatchInfo5 = unstable_cache(async (tournamentId: string, matchId: string, leg: number) => {
     return await getPlayerThrowInfo(tournamentId, matchId, leg);
 }, ['cachedMatchInfo5'], {
-    tags: ['match5']
+    tags: ['match15']
 });
 const cachedMatchInfo6 = unstable_cache(async (tournamentId: string, matchId: string, leg: number) => {
     return await getPlayerThrowInfo(tournamentId, matchId, leg);
 }, ['cachedMatchInfo6'], {
-    tags: ['match6']
+    tags: ['match16']
 });
 const cachedFirstPlayer1 = unstable_cache(async (matchId: string) => {
     return await getMatch(matchId);
 }, ['cachedFirstPlayer1'], {
-    tags: ['match1']
+    tags: ['match11']
 });
 const cachedFirstPlayer2 = unstable_cache(async (matchId: string) => {
     return await getMatch(matchId);
 }, ['cachedFirstPlayer2'], {
-    tags: ['match2']
+    tags: ['match12']
 });
 const cachedFirstPlayer3 = unstable_cache(async (matchId: string) => {
     return await getMatch(matchId);
 }, ['cachedFirstPlayer3'], {
-    tags: ['match3']
+    tags: ['match13']
 });
 const cachedFirstPlayer4 = unstable_cache(async (matchId: string) => {
     return await getMatch(matchId);
 }, ['cachedFirstPlayer4'], {
-    tags: ['match4']
+    tags: ['match14']
 });
 const cachedFirstPlayer5 = unstable_cache(async (matchId: string) => {
     return await getMatch(matchId);
 }, ['cachedFirstPlayer5'], {
-    tags: ['match5']
+    tags: ['match15']
 });
 const cachedFirstPlayer6 = unstable_cache(async (matchId: string) => {
     return await getMatch(matchId);
 }, ['cachedFirstPlayer6'], {
-    tags: ['match6']
+    tags: ['match16']
 });
 
 function getTableId(table: string, test: boolean) {
