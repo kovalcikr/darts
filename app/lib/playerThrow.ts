@@ -39,7 +39,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
             }
         })
         if (closeLeg) {
-            match = await tx.match.findUnique({where: {id: matchId}});
+            match = await tx.match.findUnique({ where: { id: matchId } });
             match = await tx.match.update({
                 data: {
                     playerALegs: match.playerALegs + (match.playerAId == playerId ? 1 : 0),
@@ -54,9 +54,11 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
     if (closeLeg) {
         setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
-    
+
     revalidatePath('/tournaments/[id]/tables/[table]', 'page');
-    revalidateTag('match' + table);
+    const cacheTag = `match${table}`
+    console.log('revalidating tag', cacheTag)
+    revalidateTag(cacheTag)
 }
 
 export async function undoThrow(matchId, leg, slow, table) {
@@ -65,7 +67,7 @@ export async function undoThrow(matchId, leg, slow, table) {
     }
     let undoCloseLeg = false;
     let match = null;
-     await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
         const lastThrow = await tx.playerThrow.findFirst({
             where: {
                 matchId: matchId,
@@ -93,7 +95,7 @@ export async function undoThrow(matchId, leg, slow, table) {
                         id: previousLegLastThrow.id
                     }
                 })
-                match = await tx.match.findUnique({where: {id: matchId}});
+                match = await tx.match.findUnique({ where: { id: matchId } });
                 match = await tx.match.update({
                     data: {
                         playerALegs: match.playerALegs - (match.playerAId == previousLegLastThrow.playerId ? 1 : 0),
@@ -126,11 +128,14 @@ export async function undoThrow(matchId, leg, slow, table) {
         setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
     revalidatePath('/tournaments/[id]/tables/[table]', 'page');
-    revalidateTag('match' + table);
+    const cacheTag = `match${table}`
+    console.log('revalidating tag', cacheTag)
+    revalidateTag(cacheTag)
+
 }
 
 export async function findLastThrow(matchId, leg, player) {
-    return  await prisma.playerThrow.findFirst({
+    return await prisma.playerThrow.findFirst({
         where: {
             matchId: matchId,
             leg: leg,

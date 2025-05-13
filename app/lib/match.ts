@@ -23,6 +23,7 @@ interface CueScoreMatch {
 }
 
 export async function getCuescoreMatchCached(tournamentId: string, tableName: string) {
+  console.log('getCuescoreMatchCached', tournamentId, tableName);
   const tournament = await getTournamentInfo(tournamentId);
   for (let match of tournament.matches) {
     if (match.matchstatus == 'playing' && match?.table.name == tableName) return match;
@@ -134,7 +135,9 @@ export async function setStartingPlayer(matchId, playerId) {
 export async function startMatch(formData) {
   await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
   revalidatePath('/tournaments/[id]/tables/[table]', 'page');
-  revalidateTag('match' + formData.get('table'));
+  const cacheTag = `match${formData.get('table')}`
+  console.log('revalidating tag', cacheTag)
+  revalidateTag(cacheTag)
 }
 
 export async function resetMatch(formData) {

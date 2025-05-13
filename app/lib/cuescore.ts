@@ -1,7 +1,6 @@
 'use server'
 
 import axios from "axios";
-import { table } from "console";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 export default async function getTournamentInfo(tournamentId : string) {
@@ -43,7 +42,9 @@ export async function finishMatch(tournamentId, matchId, playerALegs, playerBleg
   }
   revalidatePath(`/stats/tournaments/${tournamentId}`);
   revalidatePath('/tournaments/[id/]tables/[table]', 'page');
-  revalidateTag('match' + table)
+  const cacheTag = `match${table}`
+  console.log('revalidating tag', cacheTag)
+  revalidateTag(cacheTag)
 }
 
 export async function getRankings(rankingId: string) {
