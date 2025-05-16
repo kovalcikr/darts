@@ -139,7 +139,7 @@ export default async function TournamentStats({ params }: { params: { id: string
     const { bLeg, bestLegDarts, bLegPlayers } = await cachedBestLeg(params.id);
 
     function avg(match) {
-        return (match._sum.score || 0) / match._sum.darts * 3;
+        return match._sum.darts ? ((match._sum.score || 0) / match._sum.darts * 3) : 0;
     }
 
     const { bestAvg, avgPP } = await cachedMatchAverages(params.id, avg);
@@ -315,7 +315,7 @@ async function getBestCheckout(id: string) {
                 data.scores.push(co.score);
         }
     });
-    const bestCoc = Object.values(bestCo).sort((a: { index: number }, b: { index: number }) => a.index - b.index);
+    const bestCoc = Object.values(bestCo).sort((a: any, b: any) => (b.c60 + b.c80 + b.c100) - (a.c60 + a.c80 + a.c100));
     return { bestCheckout, bestCoc };
 }
 
@@ -382,7 +382,7 @@ function Header({ text }) {
 function BestCheckoutTable({ bestCoc, players }) {
     return (
         <div className="overflow-x-auto">
-            <Header text={"Najlepšie zatvorenie"} />
+            <Header text={"Najlepšie zatvorenie (počet)"} />
 
             <table className="min-w-full divide-y-2 divide-gray-200">
                 <thead className="text-left ltr:text-left rtl:text-right">
