@@ -315,7 +315,7 @@ async function getBestCheckout(id: string) {
                 data.scores.push(co.score);
         }
     });
-    const bestCoc = Object.values(bestCo).sort((a: any, b: any) => (b.c60 + b.c80 + b.c100) - (a.c60 + a.c80 + a.c100));
+    const bestCoc = Object.values(bestCo).sort((a: any, b: any) => (b.c60 + b.c80 + b.c100) - (a.c60 + a.c80 + a.c100) || a.index - b.index);
     return { bestCheckout, bestCoc };
 }
 
