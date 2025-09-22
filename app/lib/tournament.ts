@@ -22,20 +22,7 @@ export async function openTournament(tournamentId: string) {
     revalidatePath("/stats/tournaments");
 }
 
-export async function createTournament({ tournamentId, name }) {
-    return prisma.tournament.upsert({
-        create: {
-            id: String(tournamentId),
-            name: name
-        },
-        update: {
-            name: name
-        },
-        where: {
-            id: String(tournamentId)
-        }
-    })
-}
+import { createTournament } from "./tournamentActions";
 
 export async function getTournaments() {
     const tournamentNames = generateTournamentNames(13, 24);
@@ -51,7 +38,7 @@ export async function getTournaments() {
     return tournaments
 }
 
-function generateTournamentNames(start, end) {
+export function generateTournamentNames(start, end) {
     const names = [];
     for (let i = start; i <= end; i++) {
         names.push("Relax Darts CUP " + i + " 2024")

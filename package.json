@@ -11,8 +11,16 @@
     "studio:test": "npx dotenv -e .env.test npx prisma studio",
     "test": "npx dotenv -e .env.test jest",
     "test:watch": "npx dotenv -e .env.test jest --watch",
+    "test:e2e": "npm run test:setup && npx playwright test",
     "migrate": "npx dotenv -e .env.development.local npx prisma db push",
-    "migrate:test": "npx dotenv -e .env.test npx prisma db push"
+    "migrate:test": "npx dotenv -e .env.test npx prisma db push --accept-data-loss",
+    "test:db:up": "sudo docker compose up -d",
+    "test:db:down": "sudo docker compose down",
+    "test:setup": "npm run test:db:up && sleep 5 && npm run migrate:test && npx prisma db seed",
+    "dev:test": "POSTGRES_PRISMA_URL='postgresql://testuser:testpassword@localhost:5433/testdb?schema=public' POSTGRES_URL_NON_POOLING='postgresql://testuser:testpassword@localhost:5433/testdb?schema=public' next dev"
+  },
+  "prisma": {
+    "seed": "./prisma/seed.sh"
   },
   "dependencies": {
     "@prisma/client": "^5.15.1",
@@ -27,6 +35,7 @@
   "devDependencies": {
     "@babel/preset-typescript": "^7.24.7",
     "@jest/globals": "^29.7.0",
+    "@playwright/test": "^1.55.0",
     "@testing-library/jest-dom": "^6.4.5",
     "@testing-library/react": "^16.0.0",
     "@types/node": "^20",
@@ -43,6 +52,7 @@
     "tailwindcss": "^3.3.0",
     "ts-jest": "^29.1.4",
     "typescript": "^5",
-    "vercel": "^32.3.0"
+    "vercel": "^32.3.0",
+    "whatwg-fetch": "^3.6.20"
   }
 }
