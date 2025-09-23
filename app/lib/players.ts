@@ -1,33 +1,18 @@
-import prisma from "./db";
+import { findPlayersByTournament } from "./data";
 
 export async function getPlayers(tournaments) : Promise<any> {
-    const playersA = await prisma.match.findMany({
-        where: {
-          tournamentId: {
-            in: tournaments
-          }
-        },
-        distinct: ["playerAId"],
-        select: {
-          playerAId: true,
-          playerAName: true
+    const { playersA, playersB } = await findPlayersByTournament(tournaments);
+    const players = {};
+    playersA.forEach(value => {
+        if (value.playerAId) {
+            players[value.playerAId] = value.playerAName
         }
-      })
-      const playersB = await prisma.match.findMany({
-        where: {
-          tournamentId: {
-            in: tournaments
-          }
-        },
-        distinct: ["playerBId"],
-        select: {
-          playerBId: true,
-          playerBName: true
+    })
+    playersB.forEach(value => {
+        if (value.playerBId) {
+            players[value.playerBId] = value.playerBName
         }
-      })
-      const players = {};
-      playersA.forEach(value => players[value.playerAId] = value.playerAName)
-      playersB.forEach(value => players[value.playerBId] = value.playerBName)
+    })
 
-      return players;
+    return players;
 }

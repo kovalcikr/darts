@@ -4,15 +4,6 @@ import { getTournaments } from "@/app/lib/tournament"
 import { randomUUID } from "crypto"
 import Link from "next/link"
 
-export async function generateStaticParams() {
-    const tournamentIds = await getTournaments()
-    const players = await getPlayers(tournamentIds)
-
-    return Array.from(players).map((player) => ({
-        id: player[0],
-    }))
-}
-
 export default async function Player({ params }: { params: { id: string } }) {
 
     const tournamentIds = await getTournaments()

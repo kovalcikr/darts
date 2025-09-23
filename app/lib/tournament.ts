@@ -1,9 +1,9 @@
 'use server'
 
 import { redirect } from "next/navigation";
-import prisma from "./db";
 import getTournamentInfo from "./cuescore";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { upsertTournament, findTournamentsByName, findTournamentsByYear } from "./data";
 
 export async function openTournamentForm(prevState: any, data: FormData) {
     const tournamentId = data.get('tournamentId') as string;
@@ -23,30 +23,13 @@ export async function openTournament(tournamentId: string) {
 }
 
 export async function createTournament({ tournamentId, name }) {
-    return prisma.tournament.upsert({
-        create: {
-            id: String(tournamentId),
-            name: name
-        },
-        update: {
-            name: name
-        },
-        where: {
-            id: String(tournamentId)
-        }
-    })
+    return upsertTournament(String(tournamentId), name);
 }
 
 export async function getTournaments() {
     const tournamentNames = generateTournamentNames(13, 24);
 
-    const tournamentIds = await prisma.tournament.findMany({
-        where: {
-            name: {
-                in: tournamentNames
-            }
-        }
-    });
+    const tournamentIds = await findTournamentsByName(tournamentNames);
     const tournaments = tournamentIds.map(tourament => tourament.id);
     return tournaments
 }
@@ -61,13 +44,7 @@ function generateTournamentNames(start, end) {
 
 export const getCachedTournaments = unstable_cache(
     async () => {
-        return await prisma.tournament.findMany({
-            where: {
-                name: {
-                    contains: "2025"
-                }
-            }
-        });
+        return await findTournamentsByYear("2025");
     },
     null,
     { tags: ["tournaments"] }

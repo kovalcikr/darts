@@ -2,6 +2,8 @@ import prisma from "@/app/lib/db";
 import { getCachedTournaments } from "@/app/lib/tournament"
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic'
+
 export default async function Tournaments() {
 
     const tournaments = (await getCachedTournaments()).sort((t1, t2) => t1.name.localeCompare(t2.name));
