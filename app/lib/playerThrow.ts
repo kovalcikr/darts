@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { setScore } from "./cuescore";
 import { aggregatePlayerThrow, createPlayerThrow, updateMatchLegs, findLastThrow as findLastThrowData, deletePlayerThrow, findPreviousLegLastThrow, aggregateMatchThrows, findManyPlayerThrows, findThrowsByMatchAndLeg, updateMatchFirstPlayer, decrementMatchLegs } from "./data";
 import { findMatch } from "./data";
+import prisma from "./db";
 
 export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, slow, table) {
     if (slow) {
@@ -11,17 +12,21 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
     }
     let closeLeg = false;
     let match = null;
-    const currentScore = await aggregatePlayerThrow(matchId, leg, playerId);
-    if (currentScore._sum.score + score > 501) {
-        throw new Error('Bust')
-    }
-    if (currentScore._sum.score + score == 501) {
-        closeLeg = true;
-    }
-    await createPlayerThrow(tournamentId, matchId, leg, playerId, score, dartsCount, closeLeg);
+    await prisma.$transaction(async (tx) => {
+        const currentScore = await aggregatePlayerThrow(matchId, leg, playerId, tx);
+        if (currentScore._sum.score + score > 501) {
+            throw new Error('Bust')
+        }
+        if (currentScore._sum.score + score == 501) {
+            closeLeg = true;
+        }
+        await createPlayerThrow(tournamentId, matchId, leg, playerId, score, dartsCount, closeLeg, tx);
+        if (closeLeg) {
+            match = await findMatch(matchId, tx);
+            match = await updateMatchLegs(matchId, match.playerAId, playerId, match.playerALegs, match.playerBlegs, tx);
+        }
+    });
     if (closeLeg) {
-        match = await findMatch(matchId);
-        match = await updateMatchLegs(matchId, match.playerAId, playerId, match.playerALegs, match.playerBlegs);
         setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
 
@@ -37,22 +42,26 @@ export async function undoThrow(matchId, leg, slow, table) {
     }
     let undoCloseLeg = false;
     let match = null;
-    const lastThrow = await findLastThrowData(matchId, leg);
-    console.log(lastThrow);
-    if (!lastThrow) {
-        undoCloseLeg = true;
-        const previousLegLastThrow = await findPreviousLegLastThrow(matchId, leg);
-        if (previousLegLastThrow) {
-            await deletePlayerThrow(previousLegLastThrow.id)
-            match = await findMatch(matchId);
-            match = await decrementMatchLegs(matchId, match.playerAId, previousLegLastThrow.playerId, match.playerALegs, match.playerBlegs);
-            setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
+    await prisma.$transaction(async (tx) => {
+        const lastThrow = await findLastThrowData(matchId, leg, undefined, tx);
+        console.log(lastThrow);
+        if (!lastThrow) {
+            undoCloseLeg = true;
+            const previousLegLastThrow = await findPreviousLegLastThrow(matchId, leg, tx);
+            if (previousLegLastThrow) {
+                await deletePlayerThrow(previousLegLastThrow.id, tx)
+                match = await findMatch(matchId, tx);
+                match = await decrementMatchLegs(matchId, match.playerAId, previousLegLastThrow.playerId, match.playerALegs, match.playerBlegs, tx);
+            } else {
+                undoCloseLeg = false;
+                await updateMatchFirstPlayer(matchId, null, tx);
+            }
         } else {
-            undoCloseLeg = false;
-            await updateMatchFirstPlayer(matchId, null);
+            await deletePlayerThrow(lastThrow.id, tx)
         }
-    } else {
-        await deletePlayerThrow(lastThrow.id)
+    });
+    if (undoCloseLeg && match) {
+        setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
     revalidatePath('/tournaments/[id]/tables/[table]', 'page');
     const cacheTag = `match${table}`
