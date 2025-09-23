@@ -1,10 +1,10 @@
 'use server'
 
 import getTournamentInfo from "./cuescore"
-import prisma from "./db";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
+import { findMatch, upsertMatch, updateMatchFirstPlayer, resetMatchData, findThrowsByMatchAndLeg } from "./data";
 
 interface CueScorePlayer {
   playerId: number;
@@ -86,50 +86,15 @@ export async function getFullMatch(matchId, slow) {
 }
 
 export async function getMatch(matchId) {
-  return prisma.match.findUnique({
-    where: { id: matchId },
-    include: { tournament: true }
-  })
+  return findMatch(matchId);
 }
 
 export async function createMatch(match) {
-  return await prisma.match.upsert({
-    create: {
-      id: String(match.matchId),
-      tournamentId: String(match.tournamentId),
-      playerAId: String(match.playerA.playerId),
-      playerAName: match.playerA.name,
-      playerAImage: match.playerA.image,
-      playerBId: String(match.playerB.playerId),
-      playerBName: match.playerB.name,
-      playerBImage: match.playerB.image,
-      round: match.roundName,
-      runTo: match.raceTo
-    },
-    update: {
-      playerAId: String(match.playerA.playerId),
-      playerAName: match.playerA.name,
-      playerAImage: match.playerA.image,
-      playerBId: String(match.playerB.playerId),
-      playerBName: match.playerB.name,
-      playerBImage: match.playerB.image,
-      round: match.roundName,
-      runTo: match.raceTo
-    },
-    where: {
-      id: String(match.matchId)
-    }
-  });
+  return await upsertMatch(match);
 }
 
 export async function setStartingPlayer(matchId, playerId) {
-  return await prisma.match.update({
-    data: {
-      firstPlayer: playerId
-    }, where: {
-      id: matchId
-    }
-  });
+  return await updateMatchFirstPlayer(matchId, playerId);
 }
 
 export async function startMatch(formData) {
@@ -141,40 +106,12 @@ export async function startMatch(formData) {
 }
 
 export async function resetMatch(formData) {
-  await prisma.match.update({
-    data: {
-      firstPlayer: null,
-      playerALegs: 0,
-      playerBlegs: 0,
-      throwsList: {
-        deleteMany: {
-        }
-      }
-    },
-    where: {
-      id: formData.get('matchId')
-    }
-  })
+  await resetMatchData(formData.get('matchId'));
   revalidatePath('/tournaments/[id]/tables/[table]', 'layout');
 }
 
 export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
-  return await prisma.playerThrow.groupBy({
-    by: ['playerId'],
-    _sum: {
-      score: true
-    },
-    _count: {
-      score: true
-    },
-    where: {
-      matchId: matchId,
-      leg: leg,
-      playerId: {
-        in: [playerA, playerB]
-      }
-    }
-  });
+  return await findThrowsByMatchAndLeg(matchId, leg, playerA, playerB);
 }
 
 export async function getScores(matchId: string, leg: number, playerA: string, playerB: string, firstPlayer: string) {

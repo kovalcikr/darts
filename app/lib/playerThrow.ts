@@ -1,8 +1,9 @@
 'use server'
 
 import { revalidatePath, revalidateTag } from "next/cache";
-import prisma from "./db";
 import { setScore } from "./cuescore";
+import { aggregatePlayerThrow, createPlayerThrow, updateMatchLegs, findLastThrow as findLastThrowData, deletePlayerThrow, findPreviousLegLastThrow, aggregateMatchThrows, findManyPlayerThrows, findThrowsByMatchAndLeg, updateMatchFirstPlayer, decrementMatchLegs } from "./data";
+import { findMatch } from "./data";
 
 export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, slow, table) {
     if (slow) {
@@ -10,48 +11,17 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
     }
     let closeLeg = false;
     let match = null;
-    await prisma.$transaction(async (tx) => {
-        const currentScore = await tx.playerThrow.aggregate({
-            _sum: {
-                score: true
-            },
-            where: {
-                matchId: matchId,
-                leg: leg,
-                playerId: playerId
-            }
-        })
-        if (currentScore._sum.score + score > 501) {
-            throw new Error('Bust')
-        }
-        if (currentScore._sum.score + score == 501) {
-            closeLeg = true;
-        }
-        await tx.playerThrow.create({
-            data: {
-                tournamentId: tournamentId,
-                matchId: matchId,
-                leg: leg,
-                playerId: playerId,
-                score: score,
-                darts: dartsCount,
-                checkout: (currentScore._sum.score + score == 501)
-            }
-        })
-        if (closeLeg) {
-            match = await tx.match.findUnique({ where: { id: matchId } });
-            match = await tx.match.update({
-                data: {
-                    playerALegs: match.playerALegs + (match.playerAId == playerId ? 1 : 0),
-                    playerBlegs: match.playerBlegs + (match.playerBId == playerId ? 1 : 0)
-                },
-                where: {
-                    id: matchId
-                }
-            })
-        }
-    })
+    const currentScore = await aggregatePlayerThrow(matchId, leg, playerId);
+    if (currentScore._sum.score + score > 501) {
+        throw new Error('Bust')
+    }
+    if (currentScore._sum.score + score == 501) {
+        closeLeg = true;
+    }
+    await createPlayerThrow(tournamentId, matchId, leg, playerId, score, dartsCount, closeLeg);
     if (closeLeg) {
+        match = await findMatch(matchId);
+        match = await updateMatchLegs(matchId, match.playerAId, playerId, match.playerALegs, match.playerBlegs);
         setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
 
@@ -67,65 +37,22 @@ export async function undoThrow(matchId, leg, slow, table) {
     }
     let undoCloseLeg = false;
     let match = null;
-    await prisma.$transaction(async (tx) => {
-        const lastThrow = await tx.playerThrow.findFirst({
-            where: {
-                matchId: matchId,
-                leg: leg,
-            },
-            orderBy: {
-                time: 'desc'
-            }
-        })
-        console.log(lastThrow);
-        if (!lastThrow) {
-            undoCloseLeg = true;
-            const previousLegLastThrow = await tx.playerThrow.findFirst({
-                where: {
-                    matchId: matchId,
-                    leg: leg - 1,
-                },
-                orderBy: {
-                    time: 'desc'
-                }
-            })
-            if (previousLegLastThrow) {
-                await tx.playerThrow.delete({
-                    where: {
-                        id: previousLegLastThrow.id
-                    }
-                })
-                match = await tx.match.findUnique({ where: { id: matchId } });
-                match = await tx.match.update({
-                    data: {
-                        playerALegs: match.playerALegs - (match.playerAId == previousLegLastThrow.playerId ? 1 : 0),
-                        playerBlegs: match.playerBlegs - (match.playerBId == previousLegLastThrow.playerId ? 1 : 0)
-                    },
-                    where: {
-                        id: matchId
-                    }
-                })
-            } else {
-                undoCloseLeg = false;
-                match = await tx.match.update({
-                    data: {
-                        firstPlayer: null
-                    },
-                    where: {
-                        id: matchId
-                    }
-                })
-            }
+    const lastThrow = await findLastThrowData(matchId, leg);
+    console.log(lastThrow);
+    if (!lastThrow) {
+        undoCloseLeg = true;
+        const previousLegLastThrow = await findPreviousLegLastThrow(matchId, leg);
+        if (previousLegLastThrow) {
+            await deletePlayerThrow(previousLegLastThrow.id)
+            match = await findMatch(matchId);
+            match = await decrementMatchLegs(matchId, match.playerAId, previousLegLastThrow.playerId, match.playerALegs, match.playerBlegs);
+            setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
         } else {
-            await tx.playerThrow.delete({
-                where: {
-                    id: lastThrow.id
-                }
-            })
+            undoCloseLeg = false;
+            await updateMatchFirstPlayer(matchId, null);
         }
-    });
-    if (undoCloseLeg) {
-        setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
+    } else {
+        await deletePlayerThrow(lastThrow.id)
     }
     revalidatePath('/tournaments/[id]/tables/[table]', 'page');
     const cacheTag = `match${table}`
@@ -135,63 +62,25 @@ export async function undoThrow(matchId, leg, slow, table) {
 }
 
 export async function findLastThrow(matchId, leg, player) {
-    return await prisma.playerThrow.findFirst({
-        where: {
-            matchId: matchId,
-            leg: leg,
-            playerId: player
-        },
-        orderBy: {
-            time: 'desc'
-        }
-    })
+    return await findLastThrowData(matchId, leg, player);
 }
 
 export async function findMatchAvg(matchId, player) {
-    const data = await prisma.playerThrow.aggregate({
-        _sum: {
-            score: true,
-            darts: true,
-        },
-        where: {
-            matchId: matchId,
-            playerId: player
-        },
-    });
-    return data._sum.darts ? data._sum.score / data._sum.darts * 3 : 0;
+    const data = await aggregateMatchThrows(matchId, player);
+    if (!data._sum.darts) {
+        return 0;
+    }
+    return data._sum.score / data._sum.darts * 3;
 }
 
-export async function getPlayerThrowInfo(tournamentId, matchId, leg) {
+export async function getPlayerThrowInfo(tournamentId, matchId, leg, playerA, playerB) {
     if (!matchId) {
         return null;
     }
 
-    const score = await prisma.playerThrow.groupBy({
-        by: ['tournamentId', 'matchId', 'leg', 'playerId'],
-        _sum: {
-            score: true
-        },
-        _count: {
-            score: true
-        },
-        where: {
-            tournamentId: tournamentId,
-            matchId: matchId,
-            leg: leg
-        }
-    });
+    const score = await findThrowsByMatchAndLeg(matchId, leg, playerA, playerB);
 
-    const lastThrows = await prisma.playerThrow.findMany({
-        where: {
-            tournamentId: tournamentId,
-            matchId: matchId,
-            leg: leg
-        },
-        orderBy: {
-            time: 'desc'
-        },
-        take: 6
-    });
+    const lastThrows = await findManyPlayerThrows(tournamentId, matchId, leg);
 
     return { score, lastThrows };
 }
