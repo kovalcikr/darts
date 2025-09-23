@@ -25,6 +25,55 @@ export async function upsertTournament(tournamentId: string, name: string, tx?: 
     });
 }
 
+export async function findHighestScoreInMatch(matchId: string, playerId: string, tx?: PrismaTransactionClient) {
+    const client = getPrismaClient(tx);
+    const result = await client.playerThrow.aggregate({
+        _max: {
+            score: true,
+        },
+        where: {
+            matchId: matchId,
+            playerId: playerId,
+        },
+    });
+    return result._max.score || 0;
+}
+
+export async function findBestCheckoutInMatch(matchId: string, playerId: string, tx?: PrismaTransactionClient) {
+    const client = getPrismaClient(tx);
+    const result = await client.playerThrow.aggregate({
+        _max: {
+            score: true,
+        },
+        where: {
+            matchId: matchId,
+            playerId: playerId,
+            checkout: true,
+        },
+    });
+    return result._max.score || 0;
+}
+
+export async function findBestLegInMatch(matchId: string, playerId: string, tx?: PrismaTransactionClient) {
+    const client = getPrismaClient(tx);
+    const result = await client.playerThrow.groupBy({
+        by: ['leg'],
+        _sum: {
+            darts: true,
+        },
+        where: {
+            matchId: matchId,
+            playerId: playerId,
+        },
+        orderBy: {
+            _sum: {
+                darts: 'asc',
+            },
+        },
+    });
+    return result[0]?._sum.darts || 0;
+}
+
 export async function findThrowsByMatch(matchId: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     return client.playerThrow.findMany({

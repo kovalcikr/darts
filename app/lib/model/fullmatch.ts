@@ -20,4 +20,7 @@ export type Player = {
     matchAvg: number
     legCount: number
     active: boolean;
+    highestScore: number;
+    bestCheckout: number;
+    bestLeg: number;
 }
