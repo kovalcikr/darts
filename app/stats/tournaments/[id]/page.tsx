@@ -7,12 +7,6 @@ import { unstable_cache } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 
-export async function generateStaticParams() {
-    return (await getCachedTournaments()).map((t) => ({
-        id: t.id,
-    }))
-}
-
 const cachedTournament = unstable_cache(async (tournamentId) => {
     console.log("Fetching tournament data from DB");
     return await prisma.tournament.findUnique({
