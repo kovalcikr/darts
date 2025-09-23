@@ -36,9 +36,9 @@ describe('Tournament Integration Tests', () => {
     test('should find tournaments by name', async () => {
         await prismaTest.tournament.createMany({
             data: [
-                { id: '1', name: 'Tournament A' },
-                { id: '2', name: 'Tournament B' },
-                { id: '3', name: 'Another Tournament' },
+                { id: '4', name: 'Tournament A' },
+                { id: '5', name: 'Tournament B' },
+                { id: '6', name: 'Another Tournament' },
             ],
         });
 
@@ -51,9 +51,9 @@ describe('Tournament Integration Tests', () => {
     test('should find tournaments by year', async () => {
         await prismaTest.tournament.createMany({
             data: [
-                { id: '1', name: 'Tournament 2023 A' },
-                { id: '2', name: 'Tournament 2023 B' },
-                { id: '3', name: 'Tournament 2024' },
+                { id: '7', name: 'Tournament 2023 A' },
+                { id: '8', name: 'Tournament 2023 B' },
+                { id: '9', name: 'Tournament 2024' },
             ],
         });
 

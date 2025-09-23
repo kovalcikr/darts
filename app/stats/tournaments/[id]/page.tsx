@@ -1,4 +1,6 @@
+import { Header } from "@/app/components/header";
 import getTournamentInfo, { getResults } from "@/app/lib/cuescore";
+import { findMatchesByTournament } from "@/app/lib/data";
 import prisma from "@/app/lib/db";
 import { getPlayers } from "@/app/lib/players";
 import { getCachedTournaments } from "@/app/lib/tournament";
@@ -110,6 +112,11 @@ const cachedMatchAverages = unstable_cache(async (tournamentId, avg) => {
     return await getMatchAverages(tournamentId, avg);
 });
 
+const cachedMatches = unstable_cache(async (tournamentId) => {
+    console.log("Fetching matches from DB");
+    return await findMatchesByTournament(tournamentId);
+});
+
 export default async function TournamentStats({ params }: { params: { id: string } }) {
 
     const tournament = await cachedTournament(params.id);
@@ -137,6 +144,8 @@ export default async function TournamentStats({ params }: { params: { id: string
     }
 
     const { bestAvg, avgPP } = await cachedMatchAverages(params.id, avg);
+
+    const matches = await cachedMatches(params.id);
 
     function Stat({ name, value }) {
         return (<div className="my-1"><span className="font-bold">{name}: </span>{value}</div>)
@@ -224,9 +233,47 @@ export default async function TournamentStats({ params }: { params: { id: string
                         <BestLegTable bestLeg={bLeg} players={players} />
 
                         <AveragesTable avgPP={avgPP} players={players} />
+
+                        <MatchesList matches={matches} tournamentId={params.id} />
                     </div>
                 </div>
             </main>
+        </div>
+    )
+}
+
+function MatchesList({ matches, tournamentId }) {
+    return (
+        <div className="overflow-x-auto">
+            <Header text={"Zápasy"} />
+
+            <table className="min-w-full divide-y-2 divide-gray-200">
+                <thead className="text-left ltr:text-left rtl:text-right">
+                    <tr className="*:font-medium *:text-gray-900">
+                        <th className="px-1 py-2 whitespace-nowrap">Kolo</th>
+                        <th className="px-3 py-2 whitespace-nowrap">Hráč A</th>
+                        <th className="px-3 py-2 whitespace-nowrap">Skóre</th>
+                        <th className="px-3 py-2 whitespace-nowrap">Hráč B</th>
+                        <th className="px-3 py-2 whitespace-nowrap"></th>
+                    </tr>
+                </thead>
+
+                <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
+                    {
+                        matches.map((match) => (
+                            <tr key={match.id} className="*:text-gray-900 *:first:font-medium">
+                                <td className="px-1 py-2 whitespace-nowrap">{match.round}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{match.playerAName}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{match.playerALegs} : {match.playerBlegs}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{match.playerBName}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">
+                                    <Link href={`/tournaments/${tournamentId}/match/${match.id}`} className="text-sky-500 hover:text-sky-700">Detail</Link>
+                                </td>
+                            </tr>
+                        ))
+                    }
+                </tbody>
+            </table>
         </div>
     )
 }
@@ -358,19 +405,6 @@ async function getHighScore(tournamentId: string): Promise<{ player: string, s80
     });
     const hss = Object.values(hs).sort((a: { index: number }, b: { index: number }) => a.index - b.index);
     return hss as { player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number }[];
-}
-
-function Header({ text }) {
-    return (
-        <span className="flex items-center">
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-300"></span>
-
-            <span className="text-2xl shrink-0 px-4 text-gray-900">{text}</span>
-
-            <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-300"></span>
-        </span>
-
-    )
 }
 
 function BestCheckoutTable({ bestCoc, players }) {

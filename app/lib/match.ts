@@ -4,7 +4,7 @@ import getTournamentInfo from "./cuescore"
 import { revalidatePath, revalidateTag } from "next/cache";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
-import { findMatch, upsertMatch, updateMatchFirstPlayer, resetMatchData, findThrowsByMatchAndLeg } from "./data";
+import { findMatch, upsertMatch, updateMatchFirstPlayer, resetMatchData, findThrowsByMatchAndLeg, findThrowsByMatch } from "./data";
 
 interface CueScorePlayer {
   playerId: number;
@@ -49,6 +49,7 @@ export async function getFullMatch(matchId, slow) {
   const playerBLast = (await findLastThrow(match.id, leg, match.playerBId))?.score;
   const playerAAvg = (await findMatchAvg(match.id, match.playerAId));
   const playerBAvg = (await findMatchAvg(match.id, match.playerBId));
+  const throws = await findThrowsByMatch(matchId);
 
   const playerA: Player = {
     id: match.playerAId,
@@ -80,7 +81,8 @@ export async function getFullMatch(matchId, slow) {
     currentLeg: leg,
     nextPlayer: scores.nextPlayer,
     playerA: playerA,
-    playerB: playerB
+    playerB: playerB,
+    throws: throws
   }
   return fullMatch;
 }
