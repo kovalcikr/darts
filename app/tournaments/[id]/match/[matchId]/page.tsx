@@ -108,10 +108,10 @@ function ThrowsList({ throws, playerA, playerB }) {
                                     {getLegRows(legThrows, playerA.id, playerB.id).map((row, i) => (
                                         <tr key={i} className="*:text-gray-900">
                                             <td className={`px-1 py-2 whitespace-nowrap ${row.playerA?.first ? 'font-bold' : ''} ${row.playerA?.last ? 'text-green-600 font-bold' : ''}`}>
-                                                {row.playerA?.score}
+                                                {row.playerA && <span>{row.playerA.remaining} <span className="text-gray-500">({row.playerA.score})</span></span>}
                                             </td>
                                             <td className={`px-3 py-2 whitespace-nowrap ${row.playerB?.first ? 'font-bold' : ''} ${row.playerB?.last ? 'text-green-600 font-bold' : ''}`}>
-                                                {row.playerB?.score}
+                                                {row.playerB && <span>{row.playerB.remaining} <span className="text-gray-500">({row.playerB.score})</span></span>}
                                             </td>
                                         </tr>
                                     ))}
@@ -132,18 +132,29 @@ function getLegRows(legThrows, playerAId, playerBId) {
     const numRows = Math.max(playerAThrows.length, playerBThrows.length);
     const firstThrow = legThrows.length > 0 ? legThrows[0] : null;
 
+    let remainingA = 501;
+    let remainingB = 501;
+
     for (let i = 0; i < numRows; i++) {
         const row = { playerA: null, playerB: null };
         if (playerAThrows[i]) {
+            const score = playerAThrows[i].score;
+            const remainingBefore = remainingA;
+            remainingA -= score;
             row.playerA = {
-                score: playerAThrows[i].checkout ? `${playerAThrows[i].score} D` : playerAThrows[i].score,
+                score: playerAThrows[i].checkout ? `${score} D` : score,
+                remaining: remainingBefore,
                 first: firstThrow && playerAThrows[i].id === firstThrow.id,
                 last: playerAThrows[i].checkout,
             };
         }
         if (playerBThrows[i]) {
+            const score = playerBThrows[i].score;
+            const remainingBefore = remainingB;
+            remainingB -= score;
             row.playerB = {
-                score: playerBThrows[i].checkout ? `${playerBThrows[i].score} D` : playerBThrows[i].score,
+                score: playerBThrows[i].checkout ? `${score} D` : score,
+                remaining: remainingBefore,
                 first: firstThrow && playerBThrows[i].id === firstThrow.id,
                 last: playerBThrows[i].checkout,
             };

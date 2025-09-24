@@ -1,6 +1,6 @@
-import { test, expect, describe, beforeAll } from '@jest/globals';
-import { prisma } from '@/lib/db';
-import { getFullMatch } from '@/lib/match';
+import { test, expect, describe, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
+import { prisma } from '../lib/db';
+import { getFullMatch } from '../lib/match';
 
 describe('Match Details Integration Test', () => {
     let tournament;
@@ -9,6 +9,16 @@ describe('Match Details Integration Test', () => {
     let match;
 
     beforeAll(async () => {
+        await prisma.playerThrow.deleteMany();
+        await prisma.match.deleteMany();
+        await prisma.tournament.deleteMany();
+    });
+
+    beforeEach(async () => {
+        await prisma.playerThrow.deleteMany();
+        await prisma.match.deleteMany();
+        await prisma.tournament.deleteMany();
+
         tournament = await prisma.tournament.create({
             data: {
                 id: 'test-tournament-match-details-2',
@@ -70,6 +80,19 @@ describe('Match Details Integration Test', () => {
                 playerBlegs: 1,
             }
         });
+    });
+
+    afterEach(async () => {
+        await prisma.playerThrow.deleteMany();
+        await prisma.match.deleteMany();
+        await prisma.tournament.deleteMany();
+    });
+
+    afterAll(async () => {
+        await prisma.playerThrow.deleteMany();
+        await prisma.match.deleteMany();
+        await prisma.tournament.deleteMany();
+        await prisma.$disconnect();
     });
 
     test('should return full match details', async () => {

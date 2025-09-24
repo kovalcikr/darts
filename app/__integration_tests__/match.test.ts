@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import prisma from '@/app/lib/db';
-import { afterAll, beforeEach, describe, expect, test } from '@jest/globals';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
 import {
     findMatch,
     upsertMatch,
@@ -13,7 +13,19 @@ import {
 const prismaTest = prisma as unknown as PrismaClient;
 
 describe('Match Integration Tests', () => {
+    beforeAll(async () => {
+        await prismaTest.playerThrow.deleteMany();
+        await prismaTest.match.deleteMany();
+        await prismaTest.tournament.deleteMany();
+    });
+
     beforeEach(async () => {
+        await prismaTest.playerThrow.deleteMany();
+        await prismaTest.match.deleteMany();
+        await prismaTest.tournament.deleteMany();
+    });
+
+    afterEach(async () => {
         await prismaTest.playerThrow.deleteMany();
         await prismaTest.match.deleteMany();
         await prismaTest.tournament.deleteMany();
