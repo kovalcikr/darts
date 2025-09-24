@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import prisma from '@/app/lib/db';
-import { afterAll, beforeEach, describe, expect, test } from '@jest/globals';
+import { afterAll, afterEach, describe, expect, test } from '@jest/globals';
 import {
     findThrowsByMatchAndLeg,
     aggregatePlayerThrow,
@@ -15,7 +15,7 @@ import {
 const prismaTest = prisma as unknown as PrismaClient;
 
 describe('Player Throw Integration Tests', () => {
-    beforeEach(async () => {
+    afterEach(async () => {
         await prismaTest.playerThrow.deleteMany();
         await prismaTest.match.deleteMany();
         await prismaTest.tournament.deleteMany();

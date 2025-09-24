@@ -6,6 +6,7 @@ import { finishMatch } from "@/app/lib/cuescore";
 import { Match } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react"
+import Image from "next/image";
 
 export default function Winner({ player, image, match, leg, slow, table }: { player: string, image: string, match: Match, leg: number, slow: boolean, table: string }) {
 
@@ -16,12 +17,12 @@ export default function Winner({ player, image, match, leg, slow, table }: { pla
       finishMatch(match.tournamentId, match.id, match.playerALegs, match.playerBlegs, table)
     }, 20000); //This will refresh the data at regularIntervals of refreshTime
     return () => clearInterval(comInterval) //Clear interval on component unmount to avoid memory leak
-  }, [])
+  }, [match.tournamentId, match.id, match.playerALegs, match.playerBlegs, table])
 
   return (
     <div className="flex flex-col text-center justify-center items-center content-center">
       Winner:
-      <img src={image} className="w-20"></img>
+      <Image src={image} alt={player} width={80} height={80} className="w-20" />
       <div className={"flex p-2 text-2xl font-bold"}>
         {player}
       </div>

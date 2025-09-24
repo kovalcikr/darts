@@ -1,5 +1,6 @@
 import { getFullMatch } from "@/app/lib/match";
 import Link from "next/link";
+import Image from "next/image";
 
 export default async function MatchPage({ params }: { params: { id: string, matchId: string } }) {
     const fullMatch = await getFullMatch(params.matchId, false);
@@ -49,12 +50,12 @@ function PlayerStats({ playerA, playerB }) {
         <div className="flex justify-around">
             <div className="w-1/2 p-4">
                 <div className="flex items-center">
-                    <img src={playerA.imageUrl} className="w-12 h-12 rounded-full" alt={playerA.name} />
+                    <Image src={playerA.imageUrl} width={48} height={48} className="w-12 h-12 rounded-full" alt={playerA.name} />
                     <h2 className="text-2xl font-bold ml-4">{playerA.name}</h2>
+                    <span className="text-2xl font-bold ml-2">({playerA.legCount})</span>
                 </div>
                 <div className="mt-4">
                     <p><strong>Priemer:</strong> {playerA.matchAvg.toFixed(2)}</p>
-                    <p><strong>Legy:</strong> {playerA.legCount}</p>
                     <p><strong>Najvyšší náhod:</strong> {playerA.highestScore}</p>
                     <p><strong>Najlepší checkout:</strong> {playerA.bestCheckout}</p>
                     <p><strong>Najlepší leg:</strong> {playerA.bestLeg}</p>
@@ -62,12 +63,12 @@ function PlayerStats({ playerA, playerB }) {
             </div>
             <div className="w-1/2 p-4">
                 <div className="flex items-center">
-                    <img src={playerB.imageUrl} className="w-12 h-12 rounded-full" alt={playerB.name} />
+                    <Image src={playerB.imageUrl} width={48} height={48} className="w-12 h-12 rounded-full" alt={playerB.name} />
                     <h2 className="text-2xl font-bold ml-4">{playerB.name}</h2>
+                    <span className="text-2xl font-bold ml-2">({playerB.legCount})</span>
                 </div>
                 <div className="mt-4">
                     <p><strong>Priemer:</strong> {playerB.matchAvg.toFixed(2)}</p>
-                    <p><strong>Legy:</strong> {playerB.legCount}</p>
                     <p><strong>Najvyšší náhod:</strong> {playerB.highestScore}</p>
                     <p><strong>Najlepší checkout:</strong> {playerB.bestCheckout}</p>
                     <p><strong>Najlepší leg:</strong> {playerB.bestLeg}</p>
@@ -92,7 +93,7 @@ function ThrowsList({ throws, playerA, playerB }) {
                 const legWinner = legThrows.find(t => t.checkout)?.playerId;
                 return (
                     <div key={leg}>
-                        <h2 className={`text-xl font-bold mt-4 ${legWinner === playerA.id ? 'text-blue-700' : legWinner === playerB.id ? 'text-red-700' : ''}`}>
+                        <h2 className={`text-xl font-bold mt-4 p-2 ${legWinner === playerA.id ? 'bg-blue-200 text-blue-800' : legWinner === playerB.id ? 'bg-red-200 text-red-800' : ''}`}>
                             Leg {leg}
                         </h2>
                         <div className="overflow-x-auto">
@@ -106,10 +107,10 @@ function ThrowsList({ throws, playerA, playerB }) {
                                 <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
                                     {getLegRows(legThrows, playerA.id, playerB.id).map((row, i) => (
                                         <tr key={i} className="*:text-gray-900">
-                                            <td className={`px-1 py-2 whitespace-nowrap ${row.playerA?.first ? 'font-bold' : ''} ${row.playerA?.checkout ? 'text-green-600' : ''}`}>
+                                            <td className={`px-1 py-2 whitespace-nowrap ${row.playerA?.first ? 'font-bold' : ''} ${row.playerA?.last ? 'text-green-600 font-bold' : ''}`}>
                                                 {row.playerA?.score}
                                             </td>
-                                            <td className={`px-3 py-2 whitespace-nowrap ${row.playerB?.first ? 'font-bold' : ''} ${row.playerB?.checkout ? 'text-green-600' : ''}`}>
+                                            <td className={`px-3 py-2 whitespace-nowrap ${row.playerB?.first ? 'font-bold' : ''} ${row.playerB?.last ? 'text-green-600 font-bold' : ''}`}>
                                                 {row.playerB?.score}
                                             </td>
                                         </tr>
@@ -129,21 +130,22 @@ function getLegRows(legThrows, playerAId, playerBId) {
     const playerAThrows = legThrows.filter(t => t.playerId === playerAId);
     const playerBThrows = legThrows.filter(t => t.playerId === playerBId);
     const numRows = Math.max(playerAThrows.length, playerBThrows.length);
+    const firstThrow = legThrows.length > 0 ? legThrows[0] : null;
 
     for (let i = 0; i < numRows; i++) {
         const row = { playerA: null, playerB: null };
         if (playerAThrows[i]) {
             row.playerA = {
-                score: playerAThrows[i].score,
-                checkout: playerAThrows[i].checkout,
-                first: i === 0,
+                score: playerAThrows[i].checkout ? `${playerAThrows[i].score} D` : playerAThrows[i].score,
+                first: firstThrow && playerAThrows[i].id === firstThrow.id,
+                last: playerAThrows[i].checkout,
             };
         }
         if (playerBThrows[i]) {
             row.playerB = {
-                score: playerBThrows[i].score,
-                checkout: playerBThrows[i].checkout,
-                first: i === 0,
+                score: playerBThrows[i].checkout ? `${playerBThrows[i].score} D` : playerBThrows[i].score,
+                first: firstThrow && playerBThrows[i].id === firstThrow.id,
+                last: playerBThrows[i].checkout,
             };
         }
         rows.push(row);

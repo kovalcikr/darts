@@ -3,6 +3,7 @@
 import { startMatch } from "@/app/lib/match";
 import { Match } from "@prisma/client";
 import { useFormStatus } from "react-dom";
+import Image from "next/image";
 
 export default function ChoosePlayer({ match, table }: { match: Match, table: string }) {
 
@@ -44,7 +45,7 @@ function Player({ playerId, image, name }) {
             <div className="flex flex-col">
                 <div className={`p-4 m-6 border-slate-400 border-2 bg-blue-300 rounded shadow ${pending && "bg-slate-200"}`}>
                     <div className="flex items-center justify-center flex-row basis-1/2">
-                        <img src={image} className="w-14 "></img>
+                        <Image src={image} alt={name} width={56} height={56} className="w-14 " />
                         <div className={"flex items-center justify-center text-center p-2 text-3xl"}>
                             {name}
                         </div>

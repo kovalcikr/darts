@@ -244,14 +244,28 @@ export default async function TournamentStats({ params }: { params: { id: string
 
 function MatchesList({ matches, tournamentId }) {
     const roundOrder = {
-        "Finále": 1,
-        "Semifinále": 2,
-        "Štvrťfinále": 3,
+        "Final": 1,
+        "Semi-final": 2,
+        "Quarter-final": 3,
+        "Last 16": 4,
+        "Last 32": 5,
+        "Last 64": 6,
+        "Last 128": 7,
+    };
+
+    const roundTranslations = {
+        "Final": "Finále",
+        "Semi-final": "Semifinále",
+        "Quarter-final": "Štvrťfinále",
+        "Last 16": "Osemfinále",
+        "Last 32": "Šestnásťfinále",
+        "Last 64": "1/32-finále",
+        "Last 128": "1/64-finále",
     };
 
     const sortedMatches = [...matches].sort((a, b) => {
-        const roundA = roundOrder[a.round] || parseInt(a.round.split(" ")[1]) + 3;
-        const roundB = roundOrder[b.round] || parseInt(b.round.split(" ")[1]) + 3;
+        const roundA = roundOrder[a.round] || (a.round.includes("Round") ? parseInt(a.round.split(" ")[1]) + 10 : 99);
+        const roundB = roundOrder[b.round] || (b.round.includes("Round") ? parseInt(b.round.split(" ")[1]) + 10 : 99);
         return roundA - roundB;
     });
 
@@ -273,13 +287,13 @@ function MatchesList({ matches, tournamentId }) {
                 <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
                     {
                         sortedMatches.map((match) => {
-                            const winner = match.playerALegs > match.playerBlegs ? match.playerAId : match.playerBId;
+                            const winnerId = match.playerALegs > match.playerBlegs ? match.playerAId : match.playerBId;
                             return (
                                 <tr key={match.id} className="*:text-gray-900 *:first:font-medium">
-                                    <td className="px-1 py-2 whitespace-nowrap">{match.round}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap ${winner === match.playerAId ? 'font-bold' : ''}`}>{match.playerAName}</td>
-                                    <td className="px-3 py-2 whitespace-nowrap">{match.playerALegs} : {match.playerBlegs}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap ${winner === match.playerBId ? 'font-bold' : ''}`}>{match.playerBName}</td>
+                                    <td className="px-1 py-2 whitespace-nowrap">{roundTranslations[match.round] || match.round}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap ${winnerId === match.playerAId ? 'font-bold' : ''}`}>{match.playerAName}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap ${winnerId ? 'font-bold' : ''}`}>{match.playerALegs} : {match.playerBlegs}</td>
+                                    <td className={`px-3 py-2 whitespace-nowrap ${winnerId === match.playerBId ? 'font-bold' : ''}`}>{match.playerBName}</td>
                                     <td className="px-3 py-2 whitespace-nowrap">
                                         <Link href={`/tournaments/${tournamentId}/match/${match.id}`} className="text-sky-500 hover:text-sky-700">Detail</Link>
                                     </td>

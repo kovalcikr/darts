@@ -1,6 +1,9 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import axios from 'axios';
 import getTournamentInfo, { setScore, finishMatch, getRankings, getResults } from '../lib/cuescore';
-import { mockedAxios } from './mocks';
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 jest.mock('next/cache', () => ({
     revalidateTag: jest.fn(),
