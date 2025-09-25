@@ -27,8 +27,8 @@ export default async function Darts({ table, matchId, slow, reset }: { table: st
       firstPlayer: "1",
       tournamentId: "test",
     },
-    playerA: { matchAvg: 10, score: 501, active: true, id: "1", name: "Fero Hruska", dartsCount: 3, imageUrl: "abc", lastThrow: 41, legCount: 0 },
-    playerB: { matchAvg: 30, score: 501, active: false, id: "2", name: "Jozo Mrkva", dartsCount: 6, imageUrl: "abc", lastThrow: 41, legCount: 1 },
+    playerA: { matchAvg: 10, score: 501, active: true, id: "1", name: "Fero Hruska", dartsCount: 3, imageUrl: "abc", lastThrow: 41, legCount: 0, highestScore: 0, bestCheckout: 0, bestLeg: 0 },
+    playerB: { matchAvg: 30, score: 501, active: false, id: "2", name: "Jozo Mrkva", dartsCount: 6, imageUrl: "abc", lastThrow: 41, legCount: 1, highestScore: 0, bestCheckout: 0, bestLeg: 0 },
     nextPlayer: "1",
     currentLeg: 1,
   };

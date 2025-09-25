@@ -4,7 +4,7 @@ import getTournamentInfo from "./cuescore"
 import { revalidatePath, revalidateTag } from "next/cache";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
-import { findMatch, upsertMatch, updateMatchFirstPlayer, resetMatchData, findThrowsByMatchAndLeg } from "./data";
+import { findMatch, upsertMatch, updateMatchFirstPlayer, resetMatchData, findThrowsByMatchAndLeg, findThrowsByMatch, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch } from "./data";
 
 interface CueScorePlayer {
   playerId: number;
@@ -49,6 +49,7 @@ export async function getFullMatch(matchId, slow) {
   const playerBLast = (await findLastThrow(match.id, leg, match.playerBId))?.score;
   const playerAAvg = (await findMatchAvg(match.id, match.playerAId));
   const playerBAvg = (await findMatchAvg(match.id, match.playerBId));
+  const throws = await findThrowsByMatch(matchId);
 
   const playerA: Player = {
     id: match.playerAId,
@@ -59,7 +60,10 @@ export async function getFullMatch(matchId, slow) {
     lastThrow: playerALast,
     matchAvg: playerAAvg,
     legCount: match.playerALegs,
-    active: scores.nextPlayer == match.playerAId
+    active: scores.nextPlayer == match.playerAId,
+    highestScore: await findHighestScoreInMatch(matchId, match.playerAId),
+    bestCheckout: await findBestCheckoutInMatch(matchId, match.playerAId),
+    bestLeg: await findBestLegInMatch(matchId, match.playerAId),
   }
 
   const playerB: Player = {
@@ -71,7 +75,10 @@ export async function getFullMatch(matchId, slow) {
     lastThrow: playerBLast,
     matchAvg: playerBAvg,
     legCount: match.playerBlegs,
-    active: scores.nextPlayer == match.playerBId
+    active: scores.nextPlayer == match.playerBId,
+    highestScore: await findHighestScoreInMatch(matchId, match.playerBId),
+    bestCheckout: await findBestCheckoutInMatch(matchId, match.playerBId),
+    bestLeg: await findBestLegInMatch(matchId, match.playerBId),
   }
 
   const fullMatch: FullMatch = {
@@ -80,7 +87,8 @@ export async function getFullMatch(matchId, slow) {
     currentLeg: leg,
     nextPlayer: scores.nextPlayer,
     playerA: playerA,
-    playerB: playerB
+    playerB: playerB,
+    throws: throws
   }
   return fullMatch;
 }

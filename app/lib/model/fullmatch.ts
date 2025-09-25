@@ -1,13 +1,13 @@
-import { Match, Tournament } from "@prisma/client"
+import { Match, PlayerThrow, Tournament } from "@prisma/client"
 
 export type FullMatch = {
-    match : Match
+    match: Match
     tournament: Tournament
     currentLeg: number
     nextPlayer: string
     playerA: Player
     playerB: Player
-
+    throws: PlayerThrow[]
 }
 
 export type Player = {
@@ -20,4 +20,7 @@ export type Player = {
     matchAvg: number
     legCount: number
     active: boolean;
+    highestScore: number;
+    bestCheckout: number;
+    bestLeg: number;
 }

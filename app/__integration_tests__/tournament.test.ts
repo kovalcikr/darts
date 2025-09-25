@@ -1,16 +1,32 @@
 import { PrismaClient } from '@prisma/client';
 import prisma from '@/app/lib/db';
-import { afterAll, beforeEach, describe, expect, test } from '@jest/globals';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
 import { upsertTournament, findTournamentsByName, findTournamentsByYear } from '@/app/lib/data';
 
 const prismaTest = prisma as unknown as PrismaClient;
 
 describe('Tournament Integration Tests', () => {
+    beforeAll(async () => {
+        await prismaTest.playerThrow.deleteMany();
+        await prismaTest.match.deleteMany();
+        await prismaTest.tournament.deleteMany();
+    });
+
     beforeEach(async () => {
+        await prismaTest.playerThrow.deleteMany();
+        await prismaTest.match.deleteMany();
+        await prismaTest.tournament.deleteMany();
+    });
+
+    afterEach(async () => {
+        await prismaTest.playerThrow.deleteMany();
+        await prismaTest.match.deleteMany();
         await prismaTest.tournament.deleteMany();
     });
 
     afterAll(async () => {
+        await prismaTest.playerThrow.deleteMany();
+        await prismaTest.match.deleteMany();
         await prismaTest.tournament.deleteMany();
         await prismaTest.$disconnect();
     });
@@ -36,9 +52,9 @@ describe('Tournament Integration Tests', () => {
     test('should find tournaments by name', async () => {
         await prismaTest.tournament.createMany({
             data: [
-                { id: '1', name: 'Tournament A' },
-                { id: '2', name: 'Tournament B' },
-                { id: '3', name: 'Another Tournament' },
+                { id: '4', name: 'Tournament A' },
+                { id: '5', name: 'Tournament B' },
+                { id: '6', name: 'Another Tournament' },
             ],
         });
 
@@ -51,9 +67,9 @@ describe('Tournament Integration Tests', () => {
     test('should find tournaments by year', async () => {
         await prismaTest.tournament.createMany({
             data: [
-                { id: '1', name: 'Tournament 2023 A' },
-                { id: '2', name: 'Tournament 2023 B' },
-                { id: '3', name: 'Tournament 2024' },
+                { id: '7', name: 'Tournament 2023 A' },
+                { id: '8', name: 'Tournament 2023 B' },
+                { id: '9', name: 'Tournament 2024' },
             ],
         });
 

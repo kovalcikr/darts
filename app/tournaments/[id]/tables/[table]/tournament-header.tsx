@@ -1,13 +1,17 @@
 import { resetMatch } from "@/app/lib/match";
 import { Tournament } from "@prisma/client";
+import Image from "next/image";
 
 export default function TournamentHeader({ tournament, round, format, table, matchId, reset }: { tournament: Tournament, round: string, format: string, table: string, matchId: string, reset: boolean }) {
   return (
     <div className="flex flex-row basis-1/12 bg-blue-200 p-1 pl-3 text-xl text-slate-800">
       <div className="flex flex-cols items-center justify-left">
         <div>
-          <img
+          <Image
             src="https://img.cuescore.com/image/3/2/31bf20bde717adc6cb934d7b8fddd79d.png"
+            alt={tournament.name}
+            width={48}
+            height={48}
             className="w-12"
           />
         </div>

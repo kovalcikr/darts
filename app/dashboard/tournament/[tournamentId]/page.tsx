@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 async function fetchServerData(tournamentId, test) {
     const response = await fetch(`/api/dashboard/tournament/${tournamentId}${test ? `?test=${test}` : ''}`);
@@ -33,7 +34,7 @@ export default function DashboardPage({ params }: { params: { tournamentId: stri
         intervalId = setInterval(fetchData, 1000); // Poll every second
 
         return () => clearInterval(intervalId); // Cleanup on unmount
-    }, []);
+    }, [params.tournamentId, searchParams]);
 
     if (error) {
         return <div>Error: {error}</div>;
@@ -106,9 +107,11 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: 
 function Winner({ player, image }: { player: string, image: string }) {
     return (
         <div className="flex flex-col items-center justify-center space-y-2 w-full h-full">
-            <img
+            <Image
                 src={image}
-                alt={`Winner` + player}
+                alt={`Winner: ${player}`}
+                width={128}
+                height={128}
                 className="w-32 h-32 object-cover"
             />
             <p className="text-2xl font-semibold text-blue-800">{player}</p>
@@ -123,9 +126,11 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
 }) {
     return (
         <div className={`flex flex-col items-center space-y-4 flex-1 ${active ? "bg-yellow-50" : ""}`}>
-            <img
+            <Image
                 src={photo}
                 alt={`Player ${playerName} - ${playerId}`}
+                width={112}
+                height={112}
                 className="w-28 h-28"
             />
             <h2 className="text-xl text-center px-1 font-bold text-blue-700">{playerName}</h2>
