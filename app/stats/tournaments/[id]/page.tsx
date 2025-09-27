@@ -244,13 +244,13 @@ export default async function TournamentStats({ params }: { params: { id: string
 
 function MatchesList({ matches, tournamentId }) {
     const roundOrder = {
-        "Final": 1,
-        "Semi-final": 2,
-        "Quarter-final": 3,
-        "Last 16": 4,
-        "Last 32": 5,
-        "Last 64": 6,
-        "Last 128": 7,
+        "Final": 100,
+        "Semi-final": 99,
+        "Quarter-final": 98,
+        "Last 16": 97,
+        "Last 32": 96,
+        "Last 64": 95,
+        "Last 128": 94,
     };
 
     const roundTranslations = {
@@ -264,8 +264,8 @@ function MatchesList({ matches, tournamentId }) {
     };
 
     const sortedMatches = [...matches].sort((a, b) => {
-        const roundA = roundOrder[a.round] || (a.round.includes("Round") ? parseInt(a.round.split(" ")[1]) + 10 : 99);
-        const roundB = roundOrder[b.round] || (b.round.includes("Round") ? parseInt(b.round.split(" ")[1]) + 10 : 99);
+        const roundA = roundOrder[a.round] || parseInt(a.round.split(" ")[1]);
+        const roundB = roundOrder[b.round] || parseInt(b.round.split(" ")[1]);
         return roundA - roundB;
     });
 
