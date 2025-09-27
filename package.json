@@ -7,13 +7,14 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "studio": "npx dotenv -e .env.development.local npx prisma studio",
-    "studio:test": "npx dotenv -e .env.test npx prisma studio",
-    "test": "npx dotenv -e .env.test jest",
-    "test:watch": "npx dotenv -e .env.test jest --watch",
-    "test:integration": "JEST_ENV=integration npx dotenv -e .env.test jest",
-    "migrate": "npx dotenv -e .env.development.local npx prisma db push",
-    "migrate:test": "npx dotenv -e .env.test npx prisma db push"
+    "studio": "npx dotenv -e .env.development.local -- npx prisma studio",
+    "studio:test": "npx dotenv -e .env.test -- npx prisma studio",
+    "test": "npx dotenv -e .env.test -- jest",
+    "test:watch": "npx dotenv -e .env.test -- jest --watch",
+    "test:integration": "JEST_ENV=integration npx dotenv -e .env.test -- jest --runInBand",
+    "test:integration:full": "sh ./run-integration-tests.sh",
+    "migrate": "npx dotenv -e .env.development.local -- npx prisma db push",
+    "migrate:test": "npx dotenv -e .env.test -- npx prisma db push"
   },
   "dependencies": {
     "@prisma/client": "^5.15.1",
