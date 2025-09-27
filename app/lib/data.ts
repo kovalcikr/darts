@@ -56,6 +56,22 @@ export async function findBestCheckoutInMatch(matchId: string, playerId: string,
 
 export async function findBestLegInMatch(matchId: string, playerId: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
+    const wonLegs = await client.playerThrow.findMany({
+        where: {
+            matchId: matchId,
+            playerId: playerId,
+            checkout: true,
+        },
+        select: {
+            leg: true,
+        },
+    });
+
+    if (wonLegs.length === 0) {
+        return 0;
+    }
+    const wonLegNumbers = wonLegs.map(l => l.leg);
+
     const result = await client.playerThrow.groupBy({
         by: ['leg'],
         _sum: {
@@ -64,6 +80,9 @@ export async function findBestLegInMatch(matchId: string, playerId: string, tx?:
         where: {
             matchId: matchId,
             playerId: playerId,
+            leg: {
+                in: wonLegNumbers,
+            },
         },
         orderBy: {
             _sum: {
