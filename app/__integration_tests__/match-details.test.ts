@@ -1,12 +1,21 @@
 import { test, expect, describe, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
-import { prisma } from '../lib/db';
+import prisma from '../lib/db';
 import { getFullMatch } from '../lib/match';
 
 describe('Match Details Integration Test', () => {
     let tournament;
-    let player1;
-    let player2;
     let match;
+    const player1 = {
+        id: 'test-player-1-match-details-2',
+        name: 'Player 1',
+        photo: 'https://example.com/player1.jpg',
+    };
+    const player2 = {
+        id: 'test-player-2-match-details-2',
+        name: 'Player 2',
+        photo: 'https://example.com/player2.jpg',
+    };
+
 
     beforeAll(async () => {
         await prisma.playerThrow.deleteMany();
@@ -23,23 +32,6 @@ describe('Match Details Integration Test', () => {
             data: {
                 id: 'test-tournament-match-details-2',
                 name: 'Test Tournament 2',
-                date: new Date(),
-            },
-        });
-
-        player1 = await prisma.player.create({
-            data: {
-                id: 'test-player-1-match-details-2',
-                name: 'Player 1',
-                photo: 'https://example.com/player1.jpg',
-            },
-        });
-
-        player2 = await prisma.player.create({
-            data: {
-                id: 'test-player-2-match-details-2',
-                name: 'Player 2',
-                photo: 'https://example.com/player2.jpg',
             },
         });
 
@@ -53,23 +45,23 @@ describe('Match Details Integration Test', () => {
                 playerBName: player2.name,
                 playerAImage: player1.photo,
                 playerBImage: player2.photo,
-                raceTo: 2,
+                runTo: 2,
                 round: 'Final',
             },
         });
 
         await prisma.playerThrow.createMany({
             data: [
-                { id: 'throw-11-md', value: 60, double: false, leg: 1, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
-                { id: 'throw-12-md', value: 50, double: false, leg: 1, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
-                { id: 'throw-13-md', value: 100, double: false, leg: 1, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
-                { id: 'throw-14-md', value: 101, double: false, leg: 1, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
-                { id: 'throw-15-md', value: 141, double: true, leg: 1, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, checkout: true, darts: 3 },
-                { id: 'throw-16-md', value: 60, double: false, leg: 2, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
-                { id: 'throw-17-md', value: 50, double: false, leg: 2, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
-                { id: 'throw-18-md', value: 100, double: false, leg: 2, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
-                { id: 'throw-19-md', value: 101, double: false, leg: 2, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
-                { id: 'throw-20-md', value: 141, double: true, leg: 2, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, checkout: true, darts: 3 },
+                { id: 'throw-11-md', score: 60, leg: 1, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
+                { id: 'throw-12-md', score: 50, leg: 1, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
+                { id: 'throw-13-md', score: 100, leg: 1, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
+                { id: 'throw-14-md', score: 101, leg: 1, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
+                { id: 'throw-15-md', score: 141, leg: 1, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, checkout: true, darts: 3 },
+                { id: 'throw-16-md', score: 60, leg: 2, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
+                { id: 'throw-17-md', score: 50, leg: 2, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
+                { id: 'throw-18-md', score: 100, leg: 2, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
+                { id: 'throw-19-md', score: 101, leg: 2, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
+                { id: 'throw-20-md', score: 141, leg: 2, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, checkout: true, darts: 3 },
             ],
         });
 
@@ -99,7 +91,7 @@ describe('Match Details Integration Test', () => {
         const fullMatch = await getFullMatch(match.id, false);
 
         expect(fullMatch).toBeDefined();
-        expect(fullMatch.id).toBe(match.id);
+        expect(fullMatch.match.id).toBe(match.id);
         expect(fullMatch.playerA.name).toBe(player1.name);
         expect(fullMatch.playerB.name).toBe(player2.name);
         expect(fullMatch.playerA.legCount).toBe(1);
@@ -109,5 +101,42 @@ describe('Match Details Integration Test', () => {
         expect(fullMatch.playerB.matchAvg).toBeCloseTo(100.33);
         expect(fullMatch.playerA.bestCheckout).toBe(141);
         expect(fullMatch.playerB.bestCheckout).toBe(141);
+        expect(fullMatch.playerA.bestLeg).toBe(9);
+        expect(fullMatch.playerB.bestLeg).toBe(9);
+    });
+
+    test('should return 0 for best leg if player has not won any legs', async () => {
+        await prisma.playerThrow.deleteMany();
+        await prisma.match.deleteMany();
+
+        const matchWithoutWin = await prisma.match.create({
+            data: {
+                id: 'test-match-no-win-2',
+                tournamentId: tournament.id,
+                playerAId: player1.id,
+                playerBId: player2.id,
+                playerAName: player1.name,
+                playerBName: player2.name,
+                playerAImage: player1.photo,
+                playerBImage: player2.photo,
+                runTo: 2,
+                round: 'Final',
+                playerBlegs: 1,
+            },
+        });
+
+        await prisma.playerThrow.createMany({
+            data: [
+                { id: 'throw-nw-1', darts: 3, leg: 1, playerId: player1.id, matchId: matchWithoutWin.id, tournamentId: tournament.id, score: 100 },
+                { id: 'throw-nw-2', darts: 3, leg: 1, playerId: player2.id, matchId: matchWithoutWin.id, tournamentId: tournament.id, score: 100 },
+                { id: 'throw-nw-3', darts: 3, leg: 1, playerId: player1.id, matchId: matchWithoutWin.id, tournamentId: tournament.id, score: 100 },
+                { id: 'throw-nw-4', darts: 3, leg: 1, playerId: player2.id, matchId: matchWithoutWin.id, tournamentId: tournament.id, score: 301, checkout: true },
+            ],
+        });
+
+        const fullMatch = await getFullMatch(matchWithoutWin.id, false);
+
+        expect(fullMatch.playerA.bestLeg).toBe(0);
+        expect(fullMatch.playerB.bestLeg).toBe(6);
     });
 });
