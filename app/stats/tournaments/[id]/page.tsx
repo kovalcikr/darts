@@ -245,8 +245,8 @@ export default async function TournamentStats({ params }: { params: { id: string
 function MatchesList({ matches, tournamentId }) {
     const roundOrder = {
         "Final": 100,
-        "Semi-final": 99,
-        "Quarter-final": 98,
+        "Semi final": 99,
+        "Quarter final": 98,
         "Last 16": 97,
         "Last 32": 96,
         "Last 64": 95,
@@ -255,18 +255,32 @@ function MatchesList({ matches, tournamentId }) {
 
     const roundTranslations = {
         "Final": "Finále",
-        "Semi-final": "Semifinále",
-        "Quarter-final": "Štvrťfinále",
+        "Semi final": "Semifinále",
+        "Quarter final": "Štvrťfinále",
         "Last 16": "Osemfinále",
         "Last 32": "Šestnásťfinále",
         "Last 64": "1/32-finále",
         "Last 128": "1/64-finále",
     };
 
+    const getRoundValue = (round) => {
+        if (roundOrder[round]) {
+            return roundOrder[round];
+        }
+        const match = round.match(/Round\s+(\d+)/);
+        if (match) {
+            const roundNumber = parseInt(match[1], 10);
+            if (!isNaN(roundNumber)) {
+                return roundNumber;
+            }
+        }
+        return 0;
+    };
+
     const sortedMatches = [...matches].sort((a, b) => {
-        const roundA = roundOrder[a.round] || parseInt(a.round.split(" ")[1]);
-        const roundB = roundOrder[b.round] || parseInt(b.round.split(" ")[1]);
-        return roundA - roundB;
+        const roundAValue = getRoundValue(a.round);
+        const roundBValue = getRoundValue(b.round);
+        return roundAValue - roundBValue;
     });
 
     return (
