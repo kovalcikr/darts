@@ -1,9 +1,8 @@
 import { Header } from "@/app/components/header";
-import getTournamentInfo, { getResults } from "@/app/lib/cuescore";
+import { getResults } from "@/app/lib/cuescore";
 import { findMatchesByTournament } from "@/app/lib/data";
 import prisma from "@/app/lib/db";
 import { getPlayers } from "@/app/lib/players";
-import { getCachedTournaments } from "@/app/lib/tournament";
 import { randomUUID } from "crypto";
 import { unstable_cache } from "next/cache";
 import Image from "next/image";
@@ -93,14 +92,14 @@ const cachedBestLeg = unstable_cache(async (tournamentId) => {
         }
     })
 
-    const bLegPlayers = bestLeg.filter(l => l._sum.darts == bestLeg[0]._sum.darts).reduce((a, v) => {
+    const bLegPlayers = bestLeg.length > 0 ? bestLeg.filter(l => l._sum.darts == bestLeg[0]._sum.darts).reduce((a, v) => {
         if (!a[v.playerId]) {
             a[v.playerId] = 1;
         } else {
             a[v.playerId] = a[v.playerId] + 1
         }
         return a;
-    }, {});
+    }, {}) : {};
 
     const bLeg = Object.values(legMap).sort((a: { index: number }, b: { index: number }) => a.index - b.index);
     const bestLegDarts = bestLeg[0]?._sum?.darts || 0
@@ -123,75 +122,73 @@ export default async function TournamentStats({ params }: { params: { id: string
 
     if (!tournament) {
         return (
-            <div className="w-full h-screen flex items-center justify-center bg-white text-black">
+            <div className="w-full h-screen flex items-center justify-center bg-gray-900 text-gray-100">
                 <h1 className="text-2xl font-bold">Turnaj nenájdený...  </h1>
             </div>
         )
     }
 
     const results = await cachedResults(params.id);
-
     const players = await cachedPlayers(params.id);
-
     const highScore = await cachedHighScore(params.id);
-
     const { bestCheckout, bestCoc } = await cachedBestCheckout(params.id);
-
     const { bLeg, bestLegDarts, bLegPlayers } = await cachedBestLeg(params.id);
+    const matches = await cachedMatches(params.id);
 
     function avg(match) {
         return match._sum.darts ? ((match._sum.score || 0) / match._sum.darts * 3) : 0;
     }
-
     const { bestAvg, avgPP } = await cachedMatchAverages(params.id, avg);
 
-    const matches = await cachedMatches(params.id);
 
     function Stat({ name, value }) {
-        return (<div className="my-1"><span className="font-bold">{name}: </span>{value}</div>)
+        return (<div className="my-2 p-2 rounded-lg bg-gray-700/50"><span className="font-bold text-gray-400">{name}: </span><span className="font-semibold text-white">{value}</span></div>)
     }
 
     function StatNames({ name, playerIds }) {
+        if (playerIds.length === 0) return null;
         return (
-            <div className="flex flex-row my-1">
-                <div className="font-bold">{name}: </div>
-                {playerIds.map(pid =>
-                (
-                    <div className="rounded border border-slate-600 px-2 mx-1 bg-slate-200" key={randomUUID()}>{pid}</div>
-                ))}
+            <div className="my-2">
+                <div className="font-bold text-gray-400 mr-2 mb-2">{name}: </div>
+                <div className="flex flex-row flex-wrap items-center">
+                    {playerIds.map(pid =>
+                    (
+                        <div className="rounded-full bg-gray-600 px-3 py-1 text-sm font-semibold text-gray-200 mr-2 mb-2" key={randomUUID()}>{pid}</div>
+                    ))}
+                </div>
             </div>
         )
     }
 
     function StatWithNames({ name, value, playerIds }) {
         return (
-            <div className="flex flex-row my-1">
-                <div className="font-bold">{name}: </div><div className="mx-1">{value}</div>
-                {playerIds.map(pid =>
-                (
-                    <div className="rounded border border-slate-600 px-2 mx-1 bg-slate-200" key={randomUUID()}>{pid}</div>
-                ))}
+            <div className="my-2 p-2 rounded-lg bg-gray-700/50">
+                <div className="font-bold text-gray-400">{name}: <span className="font-semibold text-white">{value}</span></div>
+                <div className="flex flex-row flex-wrap items-center mt-1">
+                    {playerIds.map(pid =>
+                    (
+                        <div className="rounded-full bg-gray-600 px-3 py-1 text-sm font-semibold text-gray-200 mr-2 mb-2" key={randomUUID()}>{pid}</div>
+                    ))}
+                </div>
             </div>
         )
     }
 
-
     return (
-
-        <div className="w-full min-h-screen text-gray-900 bg-white">
-            <header className="sticky top-0 z-40 w-full backdrop-blur flex-none">
+        <div className="w-full min-h-screen bg-gray-900 text-gray-300">
+            <header className="sticky top-0 z-40 w-full border-b border-gray-700 bg-gray-900/70 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto">
-                    <div className="py-4 px-4 border-b border-gray-200 dark:border-gray-800">
+                    <div className="py-4 px-4">
                         <div className="relative flex items-center">
-                            <div className="font-bold text-xl">Relax darts cup: štatistiky turnaja {tournament.name}</div>
+                            <h1 className="font-bold text-xl text-white">Relax darts cup: <span className="text-sky-400">{tournament.name}</span></h1>
                             <div className="relative flex items-center ml-auto">
-                                <nav className="text-sm leading-6 font-semibold text-slate-700">
-                                    <ul className="flex space-x-8">
+                                <nav className="text-sm leading-6 font-semibold text-gray-400">
+                                    <ul className="flex space-x-4 md:space-x-8">
                                         <li>
-                                            <Link className="hover:text-sky-500" href="/">Domov</Link>
+                                            <Link className="hover:text-sky-400 transition-colors" href="/">Domov</Link>
                                         </li>
                                         <li>
-                                            <Link className="hover:text-sky-500" href="/stats/tournaments">Späť</Link>
+                                            <Link className="hover:text-sky-400 transition-colors" href="/stats/tournaments">Späť</Link>
                                         </li>
                                     </ul>
                                 </nav>
@@ -201,40 +198,58 @@ export default async function TournamentStats({ params }: { params: { id: string
                 </div>
             </header>
             <main className="flex-auto">
-                <div className="max-w-7xl mx-auto py-4 px-4">
-                    <div className="text-gray-700 text-base">
-                        {!results.tournamentId && (
-                            <div>
-                                <div className="flex">
-                                    <Image src="/icons8-gold-medal-40.png" alt="gold medal icons" width={40} height={40} />
-                                    <span className="text-2xl">{results[1][0].name}</span>
+                <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                        <div className="lg:col-span-3 bg-gray-800 rounded-xl shadow-lg p-6">
+                            <h2 className="text-xl font-bold text-white mb-4">Prehľad</h2>
+                            {!results.tournamentId && (
+                                <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div className="flex items-center p-4 bg-yellow-900/50 rounded-lg">
+                                        <Image src="/icons8-gold-medal-40.png" alt="gold medal" width={32} height={32} />
+                                        <span className="text-lg ml-3 font-semibold text-yellow-400">{results[1][0].name}</span>
+                                    </div>
+                                    <div className="flex items-center p-4 bg-gray-700/50 rounded-lg">
+                                        <Image src="/icons8-silver-medal-40.png" alt="silver medal" width={32} height={32} />
+                                        <span className="text-lg ml-3 font-semibold text-gray-300">{results[2][0].name}</span>
+                                    </div>
+                                    <div className="flex items-center p-4 bg-yellow-700/50 rounded-lg">
+                                        <Image src="/icons8-bronze-medal-40.png" alt="bronze medal" width={32} height={32} />
+                                        <span className="text-lg ml-3 font-semibold text-yellow-500">{results[3][0].name} a {results[3][1].name}</span>
+                                    </div>
                                 </div>
-                                <div className="flex">
-                                    <Image src="/icons8-silver-medal-40.png" alt="gold medal icons" width={40} height={40} />
-                                    <span className="text-2xl">{results[2][0].name}</span>
-                                </div>
-                                <div className="flex">
-                                    <Image src="/icons8-bronze-medal-40.png" alt="gold medal icons" width={40} height={40} />
-                                    <span className="text-2xl">{results[3][0].name} a {results[3][1].name}</span>
-                                </div>
+                            )}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <Stat name={"Počet hráčov"} value={Object.keys(players).length} />
+                                {bestCheckout[0] && <StatWithNames name="Najlepší checkout" value={bestCheckout[0].score} playerIds={[players[bestCheckout[0].playerId]]} />}
+                                {bestAvg[0] && <StatWithNames name="Najlepší priemer" value={avg(bestAvg[0]).toFixed(2)} playerIds={[players[bestAvg[0].playerId]]} />}
+                                {bestLegDarts > 0 && <StatWithNames name="Najlepší leg" value={bestLegDarts} playerIds={Object.entries(bLegPlayers).map(([k, v]) => players[k] + (v == 1 ? "" : " (" + v + "x)"))} />}
                             </div>
-                        )}
-                        <Stat name={"Počet hráčov"} value={Object.keys(players).length} />
-                        <StatNames name={180} playerIds={highScore.filter(s => s.s180 > 0).map(p => players[p.player])} />
-                        <StatNames name="170+" playerIds={highScore.filter(s => s.s170 > 0).map(p => players[p.player])} />
-                        { bestCheckout[0] && <StatWithNames name="Najlepší checkout" value={bestCheckout[0].score} playerIds={[players[bestCheckout[0].playerId]]} /> }
-                        <StatWithNames name="Najlepší priemer v zápase" value={avg(bestAvg[0]).toFixed(2)} playerIds={[players[bestAvg[0].playerId]]} />
-                        { bestLegDarts && <StatWithNames name="Najlepší leg" value={bestLegDarts} playerIds={Object.entries(bLegPlayers).map(([k, v]) => players[k] + (v == 1 ? "" : " (" + v + "x)"))} /> }
+                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <StatNames name={"180"} playerIds={highScore.filter(s => s.s180 > 0).map(p => players[p.player])} />
+                                <StatNames name="170+" playerIds={highScore.filter(s => s.s170 > 0).map(p => players[p.player])} />
+                            </div>
+                        </div>
 
-                        <BestCheckoutTable bestCoc={bestCoc} players={players} />
+                        <div className="lg:col-span-3 bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                            <BestCheckoutTable bestCoc={bestCoc} players={players} />
+                        </div>
 
-                        <HighScoreTable highScores={highScore} players={players} />
+                        <div className="lg:col-span-3 bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                            <HighScoreTable highScores={highScore} players={players} />
+                        </div>
 
-                        <BestLegTable bestLeg={bLeg} players={players} />
+                        <div className="lg:col-span-3 bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                            <BestLegTable bestLeg={bLeg} players={players} />
+                        </div>
 
-                        <AveragesTable avgPP={avgPP} players={players} />
+                        <div className="lg:col-span-3 bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                            <AveragesTable avgPP={avgPP} players={players} />
+                        </div>
 
-                        <MatchesList matches={matches} tournamentId={params.id} />
+                        <div className="lg:col-span-3 bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                            <MatchesList matches={matches} tournamentId={params.id} />
+                        </div>
                     </div>
                 </div>
             </main>
@@ -244,63 +259,48 @@ export default async function TournamentStats({ params }: { params: { id: string
 
 function MatchesList({ matches, tournamentId }) {
     const roundOrder = {
-        "Final": 100,
-        "Semi-final": 99,
-        "Quarter-final": 98,
-        "Last 16": 97,
-        "Last 32": 96,
-        "Last 64": 95,
-        "Last 128": 94,
+        "Final": 100, "Semi-final": 99, "Quarter-final": 98, "Last 16": 97,
+        "Last 32": 96, "Last 64": 95, "Last 128": 94,
     };
-
     const roundTranslations = {
-        "Final": "Finále",
-        "Semi-final": "Semifinále",
-        "Quarter-final": "Štvrťfinále",
-        "Last 16": "Osemfinále",
-        "Last 32": "Šestnásťfinále",
-        "Last 64": "1/32-finále",
-        "Last 128": "1/64-finále",
+        "Final": "Finále", "Semi-final": "Semifinále", "Quarter-final": "Štvrťfinále",
+        "Last 16": "Osemfinále", "Last 32": "Šestnásťfinále", "Last 64": "1/32-finále", "Last 128": "1/64-finále",
     };
 
     const sortedMatches = [...matches].sort((a, b) => {
-        const roundA = roundOrder[a.round] || parseInt(a.round.split(" ")[1]);
-        const roundB = roundOrder[b.round] || parseInt(b.round.split(" ")[1]);
-        return roundA - roundB;
+        const roundA = roundOrder[a.round] || parseInt(a.round.split(" ").pop() || "0");
+        const roundB = roundOrder[b.round] || parseInt(b.round.split(" ").pop() || "0");
+        return roundB - roundA;
     });
 
     return (
         <div className="overflow-x-auto">
-            <Header text={"Zápasy"} />
-
-            <table className="min-w-full divide-y-2 divide-gray-200">
-                <thead className="text-left ltr:text-left rtl:text-right">
-                    <tr className="*:font-medium *:text-gray-900">
-                        <th className="px-1 py-2 whitespace-nowrap">Kolo</th>
-                        <th className="px-3 py-2 whitespace-nowrap">Hráč A</th>
-                        <th className="px-3 py-2 whitespace-nowrap">Skóre</th>
-                        <th className="px-3 py-2 whitespace-nowrap">Hráč B</th>
-                        <th className="px-3 py-2 whitespace-nowrap"></th>
+            <div className="p-6"><Header text={"Zápasy"} /></div>
+            <table className="min-w-full divide-y-2 divide-gray-700">
+                <thead className="text-left bg-gray-700/50">
+                    <tr className="*:font-semibold *:text-gray-300">
+                        <th className="px-4 py-3 whitespace-nowrap">Kolo</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Hráč A</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">Skóre</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Hráč B</th>
+                        <th className="px-4 py-3 whitespace-nowrap"></th>
                     </tr>
                 </thead>
-
-                <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
-                    {
-                        sortedMatches.map((match) => {
-                            const winnerId = match.playerALegs > match.playerBlegs ? match.playerAId : match.playerBId;
-                            return (
-                                <tr key={match.id} className="*:text-gray-900 *:first:font-medium">
-                                    <td className="px-1 py-2 whitespace-nowrap">{roundTranslations[match.round] || match.round}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap ${winnerId === match.playerAId ? 'font-bold' : ''}`}>{match.playerAName}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap ${winnerId ? 'font-bold' : ''}`}>{match.playerALegs} : {match.playerBlegs}</td>
-                                    <td className={`px-3 py-2 whitespace-nowrap ${winnerId === match.playerBId ? 'font-bold' : ''}`}>{match.playerBName}</td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <Link href={`/tournaments/${tournamentId}/match/${match.id}`} className="text-sky-500 hover:text-sky-700">Detail</Link>
-                                    </td>
-                                </tr>
-                            )
-                        })
-                    }
+                <tbody className="divide-y divide-gray-700">
+                    {sortedMatches.map((match) => {
+                        const winnerId = match.playerALegs > match.playerBlegs ? match.playerAId : match.playerBId;
+                        return (
+                            <tr key={match.id} className="*:text-gray-300 hover:bg-gray-700/50 transition-colors">
+                                <td className="px-4 py-3 whitespace-nowrap font-medium">{roundTranslations[match.round] || match.round}</td>
+                                <td className={`px-4 py-3 whitespace-nowrap ${winnerId === match.playerAId ? 'font-bold text-white' : ''}`}>{match.playerAName}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-center font-mono font-bold text-lg">{match.playerALegs} : {match.playerBlegs}</td>
+                                <td className={`px-4 py-3 whitespace-nowrap ${winnerId === match.playerBId ? 'font-bold text-white' : ''}`}>{match.playerBName}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-right">
+                                    <Link href={`/tournaments/${tournamentId}/match/${match.id}`} className="text-sky-400 hover:text-sky-300 font-semibold">Detail</Link>
+                                </td>
+                            </tr>
+                        )
+                    })}
                 </tbody>
             </table>
         </div>
@@ -310,162 +310,115 @@ function MatchesList({ matches, tournamentId }) {
 async function getMatchAverages(id: string, avg: (match: any) => number) {
     const matchSums = await prisma.playerThrow.groupBy({
         by: ["tournamentId", "matchId", "playerId"],
-        where: {
-            tournamentId: id
-        },
-        _sum: {
-            score: true,
-            darts: true
-        }
+        where: { tournamentId: id },
+        _sum: { score: true, darts: true }
     });
-    const bestAvg = matchSums.sort((a, b) => avg(a) - avg(b)).reverse();
+    const bestAvg = matchSums.sort((a, b) => avg(b) - avg(a));
     const avgPerPlayer = {};
     bestAvg.forEach(match => {
         const player = avgPerPlayer[match.playerId];
         const average = avg(match);
         if (!player) {
             avgPerPlayer[match.playerId] = {
-                player: match.playerId,
-                max: average,
-                u40: average < 40 ? 1 : 0,
-                o40: average >= 40 && average < 50 ? 1 : 0,
-                o50: average >= 50 && average < 55 ? 1 : 0,
-                o55: average >= 55 && average < 60 ? 1 : 0,
-                o60: average >= 60 && average < 65 ? 1 : 0,
-                o65: average >= 65 && average < 75 ? 1 : 0,
-                o75: average >= 75 ? 1 : 0
+                player: match.playerId, max: average, u40: average < 40 ? 1 : 0,
+                o40: average >= 40 && average < 50 ? 1 : 0, o50: average >= 50 && average < 55 ? 1 : 0,
+                o55: average >= 55 && average < 60 ? 1 : 0, o60: average >= 60 && average < 65 ? 1 : 0,
+                o65: average >= 65 && average < 75 ? 1 : 0, o75: average >= 75 ? 1 : 0
             };
         } else {
-            if (player.max < avg(match)) {
-                player.max = avg(match);
-            }
-            player.u40 += average < 40 ? 1 : 0,
-                player.o40 += average >= 40 && average < 50 ? 1 : 0,
-                player.o50 += average >= 50 && average < 55 ? 1 : 0,
-                player.o55 += average >= 55 && average < 60 ? 1 : 0,
-                player.o60 += average >= 60 && average < 65 ? 1 : 0,
-                player.o65 += average >= 65 && average < 75 ? 1 : 0,
-                player.o75 += average >= 75 ? 1 : 0;
+            if (player.max < average) player.max = average;
+            player.u40 += average < 40 ? 1 : 0;
+            player.o40 += average >= 40 && average < 50 ? 1 : 0;
+            player.o50 += average >= 50 && average < 55 ? 1 : 0;
+            player.o55 += average >= 55 && average < 60 ? 1 : 0;
+            player.o60 += average >= 60 && average < 65 ? 1 : 0;
+            player.o65 += average >= 65 && average < 75 ? 1 : 0;
+            player.o75 += average >= 75 ? 1 : 0;
         }
     });
-    const avgPP = Object.values(avgPerPlayer).sort((a: { max: number }, b: { max: number }) => b.max - a.max);;
-
+    const avgPP = Object.values(avgPerPlayer).sort((a: { max: number }, b: { max: number }) => b.max - a.max);
     return { bestAvg, avgPP };
 }
 
 async function getBestCheckout(id: string) {
     const bestCheckout = await prisma.playerThrow.findMany({
-        where: {
-            tournamentId: id,
-            checkout: true,
-            score: {
-                gte: 60
-            }
-        },
-        orderBy: {
-            score: "desc"
-        }
+        where: { tournamentId: id, checkout: true, score: { gte: 60 } },
+        orderBy: { score: "desc" }
     });
     const bestCo = {};
     bestCheckout.forEach((co, index) => {
         const data = bestCo[co.playerId];
         if (!data) {
             bestCo[co.playerId] = {
-                player: co.playerId,
-                c60: co.score >= 60 && co.score < 80 ? 1 : 0,
-                c80: co.score >= 80 && co.score < 100 ? 1 : 0,
-                c100: co.score >= 100 ? 1 : 0,
-                scores: [co.score],
-                index: index
+                player: co.playerId, c60: co.score >= 60 && co.score < 80 ? 1 : 0,
+                c80: co.score >= 80 && co.score < 100 ? 1 : 0, c100: co.score >= 100 ? 1 : 0,
+                scores: [co.score], index: index
             };
         } else {
             data.c60 += co.score >= 60 && co.score < 80 ? 1 : 0;
             data.c80 += co.score >= 80 && co.score < 100 ? 1 : 0;
-            data.c100 += co.score >= 100 ? 1 : 0,
-                data.scores.push(co.score);
+            data.c100 += co.score >= 100 ? 1 : 0;
+            data.scores.push(co.score);
         }
     });
-    const bestCoc = Object.values(bestCo).sort((a: any, b: any) => (b.c60 + b.c80 + b.c100) - (a.c60 + a.c80 + a.c100) || a.index - b.index);
+    const bestCoc = Object.values(bestCo).sort((a: any, b: any) => (b.c100 - a.c100) || (b.c80 - a.c80) || (b.c60 - a.c60) || a.index - b.index);
     return { bestCheckout, bestCoc };
 }
 
 async function getHighScore(tournamentId: string): Promise<{ player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number }[]> {
     const highScore = await prisma.playerThrow.findMany({
-        where: {
-            AND: [
-                {
-                    tournamentId: tournamentId
-                },
-                {
-                    score: {
-                        gte: 80
-                    }
-                }
-            ]
-        },
-        orderBy: {
-            score: "desc"
-        }
+        where: { tournamentId: tournamentId, score: { gte: 80 } },
+        orderBy: { score: "desc" }
     });
     const hs = {};
     highScore.forEach((sc, index) => {
         const data = hs[sc.playerId];
         if (!data) {
             hs[sc.playerId] = {
-                player: sc.playerId,
-                s80: sc.score >= 80 && sc.score < 95 ? 1 : 0,
-                s100: sc.score >= 95 && sc.score < 133 ? 1 : 0,
-                s133: sc.score >= 133 && sc.score < 170 ? 1 : 0,
-                s170: sc.score >= 170 && sc.score < 180 ? 1 : 0,
-                b170: sc.score > 140 && sc.score <= 180 ? [sc.score] : [],
-                s180: sc.score == 180 ? 1 : 0,
-                index: index
+                player: sc.playerId, s80: sc.score >= 80 && sc.score < 95 ? 1 : 0,
+                s100: sc.score >= 95 && sc.score < 133 ? 1 : 0, s133: sc.score >= 133 && sc.score < 170 ? 1 : 0,
+                s170: sc.score >= 170 && sc.score < 180 ? 1 : 0, b170: sc.score > 140 ? [sc.score] : [],
+                s180: sc.score == 180 ? 1 : 0, index: index
             };
         } else {
-            data.s80 += sc.score >= 80 && sc.score < 100 ? 1 : 0,
-                data.s100 += sc.score >= 100 && sc.score < 133 ? 1 : 0,
-                data.s133 += sc.score >= 133 && sc.score < 170 ? 1 : 0,
-                data.s170 += sc.score >= 170 && sc.score < 180 ? 1 : 0,
-                data.s180 += sc.score == 180 ? 1 : 0;
-            if (sc.score > 140 && sc.score <= 180) {
-                data.b170.push(sc.score);
-            }
+            data.s80 += sc.score >= 80 && sc.score < 95 ? 1 : 0;
+            data.s100 += sc.score >= 95 && sc.score < 133 ? 1 : 0;
+            data.s133 += sc.score >= 133 && sc.score < 170 ? 1 : 0;
+            data.s170 += sc.score >= 170 && sc.score < 180 ? 1 : 0;
+            data.s180 += sc.score == 180 ? 1 : 0;
+            if (sc.score > 140) data.b170.push(sc.score);
         }
     });
-    const hss = Object.values(hs).sort((a: { index: number }, b: { index: number }) => a.index - b.index);
-    return hss as { player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number }[];
+    const hss = Object.values(hs).sort((a: any, b: any) => (b.s180 - a.s180) || (b.s170 - a.s170) || (b.s133 - a.s133) || (b.s100 - a.s100) || (b.s80 - a.s80) || a.index - b.index);
+    return hss as any;
 }
 
 function BestCheckoutTable({ bestCoc, players }) {
     return (
         <div className="overflow-x-auto">
-            <Header text={"Najlepšie zatvorenie (počet)"} />
-
-            <table className="min-w-full divide-y-2 divide-gray-200">
-                <thead className="text-left ltr:text-left rtl:text-right">
-                    <tr className="*:font-medium *:text-gray-900">
-                        <th className="px-1x     py-2 whitespace-nowrap"></th>
-                        <th className="px-3 py-2 whitespace-nowrap">Meno</th>
-                        <th className="px-3 py-2 whitespace-nowrap">60+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">80+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">100+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">Zatvorenia</th>
+            <div className="p-6"><Header text={"Najlepšie zatvorenie (počet)"} /></div>
+            <table className="min-w-full divide-y-2 divide-gray-700">
+                <thead className="text-left bg-gray-700/50">
+                    <tr className="*:font-semibold *:text-gray-300">
+                        <th className="px-4 py-3 whitespace-nowrap text-center">#</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Meno</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">60+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">80+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">100+</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Zatvorenia</th>
                     </tr>
                 </thead>
-
-                <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
-                    {
-                        bestCoc.map((co, index) => (
-                            <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
-                                <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{players[co.player]}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.c60}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.c80}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.c100}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.scores.join(", ")}</td>
-                            </tr>
-                        ))
-                    }
+                <tbody className="divide-y divide-gray-700">
+                    {bestCoc.map((co, index) => (
+                        <tr key={co.player} className="*:text-gray-300 hover:bg-gray-700/50 transition-colors">
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-medium">{index + 1}.</td>
+                            <td className="px-4 py-3 whitespace-nowrap font-semibold text-white">{players[co.player]}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.c60}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.c80}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.c100}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm">{co.scores.join(", ")}</td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
         </div>
@@ -473,40 +426,35 @@ function BestCheckoutTable({ bestCoc, players }) {
 }
 
 function HighScoreTable({ highScores, players }) {
-
     return (
         <div className="overflow-x-auto">
-            <Header text={"Najvyšší náhod"} />
-
-            <table className="min-w-full divide-y-2 divide-gray-200">
-                <thead className="text-left ltr:text-left rtl:text-right">
-                    <tr className="*:font-medium *:text-gray-900">
-                        <th className="px-1 py-2 whitespace-nowrap"></th>
-                        <th className="px-3 py-2 whitespace-nowrap">Meno</th>
-                        <th className="px-3 py-2 whitespace-nowrap">80+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">95+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">133+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">170+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">180</th>
-                        <th className="px-3 py-2 whitespace-nowrap">Hody 141+</th>
+            <div className="p-6"><Header text={"Najvyšší náhod"} /></div>
+            <table className="min-w-full divide-y-2 divide-gray-700">
+                <thead className="text-left bg-gray-700/50">
+                    <tr className="*:font-semibold *:text-gray-300">
+                        <th className="px-4 py-3 whitespace-nowrap text-center">#</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Meno</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">80+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">95+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">133+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">170+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">180</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Top hody</th>
                     </tr>
                 </thead>
-
-                <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
-                    {
-                        highScores.map((co, index) => (
-                            <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
-                                <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{players[co.player]}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.s80}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.s100}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.s133}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.s170}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.s180}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.b170.join(", ")}</td>
-                            </tr>
-                        ))
-                    }
+                <tbody className="divide-y divide-gray-700">
+                    {highScores.map((co, index) => (
+                        <tr key={co.player} className="*:text-gray-300 hover:bg-gray-700/50 transition-colors">
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-medium">{index + 1}.</td>
+                            <td className="px-4 py-3 whitespace-nowrap font-semibold text-white">{players[co.player]}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.s80}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.s100}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.s133}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.s170}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.s180}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm">{co.b170.join(", ")}</td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
         </div>
@@ -516,37 +464,33 @@ function HighScoreTable({ highScores, players }) {
 function BestLegTable({ bestLeg, players }) {
     return (
         <div className="overflow-x-auto">
-            <Header text={"Najlepší leg"} />
-
-            <table className="min-w-full divide-y-2 divide-gray-200">
-                <thead className="text-left ltr:text-left rtl:text-right">
-                    <tr className="*:font-medium *:text-gray-900">
-                        <th className="px-1 py-2 whitespace-nowrap"></th>
-                        <th className="px-3 py-2 whitespace-nowrap text-right">Kolo</th>
-                        <th className="px-3 py-2 whitespace-nowrap">5</th>
-                        <th className="px-3 py-2 whitespace-nowrap">6</th>
-                        <th className="px-3 py-2 whitespace-nowrap">7</th>
-                        <th className="px-3 py-2 whitespace-nowrap">8</th>
-                        <th className="px-3 py-2 whitespace-nowrap">9</th>
-                        <th className="px-3 py-2 whitespace-nowrap">Top</th>
+            <div className="p-6"><Header text={"Najlepší leg"} /></div>
+            <table className="min-w-full divide-y-2 divide-gray-700">
+                <thead className="text-left bg-gray-700/50">
+                    <tr className="*:font-semibold *:text-gray-300">
+                        <th className="px-4 py-3 whitespace-nowrap text-center">#</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Meno</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">5. kolo</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">6. kolo</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">7. kolo</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">8. kolo</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">9. kolo</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">Top leg</th>
                     </tr>
                 </thead>
-
-                <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
-                    {
-                        bestLeg.map((co, index) => (
-                            <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
-                                <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{players[co.player]}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[5] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[6] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[7] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[8] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co[9] || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.best}</td>
-                            </tr>
-                        ))
-                    }
+                <tbody className="divide-y divide-gray-700">
+                    {bestLeg.map((co, index) => (
+                        <tr key={co.player} className="*:text-gray-300 hover:bg-gray-700/50 transition-colors">
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-medium">{index + 1}.</td>
+                            <td className="px-4 py-3 whitespace-nowrap font-semibold text-white">{players[co.player]}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co[5] || 0}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co[6] || 0}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co[7] || 0}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co[8] || 0}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co[9] || 0}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono font-bold text-white">{co.best}</td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
         </div>
@@ -556,41 +500,37 @@ function BestLegTable({ bestLeg, players }) {
 function AveragesTable({ avgPP, players }) {
     return (
         <div className="overflow-x-auto">
-            <Header text={"Najvyšší priemer v zápase"} />
-
-            <table className="min-w-full divide-y-2 divide-gray-200">
-                <thead className="text-left ltr:text-left rtl:text-right">
-                    <tr className="*:font-medium *:text-gray-900">
-                        <th className="px-1 py-2 whitespace-nowrap"></th>
-                        <th className="px-3 py-2 whitespace-nowrap">Meno</th>
-                        <th className="px-3 py-2 whitespace-nowrap">40-</th>
-                        <th className="px-3 py-2 whitespace-nowrap">40+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">50+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">55+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">60+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">65+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">75+</th>
-                        <th className="px-3 py-2 whitespace-nowrap">Top</th>
+            <div className="p-6"><Header text={"Priemery v zápasoch"} /></div>
+            <table className="min-w-full divide-y-2 divide-gray-700">
+                <thead className="text-left bg-gray-700/50">
+                    <tr className="*:font-semibold *:text-gray-300">
+                        <th className="px-4 py-3 whitespace-nowrap text-center">#</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Meno</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">40-</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">40+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">50+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">55+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">60+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">65+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">75+</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-center">Top priemer</th>
                     </tr>
                 </thead>
-
-                <tbody className="divide-y divide-gray-200 *:even:bg-gray-50">
-                    {
-                        avgPP.map((co, index) => (
-                            <tr key={co.player} className="*:text-gray-900 *:first:font-medium">
-                                <td className="px-1 py-2 whitespace-nowrap">{index + 1}.</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{players[co.player]}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.u40}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.o40}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.o50}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.o55}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.o60}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.o65}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.o75}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">{co.max.toFixed(2)}</td>
-                            </tr>
-                        ))
-                    }
+                <tbody className="divide-y divide-gray-700">
+                    {avgPP.map((co, index) => (
+                        <tr key={co.player} className="*:text-gray-300 hover:bg-gray-700/50 transition-colors">
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-medium">{index + 1}.</td>
+                            <td className="px-4 py-3 whitespace-nowrap font-semibold text-white">{players[co.player]}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.u40}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.o40}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.o50}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.o55}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.o60}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.o65}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono">{co.o75}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center font-mono font-bold text-white">{co.max.toFixed(2)}</td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
         </div>
