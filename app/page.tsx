@@ -78,9 +78,12 @@ export default async function Home() {
       darts: true
     }
   });
-  const sortedThrows = throwsPerPlayer.sort((a, b) => a._sum.score / a._sum.darts - b._sum.score / b._sum.darts).reverse()
 
   const players = await getPlayers(tournaments);
+
+  const sortedThrows = throwsPerPlayer
+    .filter(p => players[p.playerId])
+    .sort((a, b) => (b._sum.score / b._sum.darts) - (a._sum.score / a._sum.darts));
 
   const legs = await prisma.playerThrow.groupBy({
     by: ["tournamentId", "matchId", "leg", "playerId"],
@@ -102,9 +105,9 @@ export default async function Home() {
     }
   })
   const legsSorted = legs.sort((a, b) => a._sum.darts - b._sum.darts)
-  const bestLeg = legsSorted.filter(leg => leg._sum.darts == legsSorted[0]._sum.darts);
+  const bestLeg = legsSorted.length > 0 ? legsSorted.filter(leg => leg._sum.darts == legsSorted[0]._sum.darts) : [];
 
-  const bestCheckout = await prisma.playerThrow.findMany({
+  const bestCheckoutResult = await prisma.playerThrow.findMany({
     where: {
       checkout: true,
       tournamentId: {
@@ -113,42 +116,61 @@ export default async function Home() {
     },
     orderBy: {
       score: "desc"
-    }
+    },
+    take: 1
   })
 
+  const bestCheckouts = bestCheckoutResult.length > 0 ? await prisma.playerThrow.findMany({
+    where: {
+      checkout: true,
+      tournamentId: {
+        in: tournaments
+      },
+      score: bestCheckoutResult[0].score
+    }
+  }) : [];
+
   function Stat({ name, value }) {
-    return (<div className="my-1"><span className="font-bold">{name}: </span>{value}</div>)
+    return (
+      <div className="bg-gray-800/50 p-4 rounded-lg text-center ring-1 ring-white/10">
+        <div className="text-sm font-medium text-gray-400 uppercase tracking-wider">{name}</div>
+        <div className="mt-1 text-3xl font-semibold text-white">{value}</div>
+      </div>
+    )
   }
   
   function StatWithNames({ name, value, playerIds }) {
     return (
-      <div className="flex flex-row my-1">
-        <div className="font-bold">{name}: </div><div className="mx-1">{value}</div>
-        {playerIds.map(pid =>
-        (
-          <Link key={randomUUID()} href={`/players/${pid}`}>
-            <div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200" >{players[pid]}</div>
-          </Link>
-        ))}
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg ring-1 ring-white/10">
+        <div className="text-sm font-medium text-gray-400 uppercase tracking-wider">{name}</div>
+        <div className="mt-1 text-3xl font-semibold text-white">{value}</div>
+        <div className="flex flex-row flex-wrap items-center mt-3">
+          {playerIds.map(pid =>
+          (
+            <Link key={randomUUID()} href={`/players/${pid}`}>
+              <div className="rounded-full bg-sky-600/50 px-3 py-1 text-sm font-semibold text-sky-200 mr-2 mb-2 hover:bg-sky-500/50 transition-colors" >{players[pid]}</div>
+            </Link>
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="w-full min-h-screen text-gray-900 bg-white">
-      <header className="sticky top-0 z-40 w-full backdrop-blur flex-none">
+    <div className="w-full min-h-screen bg-gray-900 text-gray-300">
+      <header className="sticky top-0 z-40 w-full border-b border-gray-700 bg-gray-900/70 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
-          <div className="py-4 px-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="py-4 px-4">
             <div className="relative flex items-center">
-              <div className="font-bold text-xl">Relax darts cup</div>
+              <div className="font-bold text-xl text-white">Relax Darts Cup</div>
               <div className="relative flex items-center ml-auto">
-                <nav className="text-sm leading-6 font-semibold text-slate-700">
-                  <ul className="flex space-x-8">
+                <nav className="text-sm leading-6 font-semibold text-gray-400">
+                  <ul className="flex space-x-4 md:space-x-8">
                     <li>
-                      <Link className="hover:text-sky-500" href="/players">Štatistiky hráčov</Link>
+                      <Link className="hover:text-sky-400 transition-colors" href="/players">Štatistiky hráčov</Link>
                     </li>
                     <li>
-                      <Link className="hover:text-sky-500" href="/stats/tournaments">Štatistiky turnajov</Link>
+                      <Link className="hover:text-sky-400 transition-colors" href="/stats/tournaments">Štatistiky turnajov</Link>
                     </li>
                   </ul>
                 </nav>
@@ -158,31 +180,35 @@ export default async function Home() {
         </div>
       </header>
       <main className="flex-auto">
-        <div className="max-w-7xl mx-auto py-4 px-4">
-          <div className="text-gray-700 text-base">
-            <Stat name="Sezóna" value="Jeseň 2024" />
-            <Stat name="Počet hráčov" value={players.size} />
-            <Stat name="Počet turnajov" value="12" />
-            <Stat name="Počet zápasov" value={matchesCount._count.id} />
-            <Stat name="Počet legov" value={matchesCount._sum.playerALegs + matchesCount._sum.playerBlegs} />
-            <Stat name="Počet hodov" value={throws._count.id} />
-            <Stat name="Počet šípok" value={throwsPerPlayer.reduceRight((total, t) => total + t._sum.darts, 0)} />
-            <Stat name="Počet 180" value={throw180count._count.id} />
-            <Stat name="Počet 171+" value={throw171plusCount._count.id} />
-            <Stat name="Priemer všetkých hráčov" value={(throws._sum.score / throws._sum.darts * 3).toFixed(2)} />
-            <StatWithNames name="Najlepší sezónny priemer" value={(sortedThrows[0]._sum.score / sortedThrows[0]._sum.darts * 3).toFixed(2)} playerIds={[sortedThrows[0].playerId]} />
-            <StatWithNames name="Najlepší checkout" value={bestCheckout[0].score}
-              playerIds={bestCheckout.filter(checkout => bestCheckout[0].score == checkout.score).map(checkout => checkout.playerId)} />
-
-            {/* <StatWithNames name="Najlepší leg" value={legsSorted[0]._sum.darts}
-              names={bestLeg.map(leg => players.get(leg.playerId))} /> */}
-            <div className="flex flex-row">
-              <div className="font-bold">Najlepší leg: </div><div className="mx-1">15</div>
-              <Link href="/players/45506878"><div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200">Marián - Lalky Lalkovič (3x)</div></Link>
-              <Link href="/players/39928879"><div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200">Ľubo Lechman</div></Link>
-              <Link href="/players/2472554"><div className="rounded border border-black px-2 mx-1 hover:bg-sky-300 bg-slate-200">Tomas Klobusnik</div></Link>
-            </div>
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl tracking-tight">
+              Sezóna <span className="text-sky-400">Jeseň 2024</span>
+            </h1>
+            <p className="mt-4 max-w-md mx-auto text-base text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+              Celkové štatistiky zo všetkých turnajov.
+            </p>
           </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            <Stat name="Hráčov" value={Object.keys(players).length} />
+            <Stat name="Turnajov" value={tournaments.length} />
+            <Stat name="Zápasov" value={matchesCount._count.id} />
+            <Stat name="Legov" value={matchesCount._sum.playerALegs + matchesCount._sum.playerBlegs} />
+            <Stat name="Hodov" value={throws._count.id} />
+            <Stat name="Šípok" value={throws._sum.darts} />
+            <Stat name="180s" value={throw180count._count.id} />
+            <Stat name="170+" value={throw171plusCount._count.id} />
+          </div>
+
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {sortedThrows.length > 0 && <StatWithNames name="Najlepší priemer" value={(sortedThrows[0]._sum.score / sortedThrows[0]._sum.darts * 3).toFixed(2)} playerIds={[sortedThrows[0].playerId]} />}
+            {bestCheckouts.length > 0 && <StatWithNames name="Najlepší checkout" value={bestCheckouts[0].score}
+              playerIds={Array.from(new Set(bestCheckouts.map(checkout => checkout.playerId)))} />}
+            {bestLeg.length > 0 && <StatWithNames name="Najlepší leg" value={bestLeg[0]._sum.darts}
+              playerIds={Array.from(new Set(bestLeg.map(leg => leg.playerId)))} />}
+          </div>
+
         </div>
       </main>
     </div>
