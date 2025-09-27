@@ -245,8 +245,8 @@ export default async function TournamentStats({ params }: { params: { id: string
 function MatchesList({ matches, tournamentId }) {
     const roundOrder = {
         "Final": 100,
-        "Semi-final": 99,
-        "Quarter-final": 98,
+        "Semi final": 99,
+        "Quarter final": 98,
         "Last 16": 97,
         "Last 32": 96,
         "Last 64": 95,
@@ -255,8 +255,8 @@ function MatchesList({ matches, tournamentId }) {
 
     const roundTranslations = {
         "Final": "Finále",
-        "Semi-final": "Semifinále",
-        "Quarter-final": "Štvrťfinále",
+        "Semi final": "Semifinále",
+        "Quarter final": "Štvrťfinále",
         "Last 16": "Osemfinále",
         "Last 32": "Šestnásťfinále",
         "Last 64": "1/32-finále",
