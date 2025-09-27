@@ -1,6 +1,5 @@
 import { getFullMatch } from "@/app/lib/match";
 import Link from "next/link";
-import Image from "next/image";
 
 export default async function MatchPage({ params }: { params: { id: string, matchId: string } }) {
     const fullMatch = await getFullMatch(params.matchId, false);
@@ -50,7 +49,7 @@ function PlayerStats({ playerA, playerB }) {
         <div className="flex justify-around">
             <div className="w-1/2 p-4">
                 <div className="flex items-center">
-                    <Image src={playerA.imageUrl} width={48} height={48} className="w-12 h-12 rounded-full" alt={playerA.name} />
+                    <img src={playerA.imageUrl} width={48} height={48} className="w-12 h-12 rounded-full" alt={playerA.name} />
                     <h2 className="text-2xl font-bold ml-4">{playerA.name}</h2>
                     <span className="text-2xl font-bold ml-2">({playerA.legCount})</span>
                 </div>
@@ -63,7 +62,7 @@ function PlayerStats({ playerA, playerB }) {
             </div>
             <div className="w-1/2 p-4">
                 <div className="flex items-center">
-                    <Image src={playerB.imageUrl} width={48} height={48} className="w-12 h-12 rounded-full" alt={playerB.name} />
+                    <img src={playerB.imageUrl} width={48} height={48} className="w-12 h-12 rounded-full" alt={playerB.name} />
                     <h2 className="text-2xl font-bold ml-4">{playerB.name}</h2>
                     <span className="text-2xl font-bold ml-2">({playerB.legCount})</span>
                 </div>
