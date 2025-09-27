@@ -161,7 +161,7 @@ export default async function Player({ params }: { params: { id: string } }) {
         { name: "70+", value: countAverages(matchAverages, 70, 75) },
         { name: "75+", value: countAverages(matchAverages, 75, 80) },
         { name: "80+", value: countAverages(matchAverages, 80, 180) },
-    ];
+    ].reverse();
 
     const scoresData = [
         { name: "80+", value: countThrows(throwsOver80, 80, 100) },
@@ -170,7 +170,7 @@ export default async function Player({ params }: { params: { id: string } }) {
         { name: "151+", value: countThrows(throwsOver80, 151, 171) },
         { name: "171+", value: countThrows(throwsOver80, 171, 180) },
         { name: "180", value: countThrows(throwsOver80, 180, 181) },
-    ];
+    ].reverse();
 
     const checkoutsData = [
         { name: "41+", value: countCheckouts(checkouts, 41, 60) },
@@ -180,7 +180,15 @@ export default async function Player({ params }: { params: { id: string } }) {
         { name: "100+", value: countCheckouts(checkouts, 100, 120) },
         { name: "120+", value: countCheckouts(checkouts, 120, 140) },
         { name: "140+", value: countCheckouts(checkouts, 140, 181) },
-    ];
+    ].reverse();
+
+    const bestLegsData = [
+        { name: "13-15", value: countLegs(legs, 13, 15) },
+        { name: "16-18", value: countLegs(legs, 16, 18) },
+        { name: "19-21", value: countLegs(legs, 19, 21) },
+        { name: "22-24", value: countLegs(legs, 22, 24) },
+        { name: "25-27", value: countLegs(legs, 25, 27) },
+    ].reverse();
 
     return (
         <div className="w-full min-h-screen bg-gray-900 text-gray-300">
@@ -249,6 +257,9 @@ export default async function Player({ params }: { params: { id: string } }) {
                         <div className="lg:col-span-3">
                             <CategoryGrid title="Vysoké zatvorenia" data={checkoutsData} />
                         </div>
+                        <div className="lg:col-span-3">
+                            <CategoryGrid title="Najlepšie legy" data={bestLegsData} />
+                        </div>
                     </div>
                 </div>
             </main>
@@ -268,4 +279,8 @@ function countCheckouts(checkouts: { score: number }[], min: number, max: number
 
 function countAverages(matchAverages: number[], min: number, max: number) {
     return matchAverages.filter(avg => avg >= min && avg < max).length
+}
+
+function countLegs(legs: any[], min: number, max: number) {
+    return legs.filter(l => l._sum.darts >= min && l._sum.darts <= max).length
 }
