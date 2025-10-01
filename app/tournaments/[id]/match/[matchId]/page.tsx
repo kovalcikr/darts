@@ -1,6 +1,5 @@
 import { getFullMatch } from "@/app/lib/match";
 import Link from "next/link";
-import Image from "next/image";
 
 export default async function MatchPage({ params }: { params: { id: string, matchId: string } }) {
     const fullMatch = await getFullMatch(params.matchId, false);
