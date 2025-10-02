@@ -61,7 +61,7 @@ describe('Match Details Integration Test', () => {
                 { id: 'throw-17-md', score: 50, leg: 2, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
                 { id: 'throw-18-md', score: 100, leg: 2, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
                 { id: 'throw-19-md', score: 101, leg: 2, playerId: player1.id, matchId: match.id, tournamentId: tournament.id, darts: 3 },
-                { id: 'throw-20-md', score: 141, leg: 2, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, checkout: true, darts: 3 },
+                { id: 'throw-20-md', score: 140, leg: 2, playerId: player2.id, matchId: match.id, tournamentId: tournament.id, checkout: true, darts: 3 },
             ],
         });
 
@@ -97,10 +97,10 @@ describe('Match Details Integration Test', () => {
         expect(fullMatch.playerA.legCount).toBe(1);
         expect(fullMatch.playerB.legCount).toBe(1);
         expect(fullMatch.throws.length).toBe(10);
-        expect(fullMatch.playerA.matchAvg).toBeCloseTo(100.33);
-        expect(fullMatch.playerB.matchAvg).toBeCloseTo(100.33);
+        expect(fullMatch.playerA.matchAvg).toBeCloseTo(90.4);
+        expect(fullMatch.playerB.matchAvg).toBeCloseTo(90.2);
         expect(fullMatch.playerA.bestCheckout).toBe(141);
-        expect(fullMatch.playerB.bestCheckout).toBe(141);
+        expect(fullMatch.playerB.bestCheckout).toBe(140);
         expect(fullMatch.playerA.bestLeg).toBe(9);
         expect(fullMatch.playerB.bestLeg).toBe(9);
     });

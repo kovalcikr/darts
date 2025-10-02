@@ -6,7 +6,6 @@ import { finishMatch } from "@/app/lib/cuescore";
 import { Match } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react"
-import Image from "next/image";
 
 export default function Winner({ player, image, match, leg, slow, table }: { player: string, image: string, match: Match, leg: number, slow: boolean, table: string }) {
 
@@ -22,7 +21,7 @@ export default function Winner({ player, image, match, leg, slow, table }: { pla
   return (
     <div className="flex flex-col text-center justify-center items-center content-center">
       Winner:
-      <Image src={image} alt={player} width={80} height={80} className="w-20" />
+      <img src={image} alt={player} width={80} height={80} className="w-20" />
       <div className={"flex p-2 text-2xl font-bold"}>
         {player}
       </div>

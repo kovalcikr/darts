@@ -2,7 +2,6 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 
 async function fetchServerData(tournamentId, test) {
     const response = await fetch(`/api/dashboard/tournament/${tournamentId}${test ? `?test=${test}` : ''}`);
@@ -107,7 +106,7 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: 
 function Winner({ player, image }: { player: string, image: string }) {
     return (
         <div className="flex flex-col items-center justify-center space-y-2 w-full h-full">
-            <Image
+            <img
                 src={image}
                 alt={`Winner: ${player}`}
                 width={128}
@@ -126,7 +125,7 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
 }) {
     return (
         <div className={`flex flex-col items-center space-y-4 flex-1 ${active ? "bg-yellow-50" : ""}`}>
-            <Image
+            <img
                 src={photo}
                 alt={`Player ${playerName} - ${playerId}`}
                 width={112}
