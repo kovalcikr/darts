@@ -49,3 +49,8 @@ export const getCachedTournaments = unstable_cache(
     null,
     { tags: ["tournaments"] }
 );
+
+export async function getTournamentsForList() {
+    const tournaments = await findTournamentsByYear("");
+    return tournaments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}

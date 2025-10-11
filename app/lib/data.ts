@@ -123,6 +123,11 @@ export async function findTournamentsByYear(year: string, tx?: PrismaTransaction
             name: {
                 contains: year
             }
+        },
+        select: {
+            id: true,
+            name: true,
+            createdAt: true,
         }
     });
 }
