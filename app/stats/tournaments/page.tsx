@@ -1,12 +1,8 @@
-import { getCachedTournaments } from "@/app/lib/tournament"
+import { getTournamentsForList } from "@/app/lib/tournament";
 import Link from "next/link";
 
-export const dynamic = 'force-dynamic'
-
-export default async function Tournaments() {
-
-    const tournaments = (await getCachedTournaments()).sort((t1, t2) => t1.name.localeCompare(t2.name));
-
+export default async function Page() {
+    const tournaments = await getTournamentsForList();
     return (
         <div className="w-full min-h-screen bg-gray-900 text-gray-300">
             <header className="sticky top-0 z-40 w-full border-b border-gray-700 bg-gray-900/70 backdrop-blur-sm">
@@ -29,17 +25,15 @@ export default async function Tournaments() {
             </header>
             <main className="flex-auto">
                 <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {tournaments.map(t => (
-                            <li key={t.id} className="list-none">
-                                <Link href={`/stats/tournaments/${t.id}`}>
-                                    <div className="block bg-gray-800 p-6 rounded-xl shadow-lg hover:bg-gray-700/80 hover:ring-1 hover:ring-sky-500 transition-all duration-200 h-full">
-                                        <h2 className="font-bold text-lg text-white">{t.name}</h2>
-                                    </div>
-                                </Link>
-                            </li>
-                        ))
-                        }
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {tournaments.map(tournament => (
+                            <Link key={tournament.id} href={`/tournaments/${tournament.id}`} className="bg-gray-800 p-6 rounded-xl shadow-lg ring-1 ring-white/10 hover:bg-gray-700/50 transition-colors">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-white">{tournament.name}</h2>
+                                    <p className="text-sm text-gray-400 mt-2">{new Date(tournament.createdAt).toLocaleDateString()}</p>
+                                </div>
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </main>
