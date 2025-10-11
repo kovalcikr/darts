@@ -335,6 +335,18 @@ export async function findManyPlayerThrows(tournamentId: string, matchId: string
     });
 }
 
+export async function getSeasons(tx?: PrismaTransactionClient): Promise<string[]> {
+    const client = getPrismaClient(tx);
+    const result: { year: string }[] = await client.$queryRaw`
+        SELECT DISTINCT SUBSTRING(name FROM '([0-9]{4})$') as year
+        FROM "Tournament"
+        WHERE name ~ '([0-9]{4})$' AND SUBSTRING(name FROM '([0-9]{4})$') IS NOT NULL
+        ORDER BY year DESC
+    `;
+
+    return result.map(r => r.year);
+}
+
 export async function findPlayersByTournament(tournaments: string[], tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     const playersA = await client.match.findMany({
