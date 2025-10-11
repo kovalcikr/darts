@@ -9,7 +9,7 @@ export default async function Page() {
                 <div className="max-w-7xl mx-auto">
                     <div className="py-4 px-4">
                         <div className="relative flex items-center">
-                            <h1 className="font-bold text-xl text-white">Štatistiky turnajov</h1>
+                            <h1 className="font-bold text-xl text-white">Relax Darts Cup: <span className="text-sky-400">Všetky turnaje</span></h1>
                             <div className="relative flex items-center ml-auto">
                                 <nav className="text-sm leading-6 font-semibold text-gray-400">
                                     <ul className="flex space-x-4 md:space-x-8">

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import getTournamentInfo from "./cuescore";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
-import { upsertTournament, findTournamentsByName, findTournamentsByYear } from "./data";
+import { upsertTournament, findTournamentsByName, findAllTournaments } from "./data";
 
 export async function openTournamentForm(prevState: any, data: FormData) {
     const tournamentId = data.get('tournamentId') as string;
@@ -44,13 +44,13 @@ function generateTournamentNames(start, end) {
 
 export const getCachedTournaments = unstable_cache(
     async () => {
-        return await findTournamentsByYear("2025");
+        return await findAllTournaments();
     },
     null,
     { tags: ["tournaments"] }
 );
 
 export async function getTournamentsForList() {
-    const tournaments = await findTournamentsByYear("");
+    const tournaments = await findAllTournaments();
     return tournaments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
