@@ -11,7 +11,7 @@ import PlayerName from "./player-name";
 export default async function Darts({ table, matchId, slow, reset }: { table: string, matchId: string, slow: boolean, reset: boolean }) {
 
   const fakeMatch = {
-    tournament: { id: "10", name: "ABC" },
+    tournament: { id: "10", name: "ABC", createdAt: new Date() },
     match: {
       id: "1",
       round: "Round 1",

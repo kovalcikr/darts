@@ -136,7 +136,15 @@ export async function findMatch(matchId: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     return client.match.findUnique({
         where: { id: matchId },
-        include: { tournament: true }
+        include: {
+            tournament: {
+                select: {
+                    id: true,
+                    name: true,
+                    createdAt: true,
+                }
+            }
+        }
     });
 }
 
