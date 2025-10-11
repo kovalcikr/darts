@@ -44,19 +44,16 @@ describe('tournament', () => {
     });
 
     test('get tournaments', async () => {
-        const tournamentNames = [];
-        for (let i = 13; i <= 24; i++) {
-            tournamentNames.push("Relax Darts CUP " + i + " 2024")
-        }
-        jest.mocked(data.findTournamentsByName).mockResolvedValue([{ id: '123', name: 'Relax Darts CUP 13 2024' }] as any);
-        const tournaments = await getTournaments();
-        expect(data.findTournamentsByName).toHaveBeenCalledWith(tournamentNames);
+        jest.mocked(data.findTournamentsByYear).mockResolvedValue([{ id: '123', name: 'Relax Darts CUP 13 2024' }] as any);
+        const tournaments = await getTournaments("2024");
+        expect(data.findTournamentsByYear).toHaveBeenCalledWith("2024");
         expect(tournaments).toEqual(['123']);
     });
 
     test('get cached tournaments', async () => {
         jest.mocked(data.findTournamentsByYear).mockResolvedValue([{ id: '123', name: 'Test 2025' }] as any);
-        const tournaments = await getCachedTournaments();
+        const getTournaments = getCachedTournaments("2025");
+        const tournaments = await getTournaments();
         expect(data.findTournamentsByYear).toHaveBeenCalledWith("2025");
         expect(tournaments).toEqual([{ id: '123', name: 'Test 2025' }]);
     });

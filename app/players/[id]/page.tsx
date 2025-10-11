@@ -4,9 +4,12 @@ import { getTournaments } from "@/app/lib/tournament"
 import { randomUUID } from "crypto"
 import Link from "next/link"
 
-export default async function Player({ params }: { params: { id: string } }) {
+import { getSeasons } from "@/app/lib/tournament"
 
-    const tournamentIds = await getTournaments()
+export default async function Player({ params, searchParams }: { params: { id: string }, searchParams: { season: string } }) {
+    const seasons = await getSeasons();
+    const season = searchParams.season || seasons[0] || "2025";
+    const tournamentIds = await getTournaments(season)
     const players = await getPlayers(tournamentIds)
 
     const matches = await prisma.match.findMany({
@@ -214,7 +217,7 @@ export default async function Player({ params }: { params: { id: string } }) {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8">
                             <StatCard title="Celkový výkon">
-                                <StatRow label="Sezóna" value="Jeseň 2024" />
+                                <StatRow label="Sezóna" value={season} />
                                 <StatRow label="Počet turnajov" value={`${playerTournaments.size} / ${tournamentIds.length} (${(playerTournaments.size / tournamentIds.length * 100).toFixed(1)}%)`} />
                                 <StatRow label="Vyhrané zápasy" value={`${matchesWon} / ${matches.length} (${(matchesWon / matches.length * 100).toFixed(1)}%)`} />
                                 <StatRow label="Vyhrané legy" value={`${wonLegs} / ${playerLegs} (${(wonLegs / playerLegs * 100).toFixed(1)}%)`} />

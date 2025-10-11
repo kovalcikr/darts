@@ -1,11 +1,14 @@
-import { getCachedTournaments } from "@/app/lib/tournament"
+import { getCachedTournaments, getSeasons } from "@/app/lib/tournament"
 import Link from "next/link";
+import SeasonSelector from "@/app/components/season-selector";
 
 export const dynamic = 'force-dynamic'
 
-export default async function Tournaments() {
-
-    const tournaments = (await getCachedTournaments()).sort((t1, t2) => t1.name.localeCompare(t2.name));
+export default async function Tournaments({ searchParams }: { searchParams: { season: string } }) {
+    const seasons = await getSeasons();
+    const season = searchParams.season || seasons[0] || "2025";
+    const getTournaments = getCachedTournaments(season);
+    const tournaments = (await getTournaments()).sort((t1, t2) => t1.name.localeCompare(t2.name));
 
     return (
         <div className="w-full min-h-screen bg-gray-900 text-gray-300">
@@ -29,6 +32,9 @@ export default async function Tournaments() {
             </header>
             <main className="flex-auto">
                 <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                    <div className="max-w-md mx-auto mb-8">
+                        <SeasonSelector seasons={seasons} />
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {tournaments.map(t => (
                             <li key={t.id} className="list-none">
