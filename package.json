@@ -14,7 +14,8 @@
     "test:integration": "JEST_ENV=integration npx dotenv -e .env.test -- jest --runInBand",
     "test:integration:full": "sh ./run-integration-tests.sh",
     "migrate": "npx dotenv -e .env.development.local -- npx prisma db push",
-    "migrate:test": "npx dotenv -e .env.test -- npx prisma db push"
+    "migrate:test": "npx dotenv -e .env.test -- npx prisma db push",
+    "delete:tournament": "npx dotenv -e .env.development.local -- ts-node -P tsconfig.script.json scripts/delete-tournament.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.15.1",
