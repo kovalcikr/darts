@@ -27,22 +27,25 @@ const cachedPlayers = unstable_cache(async (tournamentId) => {
     return await getPlayers([tournamentId]);
 })
 
-const cachedHighScore = unstable_cache(async (tournamentId) => {
+const cachedHighScore = unstable_cache(async (tournamentId, completedMatchIds) => {
     console.log("Fetching high scores from DB");
-    return await getHighScore(tournamentId);
+    return await getHighScore(tournamentId, completedMatchIds);
 });
 
-const cachedBestCheckout = unstable_cache(async (tournamentId) => {
+const cachedBestCheckout = unstable_cache(async (tournamentId, completedMatchIds) => {
     console.log("Fetching best checkout from DB");
-    return await getBestCheckout(tournamentId);
+    return await getBestCheckout(tournamentId, completedMatchIds);
 });
 
-const cachedBestLeg = unstable_cache(async (tournamentId) => {
+const cachedBestLeg = unstable_cache(async (tournamentId, completedMatchIds) => {
     console.log("Fetching best leg from DB");
     const bestLeg = await prisma.playerThrow.groupBy({
         by: ["tournamentId", "matchId", "leg", "playerId"],
         where: {
-            tournamentId: tournamentId
+            tournamentId: tournamentId,
+            matchId: {
+                in: completedMatchIds
+            }
         },
         _sum: {
             score: true,
@@ -106,9 +109,9 @@ const cachedBestLeg = unstable_cache(async (tournamentId) => {
     return { bLeg, bestLegDarts, bLegPlayers };
 });
 
-const cachedMatchAverages = unstable_cache(async (tournamentId, avg) => {
+const cachedMatchAverages = unstable_cache(async (tournamentId, avg, completedMatchIds) => {
     console.log("Fetching match averages from DB");
-    return await getMatchAverages(tournamentId, avg);
+    return await getMatchAverages(tournamentId, avg, completedMatchIds);
 });
 
 const cachedMatches = unstable_cache(async (tournamentId) => {
@@ -128,17 +131,20 @@ export default async function TournamentStats({ params }: { params: { id: string
         )
     }
 
+    const matches = await cachedMatches(params.id);
+    const completedMatchIds = matches.filter(m => m.playerALegs === m.runTo || m.playerBlegs === m.runTo).map(m => m.id);
+
     const results = await cachedResults(params.id);
     const players = await cachedPlayers(params.id);
-    const highScore = await cachedHighScore(params.id);
-    const { bestCheckout, bestCoc } = await cachedBestCheckout(params.id);
-    const { bLeg, bestLegDarts, bLegPlayers } = await cachedBestLeg(params.id);
-    const matches = await cachedMatches(params.id);
+    const highScore = await cachedHighScore(params.id, completedMatchIds);
+    const { bestCheckout, bestCoc } = await cachedBestCheckout(params.id, completedMatchIds);
+    const { bLeg, bestLegDarts, bLegPlayers } = await cachedBestLeg(params.id, completedMatchIds);
+
 
     function avg(match) {
         return match._sum.darts ? ((match._sum.score || 0) / match._sum.darts * 3) : 0;
     }
-    const { bestAvg, avgPP } = await cachedMatchAverages(params.id, avg);
+    const { bestAvg, avgPP } = await cachedMatchAverages(params.id, avg, completedMatchIds);
 
 
     function Stat({ name, value }) {
@@ -331,10 +337,15 @@ function MatchesList({ matches, tournamentId }) {
     )
 }
 
-async function getMatchAverages(id: string, avg: (match: any) => number) {
+async function getMatchAverages(id: string, avg: (match: any) => number, completedMatchIds: string[]) {
     const matchSums = await prisma.playerThrow.groupBy({
         by: ["tournamentId", "matchId", "playerId"],
-        where: { tournamentId: id },
+        where: {
+            tournamentId: id,
+            matchId: {
+                in: completedMatchIds
+            }
+        },
         _sum: { score: true, darts: true }
     });
     const bestAvg = matchSums.sort((a, b) => avg(b) - avg(a));
@@ -364,9 +375,13 @@ async function getMatchAverages(id: string, avg: (match: any) => number) {
     return { bestAvg, avgPP };
 }
 
-async function getBestCheckout(id: string) {
+async function getBestCheckout(id: string, completedMatchIds: string[]) {
     const bestCheckout = await prisma.playerThrow.findMany({
-        where: { tournamentId: id, checkout: true, score: { gte: 60 } },
+        where: {
+            tournamentId: id, checkout: true, score: { gte: 60 }, matchId: {
+                in: completedMatchIds
+            }
+        },
         orderBy: { score: "desc" }
     });
     const bestCo = {};
@@ -389,9 +404,13 @@ async function getBestCheckout(id: string) {
     return { bestCheckout, bestCoc };
 }
 
-async function getHighScore(tournamentId: string): Promise<{ player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number }[]> {
+async function getHighScore(tournamentId: string, completedMatchIds: string[]): Promise<{ player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number }[]> {
     const highScore = await prisma.playerThrow.findMany({
-        where: { tournamentId: tournamentId, score: { gte: 80 } },
+        where: {
+            tournamentId: tournamentId, score: { gte: 80 }, matchId: {
+                in: completedMatchIds
+            }
+        },
         orderBy: { score: "desc" }
     });
     const hs = {};
