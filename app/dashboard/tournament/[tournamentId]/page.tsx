@@ -70,12 +70,12 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: 
                 {/* Table Name */}
                 <h1 className="text-lg md:text-2xl font-bold text-white">Table {tableId}</h1>
 
-                <div className="w-full flex justify-around items-center space-x-2 md:space-x-4">
+                <div className="w-full flex flex-col sm:flex-row justify-around items-center sm:space-y-4 sm:space-x-2 md:space-x-4">
                     {match && (<>
                         {match.raceTo != match.scoreA && match.raceTo != match.scoreB && (<>
                             <Player playerId="1" photo={match.playerA.image} playerName={match.playerA.name} legsWon={match.scoreA} score={501 - (playerAInfo?._sum?.score || 0)} lastThrows={lastThrows?.filter(t => t.playerId == match.playerA.playerId.toString())?.map(t => t.score)} active={nextP == match.playerA.playerId.toString()} />
 
-                            <div className="text-center flex-none">
+                            <div className="text-center flex-none my-2 sm:my-0">
                                 <h2 className="text-lg md:text-2xl font-bold text-sky-400">VS</h2>
                             </div>
 
@@ -130,7 +130,7 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
                 alt={`Player ${playerName} - ${playerId}`}
                 width={112}
                 height={112}
-                className="w-16 h-16 md:w-24 md:h-24 rounded-full hidden sm:block"
+                className="w-16 h-16 md:w-24 md:h-24 rounded-full hidden md:block"
             />
             <h2 className="text-sm md:text-xl text-center px-1 font-bold text-white">{playerName}</h2>
             <div className="text-center">
