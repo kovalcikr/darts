@@ -111,12 +111,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const match5 = await cachedMatch5(tournamentId, getTableId('5', test == 'true'));
     const match6 = await cachedMatch6(tournamentId, getTableId('6', test == 'true'));
 
-    const matchInfo1 = match1?.matchId && await cachedMatchInfo1(tournamentId, match1?.matchId?.toString(), (match1?.scoreA || 0) + (match1?.scoreB || 0) + 1, match1?.playerA.playerId, match1?.playerB.playerId);
-    const matchInfo2 = match2?.matchId && await cachedMatchInfo2(tournamentId, match2?.matchId?.toString(), (match2?.scoreA || 0) + (match2?.scoreB || 0) + 1, match2?.playerA.playerId, match2?.playerB.playerId);
-    const matchInfo3 = match3?.matchId && await cachedMatchInfo3(tournamentId, match3?.matchId?.toString(), (match3?.scoreA || 0) + (match3?.scoreB || 0) + 1, match3?.playerA.playerId, match3?.playerB.playerId);
-    const matchInfo4 = match4?.matchId && await cachedMatchInfo4(tournamentId, match4?.matchId?.toString(), (match4?.scoreA || 0) + (match4?.scoreB || 0) + 1, match4?.playerA.playerId, match4?.playerB.playerId);
-    const matchInfo5 = match5?.matchId && await cachedMatchInfo5(tournamentId, match5?.matchId?.toString(), (match5?.scoreA || 0) + (match5?.scoreB || 0) + 1, match5?.playerA.playerId, match5?.playerB.playerId);
-    const matchInfo6 = match6?.matchId && await cachedMatchInfo6(tournamentId, match6?.matchId?.toString(), (match6?.scoreA || 0) + (match6?.scoreB || 0) + 1, match6?.playerA.playerId, match6?.playerB.playerId);
+    const matchInfo1 = match1?.matchId && await cachedMatchInfo1(tournamentId, match1?.matchId?.toString(), (match1?.scoreA || 0) + (match1?.scoreB || 0) + 1, match1?.playerA.playerId.toString(), match1?.playerB.playerId.toString());
+    const matchInfo2 = match2?.matchId && await cachedMatchInfo2(tournamentId, match2?.matchId?.toString(), (match2?.scoreA || 0) + (match2?.scoreB || 0) + 1, match2?.playerA.playerId.toString(), match2?.playerB.playerId.toString());
+    const matchInfo3 = match3?.matchId && await cachedMatchInfo3(tournamentId, match3?.matchId?.toString(), (match3?.scoreA || 0) + (match3?.scoreB || 0) + 1, match3?.playerA.playerId.toString(), match3?.playerB.playerId.toString());
+    const matchInfo4 = match4?.matchId && await cachedMatchInfo4(tournamentId, match4?.matchId?.toString(), (match4?.scoreA || 0) + (match4?.scoreB || 0) + 1, match4?.playerA.playerId.toString(), match4?.playerB.playerId.toString());
+    const matchInfo5 = match5?.matchId && await cachedMatchInfo5(tournamentId, match5?.matchId?.toString(), (match5?.scoreA || 0) + (match5?.scoreB || 0) + 1, match5?.playerA.playerId.toString(), match5?.playerB.playerId.toString());
+    const matchInfo6 = match6?.matchId && await cachedMatchInfo6(tournamentId, match6?.matchId?.toString(), (match6?.scoreA || 0) + (match6?.scoreB || 0) + 1, match6?.playerA.playerId.toString(), match6?.playerB.playerId.toString());
 
     const firstPlayer1 = match1?.matchId && (await cachedFirstPlayer1(match1.matchId.toString()))?.firstPlayer;
     const firstPlayer2 = match2?.matchId && (await cachedFirstPlayer2(match2.matchId.toString()))?.firstPlayer;
