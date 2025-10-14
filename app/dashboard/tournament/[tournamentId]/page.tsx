@@ -40,7 +40,7 @@ export default function DashboardPage({ params }: { params: { tournamentId: stri
     }
 
     return (
-        <div className="grid grid-cols-3 grid-rows-2 h-screen w-full">
+        <div className="grid grid-cols-3 grid-rows-2 h-screen w-full bg-gray-900 text-gray-300">
             <TableDashboard tableId="1" match={data?.match1} matchInfo={data?.matchInfo1?.score} lastThrows={data?.matchInfo1?.lastThrows} firstPlayer={data?.firstPlayer1} />
             <TableDashboard tableId="2" match={data?.match2} matchInfo={data?.matchInfo2?.score} lastThrows={data?.matchInfo2?.lastThrows} firstPlayer={data?.firstPlayer2} />
             <TableDashboard tableId="3" match={data?.match3} matchInfo={data?.matchInfo3?.score} lastThrows={data?.matchInfo3?.lastThrows} firstPlayer={data?.firstPlayer3} />
@@ -65,18 +65,18 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: 
     const playerBInfo = matchInfo?.find(e => e.playerId == match.playerB.playerId.toString())
     const nextP = nextPlayer(leg, playerAInfo?._count?.score, playerBInfo?._count?.score, match?.playerA?.playerId.toString(), match?.playerB?.playerId.toString(), firstPlayer);
     return (
-        <div className="col-span-1 row-span-1 bg-blue-50 p-6 flex flex-col items-center justify-center space-y-6 rounded-lg shadow-md border border-blue-200">
-            <div className="w-full flex flex-col items-center space-y-4">
+        <div className="bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4">
+            <div className="w-full flex flex-col items-center space-y-2">
                 {/* Table Name */}
-                <h1 className="text-2xl font-bold text-blue-800">Table {tableId}</h1>
+                <h1 className="text-lg md:text-2xl font-bold text-white">Table {tableId}</h1>
 
-                <div className="w-full flex justify-between items-center space-x-6">
+                <div className="w-full flex justify-around items-center space-x-2 md:space-x-4">
                     {match && (<>
                         {match.raceTo != match.scoreA && match.raceTo != match.scoreB && (<>
                             <Player playerId="1" photo={match.playerA.image} playerName={match.playerA.name} legsWon={match.scoreA} score={501 - (playerAInfo?._sum?.score || 0)} lastThrows={lastThrows?.filter(t => t.playerId == match.playerA.playerId.toString())?.map(t => t.score)} active={nextP == match.playerA.playerId.toString()} />
 
                             <div className="text-center flex-none">
-                                <h2 className="text-2xl font-bold text-blue-800">VS</h2>
+                                <h2 className="text-lg md:text-2xl font-bold text-sky-400">VS</h2>
                             </div>
 
                             <Player playerId="2" photo={match.playerB.image} playerName={match.playerB.name} legsWon={match.scoreB} score={501 - (playerBInfo?._sum?.score || 0)} lastThrows={lastThrows?.filter(t => t.playerId == match.playerB.playerId.toString())?.map(t => t.score)} active={nextP == match.playerB.playerId.toString()} />
@@ -105,16 +105,16 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: 
 
 function Winner({ player, image }: { player: string, image: string }) {
     return (
-        <div className="flex flex-col items-center justify-center space-y-2 w-full h-full">
+        <div className="flex flex-col items-center justify-center space-y-1 md:space-y-2 w-full h-full">
             <img
                 src={image}
                 alt={`Winner: ${player}`}
                 width={128}
                 height={128}
-                className="w-32 h-32 object-cover"
+                className="w-16 h-16 md:w-24 md:h-24 object-cover rounded-full"
             />
-            <p className="text-2xl font-semibold text-blue-800">{player}</p>
-            <p className="text-xl font-bold text-blue-600">Winner</p>
+            <p className="text-lg md:text-2xl font-semibold text-white text-center">{player}</p>
+            <p className="text-md md:text-xl font-bold text-sky-400">Winner</p>
         </div>
     );
 }
@@ -124,24 +124,24 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
 
 }) {
     return (
-        <div className={`flex flex-col items-center space-y-4 flex-1 ${active ? "bg-yellow-50" : ""}`}>
+        <div className={`flex flex-col items-center space-y-2 flex-1 p-1 md:p-2 rounded-lg ${active ? "bg-sky-900/50 ring-1 ring-sky-500" : ""}`}>
             <img
                 src={photo}
                 alt={`Player ${playerName} - ${playerId}`}
                 width={112}
                 height={112}
-                className="w-28 h-28"
+                className="w-16 h-16 md:w-24 md:h-24 rounded-full hidden sm:block"
             />
-            <h2 className="text-xl text-center px-1 font-bold text-blue-700">{playerName}</h2>
+            <h2 className="text-sm md:text-xl text-center px-1 font-bold text-white">{playerName}</h2>
             <div className="text-center">
-                <p className="text-xl text-blue-600">Legs Won: <span className="font-semibold text-blue-800 text-2xl">{legsWon}</span></p>
-                <p className="text-xl text-blue-600">Leg Score: <span className="font-semibold text-blue-800 text-2xl">{score}</span></p>
+                <p className="text-sm md:text-xl text-gray-400">Legs: <span className="font-semibold text-white text-md md:text-2xl">{legsWon}</span></p>
+                <p className="text-sm md:text-xl text-gray-400">Score: <span className="font-semibold text-white text-md md:text-2xl">{score}</span></p>
             </div>
             <div className="text-center">
-                <p className="text-lg font-semibold text-blue-700">Last Throws:</p>
-                <p className="text-lg text-blue-600">
+                <p className="text-xs md:text-lg font-semibold text-gray-400">Throws:</p>
+                <p className="text-xs md:text-lg text-gray-300">
                     {lastThrows?.map((throwInfo, index) => (
-                        <span key={index} className={index == 0 ? "text-xl font-bold text-blue-800" : ""}>{index != 0 && ", "}{throwInfo}</span>
+                        <span key={index} className={index == 0 ? "text-sm md:text-xl font-bold text-white" : ""}>{index != 0 && ", "}{throwInfo}</span>
                     ))}
                 </p>
             </div>
