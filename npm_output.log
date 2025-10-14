@@ -1,0 +1,3 @@
+
+> darts@0.1.0 dev
+> npx dotenv -e .env.development.local -- next dev
