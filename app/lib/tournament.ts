@@ -3,7 +3,11 @@
 import { redirect } from "next/navigation";
 import getTournamentInfo from "./cuescore";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
-import { upsertTournament, findTournamentsByName, findTournamentsByYear } from "./data";
+import { upsertTournament, findTournamentsByYear, getSeasons as getSeasonsFromDb } from "./data";
+
+export async function getSeasons() {
+    return getSeasonsFromDb();
+}
 
 export async function openTournamentForm(prevState: any, data: FormData) {
     const tournamentId = data.get('tournamentId') as string;
@@ -26,26 +30,16 @@ export async function createTournament({ tournamentId, name }) {
     return upsertTournament(String(tournamentId), name);
 }
 
-export async function getTournaments() {
-    const tournamentNames = generateTournamentNames(13, 24);
-
-    const tournamentIds = await findTournamentsByName(tournamentNames);
+export async function getTournaments(season: string) {
+    const tournamentIds = await findTournamentsByYear(season);
     const tournaments = tournamentIds.map(tourament => tourament.id);
     return tournaments
 }
 
-function generateTournamentNames(start, end) {
-    const names = [];
-    for (let i = start; i <= end; i++) {
-        names.push("Relax Darts CUP " + i + " 2024")
-    }
-    return names;
-}
-
-export const getCachedTournaments = unstable_cache(
+export const getCachedTournaments = (season: string) => unstable_cache(
     async () => {
-        return await findTournamentsByYear("2025");
+        return await findTournamentsByYear(season);
     },
     null,
-    { tags: ["tournaments"] }
+    { tags: ["tournaments", `tournaments:${season}`] }
 );

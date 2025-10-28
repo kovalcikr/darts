@@ -1,14 +1,17 @@
 import { randomUUID } from "crypto";
 import prisma from "./lib/db";
 import { getPlayers } from "./lib/players";
-import { getTournaments } from "./lib/tournament";
+import { getSeasons, getTournaments } from "./lib/tournament";
 import Link from "next/link";
+import SeasonSelector from "./components/season-selector";
 
 export const revalidate = false
 export const dynamic = 'force-dynamic'
 
-export default async function Home() {
-  const tournaments = await getTournaments()
+export default async function Home({ searchParams }: { searchParams: { season: string } }) {
+  const seasons = await getSeasons();
+  const season = searchParams.season || seasons[0] || "2025";
+  const tournaments = await getTournaments(season)
   const matchesCount = await prisma.match.aggregate({
     _count: {
       id: true
@@ -138,7 +141,7 @@ export default async function Home() {
       </div>
     )
   }
-  
+
   function StatWithNames({ name, value, playerIds }) {
     return (
       <div className="bg-gray-800 p-6 rounded-xl shadow-lg ring-1 ring-white/10">
@@ -183,11 +186,14 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl tracking-tight">
-              Sezóna <span className="text-sky-400">Jeseň 2024</span>
+              Sezóna <span className="text-sky-400">{season}</span>
             </h1>
             <p className="mt-4 max-w-md mx-auto text-base text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
               Celkové štatistiky zo všetkých turnajov.
             </p>
+            <div className="mt-4 max-w-md mx-auto">
+              <SeasonSelector seasons={seasons} />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
