@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function Tournaments() {
 
-    const tournaments = (await getCachedTournaments()).sort((t1, t2) => t1.name.localeCompare(t2.name));
+    const tournaments = (await getCachedTournaments("2025")()).sort((t1, t2) => t1.name.localeCompare(t2.name));
 
     return (
         <div className="w-full min-h-screen bg-gray-900 text-gray-300">

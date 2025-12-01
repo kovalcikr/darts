@@ -1,3 +1,5 @@
+  ▲ Next.js 14.2.4
+  - Local:        http://localhost:3000
+  - Environments: .env.development.local
 
-> darts@0.1.0 dev
-> npx dotenv -e .env.development.local -- next dev
+ ✓ Starting...

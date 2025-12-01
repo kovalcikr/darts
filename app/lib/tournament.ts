@@ -26,25 +26,26 @@ export async function createTournament({ tournamentId, name }) {
     return upsertTournament(String(tournamentId), name);
 }
 
-export async function getTournaments() {
-    const tournamentNames = generateTournamentNames(13, 24);
+export async function getTournaments(year: string) {
+    const start = year === "2024" ? 13 : 1;
+    const tournamentNames = generateTournamentNames(start, 24, year);
 
     const tournamentIds = await findTournamentsByName(tournamentNames);
     const tournaments = tournamentIds.map(tourament => tourament.id);
     return tournaments
 }
 
-function generateTournamentNames(start, end) {
+function generateTournamentNames(start, end, year) {
     const names = [];
     for (let i = start; i <= end; i++) {
-        names.push("Relax Darts CUP " + i + " 2024")
+        names.push(`Relax Darts CUP ${i} ${year}`)
     }
     return names;
 }
 
-export const getCachedTournaments = unstable_cache(
+export const getCachedTournaments = (year: string) => unstable_cache(
     async () => {
-        return await findTournamentsByYear("2025");
+        return await findTournamentsByYear(year);
     },
     null,
     { tags: ["tournaments"] }
