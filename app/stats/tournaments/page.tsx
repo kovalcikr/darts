@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 export default async function Tournaments({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
 
     const season = searchParams.season as string || "2025";
-    const tournaments = (await getCachedTournaments(season)()).sort((t1, t2) => t1.name.localeCompare(t2.name));
+    const tournaments = (await getCachedTournaments(season)).sort((t1, t2) => t1.name.localeCompare(t2.name));
 
     return (
         <div className="w-full min-h-screen bg-gray-900 text-gray-300">

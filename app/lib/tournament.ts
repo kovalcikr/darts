@@ -46,10 +46,10 @@ function generateTournamentNames(start, end) {
     return names;
 }
 
-export const getCachedTournaments = (year: string) => unstable_cache(
-    async () => {
+export const getCachedTournaments = unstable_cache(
+    async (year: string) => {
         return await findTournamentsByYear(year);
     },
-    null,
+    ['tournaments-by-year'],
     { tags: ["tournaments"] }
 );
