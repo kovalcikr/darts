@@ -27,18 +27,21 @@ export async function createTournament({ tournamentId, name }) {
 }
 
 export async function getTournaments(year: string) {
-    const start = year === "2024" ? 13 : 1;
-    const tournamentNames = generateTournamentNames(start, 24, year);
+    if (year === "2024") {
+        const tournamentNames = generateTournamentNames(13, 24);
+        const tournamentIds = await findTournamentsByName(tournamentNames);
+        return tournamentIds.map(tournament => tournament.id);
+    }
 
-    const tournamentIds = await findTournamentsByName(tournamentNames);
-    const tournaments = tournamentIds.map(tourament => tourament.id);
+    const tournamentIds = await findTournamentsByYear(year);
+    const tournaments = tournamentIds.map(tournament => tournament.id);
     return tournaments
 }
 
-function generateTournamentNames(start, end, year) {
+function generateTournamentNames(start, end) {
     const names = [];
     for (let i = start; i <= end; i++) {
-        names.push(`Relax Darts CUP ${i} ${year}`)
+        names.push("Relax Darts CUP " + i + " 2024")
     }
     return names;
 }

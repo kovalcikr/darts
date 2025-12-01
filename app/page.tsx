@@ -174,10 +174,10 @@ export default async function Home({
                 <nav className="text-sm leading-6 font-semibold text-gray-400">
                   <ul className="flex space-x-4 md:space-x-8">
                     <li>
-                      <Link className="hover:text-sky-400 transition-colors" href="/players">Štatistiky hráčov</Link>
+                      <Link className="hover:text-sky-400 transition-colors" href={`/players?season=${season}`}>Štatistiky hráčov</Link>
                     </li>
                     <li>
-                      <Link className="hover:text-sky-400 transition-colors" href="/stats/tournaments">Štatistiky turnajov</Link>
+                      <Link className="hover:text-sky-400 transition-colors" href={`/stats/tournaments?season=${season}`}>Štatistiky turnajov</Link>
                     </li>
                   </ul>
                 </nav>
