@@ -193,7 +193,7 @@ export default async function Home({
               <SeasonSelector season={season} />
             </div>
             <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl tracking-tight">
-              Sezóna <span className="text-sky-400">Jeseň {season}</span>
+              Sezóna <span className="text-sky-400">{season}</span>
             </h1>
             <p className="mt-4 max-w-md mx-auto text-base text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
               Celkové štatistiky zo všetkých turnajov.

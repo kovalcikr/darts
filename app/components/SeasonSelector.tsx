@@ -22,8 +22,8 @@ export default function SeasonSelector({ season }: { season: string }) {
             value={season}
             onChange={handleChange}
           >
-            <option value="2025">Jeseň 2025</option>
-            <option value="2024">Jeseň 2024</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
           </select>
         </div>
     );
