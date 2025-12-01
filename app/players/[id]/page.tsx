@@ -6,7 +6,7 @@ import Link from "next/link"
 
 export default async function Player({ params }: { params: { id: string } }) {
 
-    const tournamentIds = await getTournaments()
+    const tournamentIds = await getTournaments("2025")
     const players = await getPlayers(tournamentIds)
 
     const matches = await prisma.match.findMany({
