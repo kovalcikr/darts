@@ -4,9 +4,10 @@ import { getTournaments } from "@/app/lib/tournament"
 import { randomUUID } from "crypto"
 import Link from "next/link"
 
-export default async function Player({ params }: { params: { id: string } }) {
+export default async function Player({ params, searchParams }: { params: { id: string }, searchParams: { [key: string]: string | string[] | undefined } }) {
 
-    const tournamentIds = await getTournaments()
+    const season = searchParams.season as string || "2025";
+    const tournamentIds = await getTournaments(season)
     const players = await getPlayers(tournamentIds)
 
     const matches = await prisma.match.findMany({

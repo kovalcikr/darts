@@ -26,11 +26,15 @@ export async function createTournament({ tournamentId, name }) {
     return upsertTournament(String(tournamentId), name);
 }
 
-export async function getTournaments() {
-    const tournamentNames = generateTournamentNames(13, 24);
+export async function getTournaments(year: string) {
+    if (year === "2024") {
+        const tournamentNames = generateTournamentNames(13, 24);
+        const tournamentIds = await findTournamentsByName(tournamentNames);
+        return tournamentIds.map(tournament => tournament.id);
+    }
 
-    const tournamentIds = await findTournamentsByName(tournamentNames);
-    const tournaments = tournamentIds.map(tourament => tourament.id);
+    const tournamentIds = await findTournamentsByYear(year);
+    const tournaments = tournamentIds.map(tournament => tournament.id);
     return tournaments
 }
 
@@ -43,9 +47,9 @@ function generateTournamentNames(start, end) {
 }
 
 export const getCachedTournaments = unstable_cache(
-    async () => {
-        return await findTournamentsByYear("2025");
+    async (year: string) => {
+        return await findTournamentsByYear(year);
     },
-    null,
+    ['tournaments-by-year'],
     { tags: ["tournaments"] }
 );

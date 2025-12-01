@@ -7,8 +7,15 @@ import Link from "next/link";
 export const revalidate = false
 export const dynamic = 'force-dynamic'
 
-export default async function Home() {
-  const tournaments = await getTournaments()
+import SeasonSelector from "./components/SeasonSelector";
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  const season = searchParams.season as string || "2025";
+  const tournaments = await getTournaments(season)
   const matchesCount = await prisma.match.aggregate({
     _count: {
       id: true
@@ -167,10 +174,10 @@ export default async function Home() {
                 <nav className="text-sm leading-6 font-semibold text-gray-400">
                   <ul className="flex space-x-4 md:space-x-8">
                     <li>
-                      <Link className="hover:text-sky-400 transition-colors" href="/players">Štatistiky hráčov</Link>
+                      <Link className="hover:text-sky-400 transition-colors" href={`/players?season=${season}`}>Štatistiky hráčov</Link>
                     </li>
                     <li>
-                      <Link className="hover:text-sky-400 transition-colors" href="/stats/tournaments">Štatistiky turnajov</Link>
+                      <Link className="hover:text-sky-400 transition-colors" href={`/stats/tournaments?season=${season}`}>Štatistiky turnajov</Link>
                     </li>
                   </ul>
                 </nav>
@@ -182,8 +189,11 @@ export default async function Home() {
       <main className="flex-auto">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
+            <div className="mb-8">
+              <SeasonSelector season={season} />
+            </div>
             <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl tracking-tight">
-              Sezóna <span className="text-sky-400">Jeseň 2024</span>
+              Sezóna <span className="text-sky-400">{season}</span>
             </h1>
             <p className="mt-4 max-w-md mx-auto text-base text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
               Celkové štatistiky zo všetkých turnajov.
