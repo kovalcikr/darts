@@ -215,7 +215,7 @@ export default async function Player({ params, searchParams }: { params: { id: s
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8">
                             <StatCard title="Celkový výkon">
-                                <StatRow label="Sezóna" value="Jeseň 2024" />
+                                <StatRow label="Sezóna" value={`${season}`} />
                                 <StatRow label="Počet turnajov" value={`${playerTournaments.size} / ${tournamentIds.length} (${(playerTournaments.size / tournamentIds.length * 100).toFixed(1)}%)`} />
                                 <StatRow label="Vyhrané zápasy" value={`${matchesWon} / ${matches.length} (${(matchesWon / matches.length * 100).toFixed(1)}%)`} />
                                 <StatRow label="Vyhrané legy" value={`${wonLegs} / ${playerLegs} (${(wonLegs / playerLegs * 100).toFixed(1)}%)`} />
