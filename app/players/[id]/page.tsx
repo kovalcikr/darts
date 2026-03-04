@@ -6,7 +6,7 @@ import Link from "next/link"
 
 export default async function Player({ params, searchParams }: { params: { id: string }, searchParams: { [key: string]: string | string[] | undefined } }) {
 
-    const season = searchParams.season as string || "2025";
+    const season = searchParams.season as string || "2026";
     const tournamentIds = await getTournaments(season)
     const players = await getPlayers(tournamentIds)
 
