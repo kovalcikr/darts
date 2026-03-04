@@ -14,7 +14,7 @@ export default async function Home({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const season = searchParams.season as string || "2025";
+  const season = searchParams.season as string || "2026";
   const tournaments = await getTournaments(season)
   const matchesCount = await prisma.match.aggregate({
     _count: {

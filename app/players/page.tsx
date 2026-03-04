@@ -2,8 +2,8 @@ import Link from "next/link";
 import { getRankings } from "../lib/cuescore";
 
 export default async function Players({searchParams}: {searchParams: { [key: string]: string | string[] | undefined }}) {
-    const season = searchParams.season as string || "2025";
-    const rankings = season == "2024" ? "43953514" : "52708102";
+    const season = searchParams.season as string || "2026";
+    const rankings = season == "2026" ? "72952249" : (season == "2024" ? "43953514" : "52708102");
     const players = await getRankings(rankings);
 
     return (
