@@ -2,6 +2,7 @@ import { getCuescoreMatchCached, getMatch } from "@/app/lib/match";
 import { getPlayerThrowInfo } from "@/app/lib/playerThrow";
 import { unstable_cache } from "next/cache";
 import { NextRequest } from "next/server";
+import { findMatchAvg } from "@/app/lib/playerThrow";
 
 const cachedMatch1 = unstable_cache(async (tournamentId: string, table: string) => {
     return await getCuescoreMatchCached(tournamentId, table);
@@ -143,7 +144,19 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         firstPlayer3: firstPlayer3,
         firstPlayer4: firstPlayer4,
         firstPlayer5: firstPlayer5,
-        firstPlayer6: firstPlayer6
+        firstPlayer6: firstPlayer6,
+        matchAvgA1: await findMatchAvg(match1?.matchId, match1?.playerA.playerId),
+        matchAvgA2: await findMatchAvg(match2?.matchId, match2?.playerA.playerId),
+        matchAvgA3: await findMatchAvg(match3?.matchId, match3?.playerA.playerId),
+        matchAvgA4: await findMatchAvg(match4?.matchId, match4?.playerA.playerId),
+        matchAvgA5: await findMatchAvg(match5?.matchId, match5?.playerA.playerId),
+        matchAvgA6: await findMatchAvg(match6?.matchId, match6?.playerA.playerId),
+        matchAvgB1: await findMatchAvg(match1?.matchId, match1?.playerB.playerId),
+        matchAvgB2: await findMatchAvg(match2?.matchId, match2?.playerB.playerId),
+        matchAvgB3: await findMatchAvg(match3?.matchId, match3?.playerB.playerId),
+        matchAvgB4: await findMatchAvg(match4?.matchId, match4?.playerB.playerId),
+        matchAvgB5: await findMatchAvg(match5?.matchId, match5?.playerB.playerId),
+        matchAvgB6: await findMatchAvg(match6?.matchId, match6?.playerB.playerId),
     }
 
     return new Response(JSON.stringify(match));

@@ -64,6 +64,11 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: 
     const playerAInfo = matchInfo?.find(e => e.playerId == match.playerA.playerId.toString())
     const playerBInfo = matchInfo?.find(e => e.playerId == match.playerB.playerId.toString())
     const nextP = nextPlayer(leg, playerAInfo?._count?.score, playerBInfo?._count?.score, match?.playerA?.playerId.toString(), match?.playerB?.playerId.toString(), firstPlayer);
+    const playerACount = lastThrows?.filter(t => t.playerId == match.playerA.playerId.toString()).length;
+    const playerAAvg = match?.matchAvgA1 || 0;
+    const playerAAvgDisplay = playerAAvg > 0 ? playerAAvg.toFixed(1) : 0;
+    const playerBAvg = match?.matchAvgB1 || 0;
+    const playerBAvgDisplay = playerBAvg > 0 ? playerBAvg.toFixed(1) : 0;
     return (
         <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4">
             <h1 className="absolute top-2 left-2 text-xs md:text-sm font-bold text-gray-500">#{tableId}</h1>
@@ -71,13 +76,13 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: 
                 <div className="w-full flex flex-col sm:flex-row justify-around items-center sm:space-y-4 sm:space-x-2 md:space-x-4">
                     {match && (<>
                         {match.raceTo != match.scoreA && match.raceTo != match.scoreB && (<>
-                            <Player playerId="1" photo={match.playerA.image} playerName={match.playerA.name} legsWon={match.scoreA} score={501 - (playerAInfo?._sum?.score || 0)} lastThrows={lastThrows?.filter(t => t.playerId == match.playerA.playerId.toString())?.map(t => t.score)} active={nextP == match.playerA.playerId.toString()} />
+                            <Player playerId="1" photo={match.playerA.image} playerName={match.playerA.name} legsWon={match.scoreA} score={501 - (playerAInfo?._sum?.score || 0)} lastThrows={lastThrows?.filter(t => t.playerId == match.playerA.playerId.toString())?.map(t => t.score)} average={playerAAvgDisplay} active={nextP == match.playerA.playerId.toString()} />
 
                             <div className="text-center flex-none my-2 sm:my-0">
                                 <h2 className="text-lg md:text-2xl font-bold text-sky-400">VS</h2>
                             </div>
 
-                            <Player playerId="2" photo={match.playerB.image} playerName={match.playerB.name} legsWon={match.scoreB} score={501 - (playerBInfo?._sum?.score || 0)} lastThrows={lastThrows?.filter(t => t.playerId == match.playerB.playerId.toString())?.map(t => t.score)} active={nextP == match.playerB.playerId.toString()} />
+                            <Player playerId="2" photo={match.playerB.image} playerName={match.playerB.name} legsWon={match.scoreB} score={501 - (playerBInfo?._sum?.score || 0)} lastThrows={lastThrows?.filter(t => t.playerId == match.playerB.playerId.toString())?.map(t => t.score)} average={playerBAvgDisplay} active={nextP == match.playerB.playerId.toString()} />
                         </>)
                         }
                         {match.raceTo == match.scoreA && (
@@ -117,8 +122,8 @@ function Winner({ player, image }: { player: string, image: string }) {
     );
 }
 
-function Player({ playerId, playerName, photo, active, legsWon, score, lastThrows }: {
-    photo: string, playerId: string, playerName: string, active?: boolean, score: any, legsWon?: number, lastThrows?: any[]
+function Player({ playerId, playerName, photo, active, legsWon, score, lastThrows, average }: {
+    photo: string, playerId: string, playerName: string, active?: boolean, score: any, legsWon?: number, lastThrows?: any[], average?: string
 
 }) {
     return (
@@ -126,9 +131,9 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
             <img
                 src={photo}
                 alt={`Player ${playerName} - ${playerId}`}
-                width={112}
-                height={112}
-                className="w-16 h-16 md:w-24 md:h-24 rounded-full hidden md:block"
+                width={80}
+                height={80}
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full hidden md:block"
             />
             <h2 className="text-sm md:text-xl text-center px-1 font-bold text-white">{playerName}</h2>
             <div className="text-center">
@@ -143,6 +148,9 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
                     ))}
                 </p>
             </div>
+            {average && (
+                <p className="text-xs md:text-sm font-semibold text-sky-400 mt-1">Average: {average}</p>
+            )}
         </div>
     )
 }
