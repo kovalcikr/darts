@@ -64,8 +64,8 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer, av
     const playerAInfo = matchInfo?.find(e => e.playerId == match.playerA.playerId.toString())
     const playerBInfo = matchInfo?.find(e => e.playerId == match.playerB.playerId.toString())
     const nextP = nextPlayer(leg, playerAInfo?._count?.score, playerBInfo?._count?.score, match?.playerA?.playerId.toString(), match?.playerB?.playerId.toString(), firstPlayer);
-    const playerAAvgDisplay = avgPlayerA > 0 ? avgPlayerA.toFixed(1) : 0;
-    const playerBAvgDisplay = avgPlayerB > 0 ? avgPlayerB.toFixed(1) : 0;
+    const playerAAvgDisplay = avgPlayerA > 0 ? avgPlayerA.toFixed(1) : null;
+    const playerBAvgDisplay = avgPlayerB > 0 ? avgPlayerB.toFixed(1) : null;
     return (
         <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4">
             <h1 className="absolute top-2 left-2 text-xs md:text-sm font-bold text-gray-500">#{tableId}</h1>
