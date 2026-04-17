@@ -41,7 +41,7 @@ export default function DashboardPage({ params }: { params: { tournamentId: stri
 
     return (
         <div className="grid grid-cols-3 grid-rows-2 h-screen w-full bg-gray-900 text-gray-300">
-            <TableDashboard tableId="1" match={data?.match1} matchInfo={data?.matchInfo1?.score} lastThrows={data?.matchInfo1?.lastThrows} firstPlayer={data?.firstPlayer1} />
+            <TableDashboard tableId="1" match={data?.match1} matchInfo={data?.matchInfo1?.score} lastThrows={data?.matchInfo1?.lastThrows} firstPlayer={data?.firstPlayer1} avgPlayerA={data?.matchAvgA1} avgPlayerB={data?.matchAvgB1} />
             <TableDashboard tableId="2" match={data?.match2} matchInfo={data?.matchInfo2?.score} lastThrows={data?.matchInfo2?.lastThrows} firstPlayer={data?.firstPlayer2} />
             <TableDashboard tableId="3" match={data?.match3} matchInfo={data?.matchInfo3?.score} lastThrows={data?.matchInfo3?.lastThrows} firstPlayer={data?.firstPlayer3} />
             <TableDashboard tableId="4" match={data?.match4} matchInfo={data?.matchInfo4?.score} lastThrows={data?.matchInfo4?.lastThrows} firstPlayer={data?.firstPlayer4} />
@@ -51,7 +51,7 @@ export default function DashboardPage({ params }: { params: { tournamentId: stri
     );
 }
 
-function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: { tableId: string, match: any, matchInfo: any, lastThrows?: any[], firstPlayer?: string }) {
+function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer, avgPlayerA, avgPlayerB }: { tableId: string, match: any, matchInfo: any, lastThrows?: any[], firstPlayer?: string, avgPlayerA?: number, avgPlayerB?: number }) {
     function nextPlayer(leg: number, throwsA: number, throwsB: number, playerA: string, playerB: string, firstPlayer: string) {
         if ((leg + (throwsA ? throwsA : 0) + (throwsB ? throwsB : 0)) % 2 == 1) {
             return firstPlayer;
@@ -64,13 +64,8 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: 
     const playerAInfo = matchInfo?.find(e => e.playerId == match.playerA.playerId.toString())
     const playerBInfo = matchInfo?.find(e => e.playerId == match.playerB.playerId.toString())
     const nextP = nextPlayer(leg, playerAInfo?._count?.score, playerBInfo?._count?.score, match?.playerA?.playerId.toString(), match?.playerB?.playerId.toString(), firstPlayer);
-    const playerACount = lastThrows?.filter(t => t.playerId == match.playerA.playerId.toString()).length;
-    const playerAAvg = match ? match[`matchAvgA${tableId}`] : 0;
-    console.log('playerAAvg', playerAAvg)
-    const playerAAvgDisplay = playerAAvg > 0 ? playerAAvg.toFixed(1) : 0;
-    console.log('playerAAvgDisplay', playerAAvgDisplay)
-    const playerBAvg = match ? match[`matchAvgB${tableId}`] : 0;
-    const playerBAvgDisplay = playerBAvg > 0 ? playerBAvg.toFixed(1) : 0;
+    const playerAAvgDisplay = avgPlayerA > 0 ? avgPlayerA.toFixed(1) : 0;
+    const playerBAvgDisplay = avgPlayerB > 0 ? avgPlayerB.toFixed(1) : 0;
     return (
         <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4">
             <h1 className="absolute top-2 left-2 text-xs md:text-sm font-bold text-gray-500">#{tableId}</h1>
@@ -150,8 +145,8 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
                     ))}
                 </p>
             </div>
-            {average !== undefined && (
-                <p className="text-xs md:text-sm font-semibold text-sky-400 mt-1">Average: {average}</p>
+            {average && (
+                <p className="text-xl md:text-sm font-semibold text-gray-400 mt-1">Average: {average}</p>
             )}
         </div>
     )
