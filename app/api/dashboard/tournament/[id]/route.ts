@@ -159,7 +159,5 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         matchAvgB6: match6?.matchId ? await findMatchAvg(String(match6.matchId), String(match6.playerB.playerId)) : null,
     }
 
-    console.log('match', match);
-
     return new Response(JSON.stringify(match));
 }
