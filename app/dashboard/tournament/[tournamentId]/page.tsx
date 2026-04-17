@@ -66,7 +66,9 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer }: 
     const nextP = nextPlayer(leg, playerAInfo?._count?.score, playerBInfo?._count?.score, match?.playerA?.playerId.toString(), match?.playerB?.playerId.toString(), firstPlayer);
     const playerACount = lastThrows?.filter(t => t.playerId == match.playerA.playerId.toString()).length;
     const playerAAvg = match ? match[`matchAvgA${tableId}`] : 0;
+    console.log('playerAAvg', playerAAvg)
     const playerAAvgDisplay = playerAAvg > 0 ? playerAAvg.toFixed(1) : 0;
+    console.log('playerAAvgDisplay', playerAAvgDisplay)
     const playerBAvg = match ? match[`matchAvgB${tableId}`] : 0;
     const playerBAvgDisplay = playerBAvg > 0 ? playerBAvg.toFixed(1) : 0;
     return (
@@ -148,7 +150,7 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
                     ))}
                 </p>
             </div>
-            {average && (
+            {average !== undefined && (
                 <p className="text-xs md:text-sm font-semibold text-sky-400 mt-1">Average: {average}</p>
             )}
         </div>
