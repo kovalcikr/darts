@@ -27,7 +27,7 @@ export async function finishMatch(tournamentId, matchId, playerALegs, playerBleg
   revalidatePath('/tournaments/[id/]tables/[table]', 'page');
   const cacheTag = `match${table}`
   console.log('revalidating tag', cacheTag)
-  revalidateTag(cacheTag)
+  revalidateTag(cacheTag, 'max')
 }
 
 export async function getRankings(rankingId: string) {

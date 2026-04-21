@@ -1,0 +1,18 @@
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+
+export default defineConfig([
+  ...nextCoreWebVitals,
+  {
+    rules: {
+      "react-hooks/static-components": "off",
+    },
+  },
+  globalIgnores([
+    ".next/**",
+    "coverage/**",
+    "jules-scratch/**",
+    "next-env.d.ts",
+    "out/**",
+  ]),
+]);

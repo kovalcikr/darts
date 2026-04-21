@@ -39,7 +39,7 @@ describe('playerThrow', () => {
         expect(data.updateMatchLegs).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
-        expect(revalidateTag).toHaveBeenCalledWith('match11');
+        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
     test('addThrowAction closes the leg and syncs the updated score', async () => {
@@ -65,7 +65,7 @@ describe('playerThrow', () => {
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
         expect(data.updateMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pA', 1, 1, tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
-        expect(revalidateTag).toHaveBeenCalledWith('match11');
+        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
     test('addThrowAction rejects bust scores without mutating state', async () => {
@@ -90,7 +90,7 @@ describe('playerThrow', () => {
         expect(data.findPreviousLegLastThrow).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
-        expect(revalidateTag).toHaveBeenCalledWith('match11');
+        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
     test('undoThrow reopens the previous leg when the current leg is empty', async () => {
@@ -117,7 +117,7 @@ describe('playerThrow', () => {
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
         expect(data.decrementMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pB', 1, 2, tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
-        expect(revalidateTag).toHaveBeenCalledWith('match11');
+        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
     test('undoThrow resets the starting player when no throws exist yet', async () => {
@@ -130,7 +130,7 @@ describe('playerThrow', () => {
         expect(data.deletePlayerThrow).not.toHaveBeenCalled();
         expect(data.decrementMatchLegs).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidateTag).toHaveBeenCalledWith('match11');
+        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
     test('findLastThrow delegates to the data layer', async () => {

@@ -18,7 +18,7 @@ export async function openTournamentForm(prevState: any, data: FormData) {
 export async function openTournament(tournamentId: string) {
     const tournament = await getTournamentInfo(tournamentId);
     await createTournament(tournament);
-    revalidateTag("tournaments");
+    revalidateTag("tournaments", "max");
     revalidatePath("/stats/tournaments");
 }
 
