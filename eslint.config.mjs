@@ -1,10 +1,25 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextPlugin from "@next/eslint-plugin-next";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  ...nextCoreWebVitals,
   {
+    files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
+    plugins: {
+      "@next/next": nextPlugin,
+    },
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        sourceType: "module",
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
     rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
       "react-hooks/static-components": "off",
     },
   },
