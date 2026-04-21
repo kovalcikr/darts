@@ -7,6 +7,7 @@ import { randomUUID } from "crypto";
 import { unstable_cache } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
+import type { RouteParams } from "@/app/lib/next-types";
 
 const cachedTournament = unstable_cache(async (tournamentId) => {
     console.log("Fetching tournament data from DB");
@@ -116,9 +117,10 @@ const cachedMatches = unstable_cache(async (tournamentId) => {
     return await findMatchesByTournament(tournamentId);
 });
 
-export default async function TournamentStats({ params }: { params: { id: string } }) {
+export default async function TournamentStats({ params }: { params: RouteParams<{ id: string }> }) {
+    const { id } = await params;
 
-    const tournament = await cachedTournament(params.id);
+    const tournament = await cachedTournament(id);
 
     if (!tournament) {
         return (
@@ -128,17 +130,17 @@ export default async function TournamentStats({ params }: { params: { id: string
         )
     }
 
-    const results = await cachedResults(params.id);
-    const players = await cachedPlayers(params.id);
-    const highScore = await cachedHighScore(params.id);
-    const { bestCheckout, bestCoc } = await cachedBestCheckout(params.id);
-    const { bLeg, bestLegDarts, bLegPlayers } = await cachedBestLeg(params.id);
-    const matches = await cachedMatches(params.id);
+    const results = await cachedResults(id);
+    const players = await cachedPlayers(id);
+    const highScore = await cachedHighScore(id);
+    const { bestCheckout, bestCoc } = await cachedBestCheckout(id);
+    const { bLeg, bestLegDarts, bLegPlayers } = await cachedBestLeg(id);
+    const matches = await cachedMatches(id);
 
     function avg(match) {
         return match._sum.darts ? ((match._sum.score || 0) / match._sum.darts * 3) : 0;
     }
-    const { bestAvg, avgPP } = await cachedMatchAverages(params.id, avg);
+    const { bestAvg, avgPP } = await cachedMatchAverages(id, avg);
 
 
     function Stat({ name, value }) {
@@ -248,7 +250,7 @@ export default async function TournamentStats({ params }: { params: { id: string
                         </div>
 
                         <div className="lg:col-span-3 bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                            <MatchesList matches={matches} tournamentId={params.id} />
+                            <MatchesList matches={matches} tournamentId={id} />
                         </div>
                     </div>
                 </div>
