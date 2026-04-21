@@ -21,7 +21,7 @@
     "delete:tournament": "npx dotenv -e .env.development.local -- ts-node -P tsconfig.script.json scripts/delete-tournament.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^6.19.3",
     "@vercel/analytics": "^2.0.1",
     "@vercel/postgres": "^0.10.0",
     "@vercel/speed-insights": "^2.0.0",
@@ -47,7 +47,7 @@
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
     "postcss": "^8.5.10",
-    "prisma": "^5.22.0",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4.2.4",
     "ts-jest": "^29.4.9",
     "typescript": "^6.0.3",
