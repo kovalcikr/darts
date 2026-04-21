@@ -1,4 +1,4 @@
-import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import { afterAll, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import axios from 'axios';
 import getTournamentInfo, { setScore, finishMatch, getRankings, getResults } from '../lib/cuescore';
 
@@ -13,7 +13,10 @@ jest.mock('next/cache', () => ({
 global.fetch = jest.fn() as any;
 
 describe('cuescore', () => {
+    const originalProvider = process.env.CUESCORE_PROVIDER;
+
     beforeEach(() => {
+        process.env.CUESCORE_PROVIDER = 'real';
         (fetch as jest.Mock).mockClear();
         mockedAxios.get.mockClear();
         (fetch as jest.Mock).mockImplementation(() =>
@@ -22,6 +25,14 @@ describe('cuescore', () => {
                 json: () => Promise.resolve({}),
             })
         );
+    });
+
+    afterAll(() => {
+        if (originalProvider) {
+            process.env.CUESCORE_PROVIDER = originalProvider;
+        } else {
+            delete process.env.CUESCORE_PROVIDER;
+        }
     });
 
     test('getTournamentInfo', async () => {
