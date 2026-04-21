@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@/prisma/client';
 import { mockDeep, mockReset, DeepMockProxy } from 'jest-mock-extended';
 import prisma from '../lib/db';
 import axios from 'axios';

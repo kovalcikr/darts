@@ -7,17 +7,18 @@
   },
   "scripts": {
     "dev": "npx dotenv -e .env.development.local -- next dev",
-    "build": "NODE_ENV=production prisma generate && NODE_ENV=production next build --webpack",
+    "build": "NODE_ENV=production npm run prisma:generate && NODE_ENV=production next build --webpack",
     "start": "next start",
     "lint": "eslint .",
+    "prisma:generate": "prisma generate",
     "studio": "npx dotenv -e .env.development.local -- npx prisma studio",
     "studio:test": "npx dotenv -e .env.test -- npx prisma studio",
     "test": "npx dotenv -e .env.test -- jest",
     "test:watch": "npx dotenv -e .env.test -- jest --watch",
     "test:integration": "JEST_ENV=integration npx dotenv -e .env.test -- jest --runInBand",
     "test:integration:full": "sh ./run-integration-tests.sh",
-    "migrate": "npx dotenv -e .env.development.local -- npx prisma db push",
-    "migrate:test": "npx dotenv -e .env.test -- npx prisma db push",
+    "migrate": "npx dotenv -e .env.development.local -- npx prisma db push && npm run prisma:generate",
+    "migrate:test": "npx dotenv -e .env.test -- npx prisma db push && npm run prisma:generate",
     "delete:tournament": "npx dotenv -e .env.development.local -- ts-node -P tsconfig.script.json scripts/delete-tournament.ts"
   },
   "dependencies": {
