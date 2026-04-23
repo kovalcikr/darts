@@ -1,4 +1,5 @@
 import { getCachedTournaments } from "@/app/lib/tournament"
+import { formatTournamentEventDate } from "@/app/lib/tournament-metadata";
 import Link from "next/link";
 import type { PageSearchParams } from "@/app/lib/next-types";
 
@@ -8,7 +9,7 @@ export default async function Tournaments({ searchParams }: { searchParams: Page
     const resolvedSearchParams = await searchParams;
 
     const season = resolvedSearchParams.season as string || "2026";
-    const tournaments = (await getCachedTournaments(season)).sort((t1, t2) => t1.name.localeCompare(t2.name));
+    const tournaments = await getCachedTournaments(season);
 
     return (
         <div className="w-full min-h-screen bg-gray-900 text-gray-300">
@@ -38,6 +39,9 @@ export default async function Tournaments({ searchParams }: { searchParams: Page
                                 <Link href={`/stats/tournaments/${t.id}`}>
                                     <div className="block bg-gray-800 p-6 rounded-xl shadow-lg hover:bg-gray-700/80 hover:ring-1 hover:ring-sky-500 transition-all duration-200 h-full">
                                         <h2 className="font-bold text-lg text-white">{t.name}</h2>
+                                        <p className="mt-2 text-sm text-gray-400">
+                                            {formatTournamentEventDate(t.eventDate) ?? `Sezóna ${t.season ?? season}`}
+                                        </p>
                                     </div>
                                 </Link>
                             </li>

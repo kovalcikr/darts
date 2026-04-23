@@ -6,10 +6,17 @@ import 'server-only'
  */
 import prisma from "./db";
 import type { Prisma } from '@/prisma/client'
+import { generateLegacyTournamentNamesForSeason } from "./tournament-metadata";
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 
 const getPrismaClient = (tx?: PrismaTransactionClient) => tx || prisma;
+
+export type TournamentUpsertInput = {
+    name: string
+    season?: number | null
+    eventDate?: Date | string | null
+}
 
 export function isMatchComplete(runTo: number, playerALegs: number, playerBlegs: number) {
     return playerALegs >= runTo || playerBlegs >= runTo;
@@ -36,15 +43,26 @@ function getSyncedMatchLegState(match: {
     };
 }
 
-export async function upsertTournament(tournamentId: string, name: string, tx?: PrismaTransactionClient) {
+export async function upsertTournament(tournamentId: string, tournament: TournamentUpsertInput, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
+    const eventDate =
+        tournament.eventDate instanceof Date
+            ? tournament.eventDate
+            : tournament.eventDate
+                ? new Date(tournament.eventDate)
+                : null;
+
     return client.tournament.upsert({
         create: {
             id: String(tournamentId),
-            name: name
+            name: tournament.name,
+            season: tournament.season ?? null,
+            eventDate,
         },
         update: {
-            name: name
+            name: tournament.name,
+            season: tournament.season ?? null,
+            eventDate,
         },
         where: {
             id: String(tournamentId)
@@ -143,14 +161,37 @@ export async function findTournamentsByName(tournamentNames: string[], tx?: Pris
     });
 }
 
-export async function findTournamentsByYear(year: string, tx?: PrismaTransactionClient) {
+export async function findTournamentsBySeason(season: number, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
+    const legacyNames = generateLegacyTournamentNamesForSeason(season);
+
     return client.tournament.findMany({
         where: {
-            name: {
-                contains: year
+            OR: [
+                { season },
+                legacyNames.length > 0
+                    ? {
+                        season: null,
+                        name: {
+                            in: legacyNames,
+                        }
+                    }
+                    : {
+                        season: null,
+                        name: {
+                            contains: String(season)
+                        }
+                    }
+            ]
+        },
+        orderBy: [
+            {
+                eventDate: 'desc',
+            },
+            {
+                name: 'asc',
             }
-        }
+        ]
     });
 }
 

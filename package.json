@@ -22,6 +22,7 @@
     "test:integration:full": "sh ./run-integration-tests.sh",
     "migrate": "npx dotenv -e .env.development.local -- npx prisma db push && npm run prisma:generate",
     "migrate:test": "npx dotenv -e .env.test -- npx prisma db push && npm run prisma:generate",
+    "backfill:tournaments": "tsx scripts/backfill-tournament-metadata.ts",
     "delete:tournament": "tsx scripts/delete-tournament.ts",
     "delete:tournament:dev": "npx dotenv -e .env.development.local -- npm run delete:tournament --"
   },
