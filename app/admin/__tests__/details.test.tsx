@@ -41,6 +41,7 @@ describe('admin detail pages', () => {
       name: 'Relax Darts CUP 01 2026',
       season: 2026,
       eventDate: new Date('2026-04-23T00:00:00.000Z'),
+      includeInGlobalStats: false,
       _count: { matches: 2 },
     } as never)
     prismaMock.match.findMany.mockResolvedValue([
@@ -72,6 +73,7 @@ describe('admin detail pages', () => {
     expect(html).toContain('Relax Darts CUP 01 2026')
     expect(html).toContain('Season: 2026')
     expect(html).toContain('Date:')
+    expect(html).toContain('Excluded from global stats')
     expect(html).toContain('Alice vs Bob')
     expect(html).toContain('View Throws')
     expect(html).not.toContain('140 points')

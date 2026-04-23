@@ -17,6 +17,7 @@ import ConfirmSubmitButton from './ConfirmSubmitButton'
 import {
   ActionButton,
   ActionLink,
+  CheckboxField,
   EditDisclosure,
   EmptyState,
   MessageBanner,
@@ -223,6 +224,7 @@ export default async function AdminPage({
                   <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-400">
                     <span>Season: {tournament.season ?? 'unknown'}</span>
                     <span>Date: {formatTournamentEventDate(tournament.eventDate) ?? 'unknown'}</span>
+                    <span>{tournament.includeInGlobalStats ? 'Included in global stats' : 'Excluded from global stats'}</span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-slate-500">
                     <span>{tournament._count.matches} matches</span>
@@ -246,7 +248,7 @@ export default async function AdminPage({
 
               <div className="mt-5">
                 <EditDisclosure>
-                  <form action={updateTournamentAction} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.4fr_0.7fr_0.9fr_auto]">
+                  <form action={updateTournamentAction} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.4fr_0.7fr_0.9fr_1.2fr_auto]">
                     <input name="returnTo" type="hidden" value={returnTo} />
                     <input name="id" type="hidden" value={tournament.id} />
                     <TextField defaultValue={tournament.name} label="Tournament Name" name="name" required />
@@ -257,6 +259,13 @@ export default async function AdminPage({
                       name="eventDate"
                       type="date"
                     />
+                    <div className="flex items-end">
+                      <CheckboxField
+                        defaultChecked={tournament.includeInGlobalStats}
+                        label="Include in global stats"
+                        name="includeInGlobalStats"
+                      />
+                    </div>
                     <div className="flex items-end">
                       <ActionButton>Save Tournament</ActionButton>
                     </div>

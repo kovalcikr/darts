@@ -56,10 +56,11 @@ model Match {
 }
 
 model Tournament {
-  id        String    @id @default(cuid())
-  name      String
-  season    Int?
-  eventDate DateTime?
+  id                   String    @id @default(cuid())
+  name                 String
+  season               Int?
+  eventDate            DateTime?
+  includeInGlobalStats Boolean   @default(true)
 
   matches Match[]
 

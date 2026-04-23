@@ -10,9 +10,7 @@ jest.mock('../lib/cuescore', () => ({
 
 jest.mock('../lib/data');
 jest.mock('next/cache', () => ({
-    revalidateTag: jest.fn(),
     revalidatePath: jest.fn(),
-    unstable_cache: jest.fn((fn) => fn),
 }));
 
 jest.mock('next/navigation', () => ({
@@ -111,10 +109,16 @@ describe('tournament', () => {
     });
 
     test('get cached tournaments', async () => {
-        jest.mocked(data.findTournamentsBySeason).mockResolvedValue([{ id: '123', name: 'Test 2025' }] as any);
+        jest.mocked(data.findTournamentsBySeason).mockResolvedValue([
+            { id: '123', name: 'Test 2025', includeInGlobalStats: true },
+            { id: '456', name: 'Other 2025', includeInGlobalStats: false },
+        ] as any);
         const tournaments = await getCachedTournaments("2025");
-        expect(data.findTournamentsBySeason).toHaveBeenCalledWith(2025);
-        expect(tournaments).toEqual([{ id: '123', name: 'Test 2025' }]);
+        expect(data.findTournamentsBySeason).toHaveBeenCalledWith(2025, { includeExcluded: true });
+        expect(tournaments).toEqual({
+            included: [{ id: '123', name: 'Test 2025', includeInGlobalStats: true }],
+            excluded: [{ id: '456', name: 'Other 2025', includeInGlobalStats: false }],
+        });
     });
 
     test('open tournament form success', async () => {

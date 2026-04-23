@@ -301,6 +301,7 @@ export async function updateTournamentAction(formData: FormData) {
     const name = requireString(formData, 'name')
     const season = optionalInteger(formData, 'season')
     const eventDate = optionalDate(formData, 'eventDate')
+    const includeInGlobalStats = getBoolean(formData, 'includeInGlobalStats')
 
     await prisma.tournament.update({
       where: { id },
@@ -308,6 +309,7 @@ export async function updateTournamentAction(formData: FormData) {
         name,
         season,
         eventDate,
+        includeInGlobalStats,
       },
     })
 

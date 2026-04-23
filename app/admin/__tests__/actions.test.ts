@@ -152,6 +152,7 @@ describe('admin actions', () => {
       name: 'Updated Cup',
       season: '2026',
       eventDate: '2026-04-23',
+      includeInGlobalStats: 'on',
       returnTo: '/admin?q=t1',
     })
 
@@ -163,6 +164,7 @@ describe('admin actions', () => {
         name: 'Updated Cup',
         season: 2026,
         eventDate: new Date('2026-04-23'),
+        includeInGlobalStats: true,
       },
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin')

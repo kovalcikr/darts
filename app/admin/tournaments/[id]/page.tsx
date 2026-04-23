@@ -9,6 +9,7 @@ import ConfirmSubmitButton from '../../ConfirmSubmitButton'
 import {
   ActionButton,
   ActionLink,
+  CheckboxField,
   EditDisclosure,
   EmptyState,
   MessageBanner,
@@ -129,6 +130,7 @@ export default async function AdminTournamentPage({
                 <span>ID: {tournament.id}</span>
                 <span>Season: {tournament.season ?? 'unknown'}</span>
                 <span>Date: {formatTournamentEventDate(tournament.eventDate) ?? 'unknown'}</span>
+                <span>{tournament.includeInGlobalStats ? 'Included in global stats' : 'Excluded from global stats'}</span>
                 <span>{tournament._count.matches} matches</span>
               </div>
             </div>
@@ -147,7 +149,7 @@ export default async function AdminTournamentPage({
 
           <div className="mt-6">
             <EditDisclosure>
-              <form action={updateTournamentAction} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.4fr_0.7fr_0.9fr_auto]">
+              <form action={updateTournamentAction} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.4fr_0.7fr_0.9fr_1.2fr_auto]">
                 <input name="returnTo" type="hidden" value={returnTo} />
                 <input name="id" type="hidden" value={tournament.id} />
                 <TextField defaultValue={tournament.name} label="Tournament Name" name="name" required />
@@ -158,6 +160,13 @@ export default async function AdminTournamentPage({
                   name="eventDate"
                   type="date"
                 />
+                <div className="flex items-end">
+                  <CheckboxField
+                    defaultChecked={tournament.includeInGlobalStats}
+                    label="Include in global stats"
+                    name="includeInGlobalStats"
+                  />
+                </div>
                 <div className="flex items-end">
                   <ActionButton>Save Tournament</ActionButton>
                 </div>
