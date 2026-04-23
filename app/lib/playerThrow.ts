@@ -23,7 +23,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
         await createPlayerThrow(tournamentId, matchId, leg, playerId, score, dartsCount, closeLeg, tx);
         if (closeLeg) {
             match = await findMatch(matchId, tx);
-            match = await updateMatchLegs(matchId, match.playerAId, playerId, match.playerALegs, match.playerBlegs, tx);
+            match = await updateMatchLegs(matchId, match.playerAId, playerId, match.playerALegs, match.playerBlegs, match.runTo, tx);
         }
     });
     if (closeLeg) {
@@ -51,7 +51,7 @@ export async function undoThrow(matchId, leg, slow, table) {
             if (previousLegLastThrow) {
                 await deletePlayerThrow(previousLegLastThrow.id, tx)
                 match = await findMatch(matchId, tx);
-                match = await decrementMatchLegs(matchId, match.playerAId, previousLegLastThrow.playerId, match.playerALegs, match.playerBlegs, tx);
+                match = await decrementMatchLegs(matchId, match.playerAId, previousLegLastThrow.playerId, match.playerALegs, match.playerBlegs, match.runTo, tx);
             } else {
                 undoCloseLeg = false;
                 await updateMatchFirstPlayer(matchId, null, tx);

@@ -1,8 +1,8 @@
 import { Header } from "@/app/components/header";
 import { getResults } from "@/app/lib/cuescore";
-import { findMatchesByTournament } from "@/app/lib/data";
-import prisma from "@/app/lib/db";
 import { getPlayers } from "@/app/lib/players";
+import prisma from "@/app/lib/db";
+import { getCachedTournamentStats } from "@/app/lib/tournament-stats";
 import { randomUUID } from "crypto";
 import { unstable_cache } from "next/cache";
 import Image from "next/image";
@@ -28,95 +28,6 @@ const cachedPlayers = unstable_cache(async (tournamentId) => {
     return await getPlayers([tournamentId]);
 })
 
-const cachedHighScore = unstable_cache(async (tournamentId) => {
-    console.log("Fetching high scores from DB");
-    return await getHighScore(tournamentId);
-});
-
-const cachedBestCheckout = unstable_cache(async (tournamentId) => {
-    console.log("Fetching best checkout from DB");
-    return await getBestCheckout(tournamentId);
-});
-
-const cachedBestLeg = unstable_cache(async (tournamentId) => {
-    console.log("Fetching best leg from DB");
-    const bestLeg = await prisma.playerThrow.groupBy({
-        by: ["tournamentId", "matchId", "leg", "playerId"],
-        where: {
-            tournamentId: tournamentId
-        },
-        _sum: {
-            score: true,
-            darts: true
-        },
-        having: {
-            score: {
-                _sum: {
-                    equals: 501
-                }
-            },
-            darts: {
-                _sum: {
-                    lte: 27
-                }
-            }
-        },
-        orderBy: [
-            {
-                _sum: {
-                    darts: "asc"
-                }
-            }
-        ]
-    })
-    const legMap = {};
-    bestLeg.forEach((leg, index) => {
-        const player = legMap[leg.playerId]
-        const darts = leg._sum.darts;
-        const round = Math.ceil(darts / 3);
-        if (!player) {
-            legMap[leg.playerId] = {
-                player: leg.playerId,
-                best: darts,
-                [round]: 1,
-                index: index
-            }
-        } else {
-            if (player.best >= darts) {
-                player.best = darts;
-            }
-            if (!player[round]) {
-                player[round] = 1
-            } else {
-                player[round]++;
-            }
-        }
-    })
-
-    const bLegPlayers = bestLeg.length > 0 ? bestLeg.filter(l => l._sum.darts == bestLeg[0]._sum.darts).reduce((a, v) => {
-        if (!a[v.playerId]) {
-            a[v.playerId] = 1;
-        } else {
-            a[v.playerId] = a[v.playerId] + 1
-        }
-        return a;
-    }, {}) : {};
-
-    const bLeg = Object.values(legMap).sort((a: { index: number }, b: { index: number }) => a.index - b.index);
-    const bestLegDarts = bestLeg[0]?._sum?.darts || 0
-    return { bLeg, bestLegDarts, bLegPlayers };
-});
-
-const cachedMatchAverages = unstable_cache(async (tournamentId, avg) => {
-    console.log("Fetching match averages from DB");
-    return await getMatchAverages(tournamentId, avg);
-});
-
-const cachedMatches = unstable_cache(async (tournamentId) => {
-    console.log("Fetching matches from DB");
-    return await findMatchesByTournament(tournamentId);
-});
-
 export default async function TournamentStats({ params }: { params: RouteParams<{ id: string }> }) {
     const { id } = await params;
 
@@ -132,15 +43,11 @@ export default async function TournamentStats({ params }: { params: RouteParams<
 
     const results = await cachedResults(id);
     const players = await cachedPlayers(id);
-    const highScore = await cachedHighScore(id);
-    const { bestCheckout, bestCoc } = await cachedBestCheckout(id);
-    const { bLeg, bestLegDarts, bLegPlayers } = await cachedBestLeg(id);
-    const matches = await cachedMatches(id);
+    const { matches, highScore, bestCheckout, bestCoc, bLeg, bestLegDarts, bLegPlayers, bestAvg, avgPP } = await getCachedTournamentStats(id);
 
     function avg(match) {
         return match._sum.darts ? ((match._sum.score || 0) / match._sum.darts * 3) : 0;
     }
-    const { bestAvg, avgPP } = await cachedMatchAverages(id, avg);
 
 
     function Stat({ name, value }) {
@@ -331,92 +238,6 @@ function MatchesList({ matches, tournamentId }) {
             </table>
         </div>
     )
-}
-
-async function getMatchAverages(id: string, avg: (match: any) => number) {
-    const matchSums = await prisma.playerThrow.groupBy({
-        by: ["tournamentId", "matchId", "playerId"],
-        where: { tournamentId: id },
-        _sum: { score: true, darts: true }
-    });
-    const bestAvg = matchSums.sort((a, b) => avg(b) - avg(a));
-    const avgPerPlayer = {};
-    bestAvg.forEach(match => {
-        const player = avgPerPlayer[match.playerId];
-        const average = avg(match);
-        if (!player) {
-            avgPerPlayer[match.playerId] = {
-                player: match.playerId, max: average, u40: average < 40 ? 1 : 0,
-                o40: average >= 40 && average < 50 ? 1 : 0, o50: average >= 50 && average < 55 ? 1 : 0,
-                o55: average >= 55 && average < 60 ? 1 : 0, o60: average >= 60 && average < 65 ? 1 : 0,
-                o65: average >= 65 && average < 75 ? 1 : 0, o75: average >= 75 ? 1 : 0
-            };
-        } else {
-            if (player.max < average) player.max = average;
-            player.u40 += average < 40 ? 1 : 0;
-            player.o40 += average >= 40 && average < 50 ? 1 : 0;
-            player.o50 += average >= 50 && average < 55 ? 1 : 0;
-            player.o55 += average >= 55 && average < 60 ? 1 : 0;
-            player.o60 += average >= 60 && average < 65 ? 1 : 0;
-            player.o65 += average >= 65 && average < 75 ? 1 : 0;
-            player.o75 += average >= 75 ? 1 : 0;
-        }
-    });
-    const avgPP = Object.values(avgPerPlayer).sort((a: { max: number }, b: { max: number }) => b.max - a.max);
-    return { bestAvg, avgPP };
-}
-
-async function getBestCheckout(id: string) {
-    const bestCheckout = await prisma.playerThrow.findMany({
-        where: { tournamentId: id, checkout: true, score: { gte: 60 } },
-        orderBy: { score: "desc" }
-    });
-    const bestCo = {};
-    bestCheckout.forEach((co, index) => {
-        const data = bestCo[co.playerId];
-        if (!data) {
-            bestCo[co.playerId] = {
-                player: co.playerId, c60: co.score >= 60 && co.score < 80 ? 1 : 0,
-                c80: co.score >= 80 && co.score < 100 ? 1 : 0, c100: co.score >= 100 ? 1 : 0,
-                scores: [co.score], index: index
-            };
-        } else {
-            data.c60 += co.score >= 60 && co.score < 80 ? 1 : 0;
-            data.c80 += co.score >= 80 && co.score < 100 ? 1 : 0;
-            data.c100 += co.score >= 100 ? 1 : 0;
-            data.scores.push(co.score);
-        }
-    });
-    const bestCoc = Object.values(bestCo).sort((a: any, b: any) => (b.c100 - a.c100) || (b.c80 - a.c80) || (b.c60 - a.c60) || a.index - b.index);
-    return { bestCheckout, bestCoc };
-}
-
-async function getHighScore(tournamentId: string): Promise<{ player: string, s80: number, s100: number, s133: number, s170: number, b170: number[], s180: number }[]> {
-    const highScore = await prisma.playerThrow.findMany({
-        where: { tournamentId: tournamentId, score: { gte: 80 } },
-        orderBy: { score: "desc" }
-    });
-    const hs = {};
-    highScore.forEach((sc, index) => {
-        const data = hs[sc.playerId];
-        if (!data) {
-            hs[sc.playerId] = {
-                player: sc.playerId, s80: sc.score >= 80 && sc.score < 95 ? 1 : 0,
-                s100: sc.score >= 95 && sc.score < 133 ? 1 : 0, s133: sc.score >= 133 && sc.score < 170 ? 1 : 0,
-                s170: sc.score >= 170 && sc.score < 180 ? 1 : 0, b170: sc.score > 140 ? [sc.score] : [],
-                s180: sc.score == 180 ? 1 : 0, index: index
-            };
-        } else {
-            data.s80 += sc.score >= 80 && sc.score < 95 ? 1 : 0;
-            data.s100 += sc.score >= 95 && sc.score < 133 ? 1 : 0;
-            data.s133 += sc.score >= 133 && sc.score < 170 ? 1 : 0;
-            data.s170 += sc.score >= 170 && sc.score < 180 ? 1 : 0;
-            data.s180 += sc.score == 180 ? 1 : 0;
-            if (sc.score > 140) data.b170.push(sc.score);
-        }
-    });
-    const hss = Object.values(hs).sort((a: any, b: any) => (b.s180 - a.s180) || (b.s170 - a.s170) || (b.s133 - a.s133) || (b.s100 - a.s100) || (b.s80 - a.s80) || a.index - b.index);
-    return hss as any;
 }
 
 function BestCheckoutTable({ bestCoc, players }) {

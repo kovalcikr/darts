@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import prisma from '@/app/lib/db'
+import { isMatchComplete } from '@/app/lib/data'
 import {
   ADMIN_PASSWORD_ENV,
   ADMIN_SESSION_COOKIE,
@@ -350,6 +351,10 @@ export async function updateMatchAction(formData: FormData) {
       throw new Error(`Match ${id} was not found.`)
     }
 
+    const runTo = requireInteger(formData, 'runTo')
+    const playerALegs = requireInteger(formData, 'playerALegs')
+    const playerBlegs = requireInteger(formData, 'playerBlegs')
+
     const updatedMatch = await prisma.match.update({
       where: { id },
       data: {
@@ -361,9 +366,10 @@ export async function updateMatchAction(formData: FormData) {
         playerBId: requireString(formData, 'playerBId'),
         playerBName: requireString(formData, 'playerBName'),
         playerBImage: requireString(formData, 'playerBImage'),
-        runTo: requireInteger(formData, 'runTo'),
-        playerALegs: requireInteger(formData, 'playerALegs'),
-        playerBlegs: requireInteger(formData, 'playerBlegs'),
+        runTo,
+        playerALegs,
+        playerBlegs,
+        isComplete: isMatchComplete(runTo, playerALegs, playerBlegs),
         firstPlayer: optionalString(formData, 'firstPlayer'),
       },
     })

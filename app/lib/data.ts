@@ -11,6 +11,31 @@ type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "
 
 const getPrismaClient = (tx?: PrismaTransactionClient) => tx || prisma;
 
+export function isMatchComplete(runTo: number, playerALegs: number, playerBlegs: number) {
+    return playerALegs >= runTo || playerBlegs >= runTo;
+}
+
+function getSyncedMatchLegState(match: {
+    raceTo?: unknown
+    runTo?: unknown
+    scoreA?: unknown
+    scoreB?: unknown
+}) {
+    const runTo = Number(match.raceTo ?? match.runTo);
+    const playerALegs = Number(match.scoreA);
+    const playerBlegs = Number(match.scoreB);
+
+    if (!Number.isInteger(runTo) || !Number.isInteger(playerALegs) || !Number.isInteger(playerBlegs)) {
+        return null;
+    }
+
+    return {
+        playerALegs,
+        playerBlegs,
+        isComplete: isMatchComplete(runTo, playerALegs, playerBlegs),
+    };
+}
+
 export async function upsertTournament(tournamentId: string, name: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     return client.tournament.upsert({
@@ -139,6 +164,8 @@ export async function findMatch(matchId: string, tx?: PrismaTransactionClient) {
 
 export async function upsertMatch(match, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
+    const syncedMatchLegState = getSyncedMatchLegState(match);
+
     return client.match.upsert({
         create: {
             id: String(match.matchId),
@@ -150,7 +177,8 @@ export async function upsertMatch(match, tx?: PrismaTransactionClient) {
             playerBName: match.playerB.name,
             playerBImage: match.playerB.image,
             round: match.roundName,
-            runTo: match.raceTo
+            runTo: match.raceTo,
+            ...(syncedMatchLegState ?? {})
         },
         update: {
             playerAId: String(match.playerA.playerId),
@@ -160,7 +188,8 @@ export async function upsertMatch(match, tx?: PrismaTransactionClient) {
             playerBName: match.playerB.name,
             playerBImage: match.playerB.image,
             round: match.roundName,
-            runTo: match.raceTo
+            runTo: match.raceTo,
+            ...(syncedMatchLegState ?? {})
         },
         where: {
             id: String(match.matchId)
@@ -186,6 +215,7 @@ export async function resetMatchData(matchId: string, tx?: PrismaTransactionClie
             firstPlayer: null,
             playerALegs: 0,
             playerBlegs: 0,
+            isComplete: false,
             throwsList: {
                 deleteMany: {
                 }
@@ -246,12 +276,16 @@ export async function createPlayerThrow(tournamentId: string, matchId: string, l
     });
 }
 
-export async function updateMatchLegs(matchId: string, playerAId: string, playerId: string, playerALegs: number, playerBlegs: number, tx?: PrismaTransactionClient) {
+export async function updateMatchLegs(matchId: string, playerAId: string, playerId: string, playerALegs: number, playerBlegs: number, runTo: number, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
+    const nextPlayerALegs = playerALegs + (playerAId == playerId ? 1 : 0);
+    const nextPlayerBlegs = playerBlegs + (playerAId == playerId ? 0 : 1);
+
     return client.match.update({
         data: {
-            playerALegs: playerALegs + (playerAId == playerId ? 1 : 0),
-            playerBlegs: playerBlegs + (playerAId == playerId ? 0 : 1)
+            playerALegs: nextPlayerALegs,
+            playerBlegs: nextPlayerBlegs,
+            isComplete: isMatchComplete(runTo, nextPlayerALegs, nextPlayerBlegs)
         },
         where: {
             id: matchId
@@ -259,12 +293,16 @@ export async function updateMatchLegs(matchId: string, playerAId: string, player
     });
 }
 
-export async function decrementMatchLegs(matchId: string, playerAId: string, playerId: string, playerALegs: number, playerBlegs: number, tx?: PrismaTransactionClient) {
+export async function decrementMatchLegs(matchId: string, playerAId: string, playerId: string, playerALegs: number, playerBlegs: number, runTo: number, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
+    const nextPlayerALegs = playerALegs - (playerAId == playerId ? 1 : 0);
+    const nextPlayerBlegs = playerBlegs - (playerAId == playerId ? 0 : 1);
+
     return client.match.update({
         data: {
-            playerALegs: playerALegs - (playerAId == playerId ? 1 : 0),
-            playerBlegs: playerBlegs - (playerAId == playerId ? 0 : 1)
+            playerALegs: nextPlayerALegs,
+            playerBlegs: nextPlayerBlegs,
+            isComplete: isMatchComplete(runTo, nextPlayerALegs, nextPlayerBlegs)
         },
         where: {
             id: matchId
