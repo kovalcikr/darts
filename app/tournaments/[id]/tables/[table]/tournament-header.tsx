@@ -1,5 +1,5 @@
 import { resetMatch } from "@/app/lib/match";
-import { Tournament } from "@prisma/client";
+import type { Tournament } from "@/prisma/client";
 import Image from "next/image";
 
 export default function TournamentHeader({ tournament, round, format, table, matchId, reset }: { tournament: Tournament, round: string, format: string, table: string, matchId: string, reset: boolean }) {

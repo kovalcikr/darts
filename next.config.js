@@ -1,7 +1,11 @@
+import { fileURLToPath } from 'node:url'
+
+const rootDir = fileURLToPath(new URL('.', import.meta.url))
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
-  outputFileTracingRoot: __dirname,
+  outputFileTracingRoot: rootDir,
   images: {
     qualities: [75],
     remotePatterns: [
@@ -13,4 +17,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+export default nextConfig

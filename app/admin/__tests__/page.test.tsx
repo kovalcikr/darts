@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient } from '@/prisma/client'
 import { mockDeep, mockReset, DeepMockProxy } from 'jest-mock-extended'
 import { renderToStaticMarkup } from 'react-dom/server'
 import prisma from '@/app/lib/db'

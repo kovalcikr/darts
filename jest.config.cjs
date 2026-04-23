@@ -1,5 +1,5 @@
-const integrationConfig = require('./jest.integration.config.js');
-const unitConfig = require('./jest.unit.config.js');
+const integrationConfig = require('./jest.integration.config.cjs');
+const unitConfig = require('./jest.unit.config.cjs');
 
 const jestEnv = process.env.JEST_ENV;
 

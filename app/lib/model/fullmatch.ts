@@ -1,4 +1,4 @@
-import { Match, PlayerThrow, Tournament } from "@prisma/client"
+import type { Match, PlayerThrow, Tournament } from "@/prisma/client"
 
 export type FullMatch = {
     match: Match

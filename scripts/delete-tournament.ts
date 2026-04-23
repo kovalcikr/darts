@@ -1,13 +1,4 @@
-const { Client } = require('pg') as {
-  Client: new (config: { connectionString: string }) => {
-    connect: () => Promise<void>;
-    end: () => Promise<void>;
-    query: <TRow = Record<string, unknown>>(
-      sql: string,
-      params?: unknown[]
-    ) => Promise<{ rows: TRow[]; rowCount: number | null }>;
-  };
-};
+import { Client } from 'pg';
 
 type CliArgs = {
   tournamentId?: string;
