@@ -150,6 +150,8 @@ describe('admin actions', () => {
     const formData = buildFormData({
       id: 't1',
       name: 'Updated Cup',
+      season: '2026',
+      eventDate: '2026-04-23',
       returnTo: '/admin?q=t1',
     })
 
@@ -157,7 +159,11 @@ describe('admin actions', () => {
 
     expect(prismaMock.tournament.update).toHaveBeenCalledWith({
       where: { id: 't1' },
-      data: { name: 'Updated Cup' },
+      data: {
+        name: 'Updated Cup',
+        season: 2026,
+        eventDate: new Date('2026-04-23'),
+      },
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/tournaments/t1')

@@ -2,7 +2,7 @@ import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import * as match from '../lib/match';
 import getTournamentInfo from '../lib/cuescore';
 import { findLastThrow, findMatchAvg } from '../lib/playerThrow';
-import type { Match, Tournament } from '@/prisma/client';
+import type { Match } from '@/prisma/client';
 import * as data from '../lib/data';
 
 jest.mock('../lib/cuescore', () => ({
@@ -21,7 +21,7 @@ jest.mock('next/cache', () => ({
     revalidatePath: jest.fn(),
 }));
 
-const mockMatch: Match & { tournament: Tournament } = {
+const mockMatch: Match & { tournament: { id: string; name: string } } = {
     id: 'm1',
     round: 'r1',
     playerAId: 'pA',

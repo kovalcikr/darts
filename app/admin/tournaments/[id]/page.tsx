@@ -1,6 +1,7 @@
 import type { Prisma } from '@/prisma/client'
 import { notFound, redirect } from 'next/navigation'
 import prisma from '@/app/lib/db'
+import { formatTournamentEventDate } from '@/app/lib/tournament-metadata'
 import type { PageSearchParams, RouteParams } from '@/app/lib/next-types'
 import { deleteMatchAction, deleteTournamentAction, updateMatchAction, updateTournamentAction } from '../../actions'
 import { isAdminAuthenticated } from '../../auth'
@@ -29,6 +30,14 @@ function readSearchParam(value: string | string[] | undefined) {
 
 function createReturnTo(pathname: string, query: string) {
   return query ? `${pathname}?q=${encodeURIComponent(query)}` : pathname
+}
+
+function formatDateInputValue(value: Date | null) {
+  if (!value) {
+    return ''
+  }
+
+  return value.toISOString().slice(0, 10)
 }
 
 export default async function AdminTournamentPage({
@@ -118,6 +127,8 @@ export default async function AdminTournamentPage({
               </p>
               <div className="mt-4 flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-slate-400">
                 <span>ID: {tournament.id}</span>
+                <span>Season: {tournament.season ?? 'unknown'}</span>
+                <span>Date: {formatTournamentEventDate(tournament.eventDate) ?? 'unknown'}</span>
                 <span>{tournament._count.matches} matches</span>
               </div>
             </div>
@@ -136,10 +147,17 @@ export default async function AdminTournamentPage({
 
           <div className="mt-6">
             <EditDisclosure>
-              <form action={updateTournamentAction} className="grid gap-4 md:grid-cols-[1fr_auto]">
+              <form action={updateTournamentAction} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.4fr_0.7fr_0.9fr_auto]">
                 <input name="returnTo" type="hidden" value={returnTo} />
                 <input name="id" type="hidden" value={tournament.id} />
                 <TextField defaultValue={tournament.name} label="Tournament Name" name="name" required />
+                <TextField defaultValue={tournament.season} label="Season" name="season" type="number" />
+                <TextField
+                  defaultValue={formatDateInputValue(tournament.eventDate)}
+                  label="Tournament Date"
+                  name="eventDate"
+                  type="date"
+                />
                 <div className="flex items-end">
                   <ActionButton>Save Tournament</ActionButton>
                 </div>

@@ -56,8 +56,12 @@ model Match {
 }
 
 model Tournament {
-  id   String @id @default(cuid())
-  name String
+  id        String    @id @default(cuid())
+  name      String
+  season    Int?
+  eventDate DateTime?
 
   matches Match[]
+
+  @@index([season, eventDate])
 }

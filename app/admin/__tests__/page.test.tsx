@@ -61,6 +61,8 @@ describe('admin page', () => {
       {
         id: 't1',
         name: 'Relax Darts CUP 01 2026',
+        season: 2026,
+        eventDate: new Date('2026-04-23T00:00:00.000Z'),
         _count: { matches: 2 },
       },
     ] as never)
@@ -81,6 +83,8 @@ describe('admin page', () => {
     const html = renderToStaticMarkup(element)
 
     expect(html).toContain('Relax Darts CUP 01 2026')
+    expect(html).toContain('Season: 2026')
+    expect(html).toContain('Date:')
     expect(html).toContain('View Matches')
     expect(html).toContain('Delete Tournament')
     expect(html).toContain('Saved')

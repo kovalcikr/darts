@@ -86,6 +86,22 @@ function optionalInteger(formData: FormData, key: string) {
   return value
 }
 
+function optionalDate(formData: FormData, key: string) {
+  const rawValue = String(formData.get(key) ?? '').trim()
+
+  if (!rawValue) {
+    return null
+  }
+
+  const value = new Date(rawValue)
+
+  if (Number.isNaN(value.valueOf())) {
+    throw new Error(`${key} must be a valid date.`)
+  }
+
+  return value
+}
+
 function requireDate(formData: FormData, key: string) {
   const rawValue = requireString(formData, key)
   const value = new Date(rawValue)
@@ -283,10 +299,16 @@ export async function updateTournamentAction(formData: FormData) {
   try {
     const id = requireString(formData, 'id')
     const name = requireString(formData, 'name')
+    const season = optionalInteger(formData, 'season')
+    const eventDate = optionalDate(formData, 'eventDate')
 
     await prisma.tournament.update({
       where: { id },
-      data: { name },
+      data: {
+        name,
+        season,
+        eventDate,
+      },
     })
 
     revalidateSharedPaths()
