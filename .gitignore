@@ -4,6 +4,7 @@
 /node_modules
 /.pnp
 .pnp.js
+/prisma/generated
 # environment variables
 .env
 .env*.local
@@ -15,6 +16,7 @@
 
 # next.js
 /.next/
+/.next-dev/
 /out/
 
 # production

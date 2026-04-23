@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.12 <23"
+    "node": ">=22 <23"
   },
   "scripts": {
-    "dev": "npx dotenv -e .env.development.local -- next dev",
+    "dev": "npx dotenv -e .env.development.local -- next dev --webpack",
     "build": "NODE_ENV=production npm run prisma:generate && NODE_ENV=production next build --webpack",
     "start": "next start",
     "lint": "eslint .",
@@ -22,11 +22,11 @@
     "test:integration:full": "sh ./run-integration-tests.sh",
     "migrate": "npx dotenv -e .env.development.local -- npx prisma db push && npm run prisma:generate",
     "migrate:test": "npx dotenv -e .env.test -- npx prisma db push && npm run prisma:generate",
-    "delete:tournament": "npx dotenv -e .env.development.local -- tsx scripts/delete-tournament.ts"
+    "delete:tournament": "tsx scripts/delete-tournament.ts",
+    "delete:tournament:dev": "npx dotenv -e .env.development.local -- npm run delete:tournament --"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.7.0",
-    "@prisma/client": "^7.7.0",
+    "@prisma/client": "^6.19.3",
     "@vercel/analytics": "^2.0.1",
     "@vercel/postgres": "^0.10.0",
     "@vercel/speed-insights": "^2.0.0",
@@ -53,7 +53,7 @@
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
     "postcss": "^8.5.10",
-    "prisma": "^7.7.0",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4.2.4",
     "ts-jest": "^29.4.9",
     "tsx": "^4.21.0",

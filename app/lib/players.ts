@@ -1,3 +1,5 @@
+import 'server-only'
+
 import { findPlayersByTournament } from "./data";
 
 export async function getPlayers(tournaments) : Promise<any> {

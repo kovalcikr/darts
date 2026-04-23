@@ -1,13 +1,9 @@
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@/prisma/client'
-import { getDatabaseUrl } from './database-url'
+import 'server-only'
+
+import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
-  const connectionString = getDatabaseUrl()
-
-  return new PrismaClient({
-    adapter: new PrismaPg({ connectionString }),
-  })
+  return new PrismaClient()
 }
 
 declare const globalThis: {
