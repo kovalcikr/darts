@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client'
 import prisma from '@/app/lib/db'
 import type { PageSearchParams } from '@/app/lib/next-types'
 import {
@@ -114,8 +113,8 @@ export default async function AdminPage({
   const tournamentWhere = query
     ? {
         OR: [
-          { id: { contains: query, mode: Prisma.QueryMode.insensitive } },
-          { name: { contains: query, mode: Prisma.QueryMode.insensitive } },
+          { id: { contains: query, mode: 'insensitive' as const } },
+          { name: { contains: query, mode: 'insensitive' as const } },
         ],
       }
     : undefined

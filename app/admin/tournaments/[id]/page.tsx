@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import type { Prisma } from '@/prisma/client'
 import { notFound, redirect } from 'next/navigation'
 import prisma from '@/app/lib/db'
 import type { PageSearchParams, RouteParams } from '@/app/lib/next-types'
@@ -48,7 +48,7 @@ export default async function AdminTournamentPage({
   const notice = readSearchParam(resolvedSearchParams.notice).trim()
   const error = readSearchParam(resolvedSearchParams.error).trim()
   const returnTo = createReturnTo(`/admin/tournaments/${encodeURIComponent(id)}`, query)
-  const stringMode = Prisma.QueryMode.insensitive
+  const stringMode = 'insensitive' as const
   const numericQuery = query ? Number(query) : null
   const parsedNumericQuery = query && Number.isInteger(numericQuery) ? numericQuery : null
 
