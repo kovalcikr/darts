@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "../node_modules/tailwindcss/index.css";
 
 :root {
   --foreground-rgb: 229, 231, 235;

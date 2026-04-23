@@ -1,6 +1,13 @@
+import { fileURLToPath } from 'node:url'
+
+const rootDir = fileURLToPath(new URL('.', import.meta.url))
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  outputFileTracingRoot: __dirname,
+  outputFileTracingRoot: rootDir,
+  turbopack: {
+    root: rootDir,
+  },
   images: {
     qualities: [75],
     remotePatterns: [
@@ -12,4 +19,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+export default nextConfig
