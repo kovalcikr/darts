@@ -1,3 +1,5 @@
+import 'server-only'
+
 /**
  * This file contains all the functions that interact with the database.
  * This is done to make the application more testable, by allowing to mock the data access layer.
