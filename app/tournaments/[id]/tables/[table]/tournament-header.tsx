@@ -2,7 +2,9 @@ import { resetMatch } from "@/app/lib/match";
 import type { Tournament } from "@/prisma/client";
 import Image from "next/image";
 
-export default function TournamentHeader({ tournament, round, format, table, matchId, reset }: { tournament: Tournament, round: string, format: string, table: string, matchId: string, reset: boolean }) {
+type TournamentHeaderTournament = Pick<Tournament, "id" | "name">
+
+export default function TournamentHeader({ tournament, round, format, table, matchId, reset }: { tournament: TournamentHeaderTournament, round: string, format: string, table: string, matchId: string, reset: boolean }) {
   return (
     <div className="flex flex-row basis-1/12 bg-blue-200 p-1 pl-3 text-xl text-slate-800">
       <div className="flex flex-cols items-center justify-left">
