@@ -3,12 +3,13 @@ import { notFound, redirect } from 'next/navigation'
 import prisma from '@/app/lib/db'
 import { formatTournamentEventDate } from '@/app/lib/tournament-metadata'
 import type { PageSearchParams, RouteParams } from '@/app/lib/next-types'
-import { deleteMatchAction, deleteTournamentAction, updateMatchAction, updateTournamentAction } from '../../actions'
+import { deleteMatchAction, deleteTournamentAction, toggleTournamentGlobalStatsAction, updateMatchAction, updateTournamentAction } from '../../actions'
 import { isAdminAuthenticated } from '../../auth'
 import ConfirmSubmitButton from '../../ConfirmSubmitButton'
 import {
   ActionButton,
   ActionLink,
+  CheckboxField,
   EditDisclosure,
   EmptyState,
   MessageBanner,
@@ -129,12 +130,21 @@ export default async function AdminTournamentPage({
                 <span>ID: {tournament.id}</span>
                 <span>Season: {tournament.season ?? 'unknown'}</span>
                 <span>Date: {formatTournamentEventDate(tournament.eventDate) ?? 'unknown'}</span>
+                <span>{tournament.includeInGlobalStats ? 'Included in global stats' : 'Excluded from global stats'}</span>
                 <span>{tournament._count.matches} matches</span>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <ActionLink href="/admin">Back to Tournaments</ActionLink>
+              <form action={toggleTournamentGlobalStatsAction}>
+                <input name="returnTo" type="hidden" value={returnTo} />
+                <input name="id" type="hidden" value={tournament.id} />
+                {tournament.includeInGlobalStats ? null : <input name="includeInGlobalStats" type="hidden" value="on" />}
+                <ActionButton tone={tournament.includeInGlobalStats ? 'muted' : 'primary'}>
+                  {tournament.includeInGlobalStats ? 'Exclude from stats' : 'Include to stats'}
+                </ActionButton>
+              </form>
               <form action={deleteTournamentAction}>
                 <input name="returnTo" type="hidden" value="/admin" />
                 <input name="id" type="hidden" value={tournament.id} />
@@ -147,7 +157,7 @@ export default async function AdminTournamentPage({
 
           <div className="mt-6">
             <EditDisclosure>
-              <form action={updateTournamentAction} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.4fr_0.7fr_0.9fr_auto]">
+              <form action={updateTournamentAction} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.4fr_0.7fr_0.9fr_1.2fr_auto]">
                 <input name="returnTo" type="hidden" value={returnTo} />
                 <input name="id" type="hidden" value={tournament.id} />
                 <TextField defaultValue={tournament.name} label="Tournament Name" name="name" required />
@@ -158,6 +168,13 @@ export default async function AdminTournamentPage({
                   name="eventDate"
                   type="date"
                 />
+                <div className="flex items-end">
+                  <CheckboxField
+                    defaultChecked={tournament.includeInGlobalStats}
+                    label="Include in global stats"
+                    name="includeInGlobalStats"
+                  />
+                </div>
                 <div className="flex items-end">
                   <ActionButton>Save Tournament</ActionButton>
                 </div>

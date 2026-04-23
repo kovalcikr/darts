@@ -21,7 +21,7 @@ describe('tournament stats', () => {
     mockReset(prismaMock)
   })
 
-  test('builds completed-match stats with a stable tournament filter', async () => {
+  test('builds tournament stats using all tournament throws', async () => {
     prismaMock.match.findMany.mockResolvedValue([
       { id: 'm-complete', isComplete: true },
       { id: 'm-live', isComplete: false },
@@ -57,11 +57,6 @@ describe('tournament stats', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           tournamentId: 't1',
-          match: {
-            is: {
-              isComplete: true,
-            },
-          },
         }),
       })
     )
@@ -70,11 +65,6 @@ describe('tournament stats', () => {
       expect.objectContaining({
         where: {
           tournamentId: 't1',
-          match: {
-            is: {
-              isComplete: true,
-            },
-          },
         },
       })
     )

@@ -41,6 +41,7 @@ describe('Tournament Integration Tests', () => {
         expect(tournament).not.toBeNull();
         expect(tournament?.name).toBe(tournamentName);
         expect(tournament?.season).toBe(2026);
+        expect(tournament?.includeInGlobalStats).toBe(true);
 
         // Update
         const updatedTournamentName = 'Updated Test Tournament';
@@ -74,9 +75,9 @@ describe('Tournament Integration Tests', () => {
     test('should find tournaments by season', async () => {
         await prismaTest.tournament.createMany({
             data: [
-                { id: '7', name: 'Tournament 2023 A', season: 2023 },
-                { id: '8', name: 'Tournament 2023 B', season: 2023 },
-                { id: '9', name: 'Tournament 2024', season: 2024 },
+                { id: '7', name: 'Tournament 2023 A', season: 2023, includeInGlobalStats: true },
+                { id: '8', name: 'Tournament 2023 B', season: 2023, includeInGlobalStats: true },
+                { id: '9', name: 'Tournament 2024', season: 2024, includeInGlobalStats: true },
             ],
         });
 
@@ -84,6 +85,32 @@ describe('Tournament Integration Tests', () => {
         expect(found.length).toBe(2);
         expect(found.map(t => t.name)).toContain('Tournament 2023 A');
         expect(found.map(t => t.name)).toContain('Tournament 2023 B');
+    });
+
+    test('should exclude opted-out tournaments from global season lookups by default', async () => {
+        await prismaTest.tournament.createMany({
+            data: [
+                { id: '13', name: 'Included 2026', season: 2026, includeInGlobalStats: true },
+                { id: '14', name: 'Excluded 2026', season: 2026, includeInGlobalStats: false },
+            ],
+        });
+
+        const found = await findTournamentsBySeason(2026);
+        expect(found.map(t => t.name)).toContain('Included 2026');
+        expect(found.map(t => t.name)).not.toContain('Excluded 2026');
+    });
+
+    test('should include opted-out tournaments when explicitly requested', async () => {
+        await prismaTest.tournament.createMany({
+            data: [
+                { id: '15', name: 'Included 2026 B', season: 2026, includeInGlobalStats: true },
+                { id: '16', name: 'Excluded 2026 B', season: 2026, includeInGlobalStats: false },
+            ],
+        });
+
+        const found = await findTournamentsBySeason(2026, { includeExcluded: true });
+        expect(found.map(t => t.name)).toContain('Included 2026 B');
+        expect(found.map(t => t.name)).toContain('Excluded 2026 B');
     });
 
     test('should fall back to the legacy 2024 names when season is missing', async () => {

@@ -9,7 +9,7 @@ export default async function Tournaments({ searchParams }: { searchParams: Page
     const resolvedSearchParams = await searchParams;
 
     const season = resolvedSearchParams.season as string || "2026";
-    const tournaments = await getCachedTournaments(season);
+    const { included, excluded } = await getCachedTournaments(season);
 
     return (
         <div className="w-full min-h-screen bg-gray-900 text-gray-300">
@@ -33,8 +33,9 @@ export default async function Tournaments({ searchParams }: { searchParams: Page
             </header>
             <main className="flex-auto">
                 <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {tournaments.map(t => {
+                    <section>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {included.map(t => {
                             const seasonLabel = `Sezóna ${t.season ?? season}`;
                             const dateLabel = formatTournamentEventDate(t.eventDate) ?? "Dátum neznámy";
 
@@ -53,7 +54,34 @@ export default async function Tournaments({ searchParams }: { searchParams: Page
                             );
                         })
                         }
-                    </div>
+                        </div>
+                    </section>
+
+                    {excluded.length > 0 ? (
+                    <section className="mt-12">
+                        <h2 className="text-lg font-semibold text-white">Nebodované turnaje</h2>
+                            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                {excluded.map(t => {
+                                    const seasonLabel = `Sezóna ${t.season ?? season}`;
+                                    const dateLabel = formatTournamentEventDate(t.eventDate) ?? "Dátum neznámy";
+
+                                    return (
+                                    <li key={t.id} className="list-none">
+                                        <Link href={`/stats/tournaments/${t.id}`}>
+                                            <div className="block bg-gray-800/70 p-6 rounded-xl shadow-lg ring-1 ring-amber-400/30 hover:bg-gray-700/80 hover:ring-amber-300 transition-all duration-200 h-full">
+                                                <h3 className="font-bold text-lg text-white">{t.name}</h3>
+                                                <div className="mt-2 space-y-1 text-sm text-gray-400">
+                                                    <p>{seasonLabel}</p>
+                                                    <p>{dateLabel}</p>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    </li>
+                                    );
+                                })}
+                            </div>
+                    </section>
+                    ) : null}
                 </div>
             </main>
         </div>

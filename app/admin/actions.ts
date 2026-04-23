@@ -301,6 +301,7 @@ export async function updateTournamentAction(formData: FormData) {
     const name = requireString(formData, 'name')
     const season = optionalInteger(formData, 'season')
     const eventDate = optionalDate(formData, 'eventDate')
+    const includeInGlobalStats = getBoolean(formData, 'includeInGlobalStats')
 
     await prisma.tournament.update({
       where: { id },
@@ -308,6 +309,7 @@ export async function updateTournamentAction(formData: FormData) {
         name,
         season,
         eventDate,
+        includeInGlobalStats,
       },
     })
 
@@ -319,6 +321,36 @@ export async function updateTournamentAction(formData: FormData) {
   }
 
   redirectWithNotice(returnTo, 'Tournament updated.')
+}
+
+export async function toggleTournamentGlobalStatsAction(formData: FormData) {
+  const returnTo = getReturnTo(formData)
+  await requireAdminSession(returnTo)
+
+  try {
+    const id = requireString(formData, 'id')
+    const includeInGlobalStats = getBoolean(formData, 'includeInGlobalStats')
+
+    await prisma.tournament.update({
+      where: { id },
+      data: {
+        includeInGlobalStats,
+      },
+    })
+
+    revalidateSharedPaths()
+    revalidateAdminPaths([], [id])
+    revalidateTournamentPaths([id])
+  } catch (error) {
+    redirectWithError(returnTo, getErrorMessage(error))
+  }
+
+  redirectWithNotice(
+    returnTo,
+    getBoolean(formData, 'includeInGlobalStats')
+      ? 'Tournament included in global stats.'
+      : 'Tournament excluded from global stats.'
+  )
 }
 
 export async function deleteTournamentAction(formData: FormData) {

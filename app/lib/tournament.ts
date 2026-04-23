@@ -94,8 +94,16 @@ export async function getTournaments(year: string) {
 export async function getCachedTournaments(year: string) {
     const season = Number.parseInt(year, 10);
     if (Number.isNaN(season)) {
-        return [];
+        return {
+            included: [],
+            excluded: [],
+        };
     }
 
-    return await findTournamentsBySeason(season);
+    const tournaments = await findTournamentsBySeason(season, { includeExcluded: true });
+
+    return {
+        included: tournaments.filter((tournament) => tournament.includeInGlobalStats),
+        excluded: tournaments.filter((tournament) => !tournament.includeInGlobalStats),
+    };
 }

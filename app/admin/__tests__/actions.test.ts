@@ -9,6 +9,7 @@ import {
   deleteTournamentAction,
   loginAdminAction,
   logoutAdminAction,
+  toggleTournamentGlobalStatsAction,
   updateMatchAction,
   updateThrowAction,
   updateTournamentAction,
@@ -152,6 +153,7 @@ describe('admin actions', () => {
       name: 'Updated Cup',
       season: '2026',
       eventDate: '2026-04-23',
+      includeInGlobalStats: 'on',
       returnTo: '/admin?q=t1',
     })
 
@@ -163,6 +165,7 @@ describe('admin actions', () => {
         name: 'Updated Cup',
         season: 2026,
         eventDate: new Date('2026-04-23'),
+        includeInGlobalStats: true,
       },
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin')
@@ -196,6 +199,28 @@ describe('admin actions', () => {
     })
     expect(prismaMock.tournament.delete).toHaveBeenCalledWith({
       where: { id: 't1' },
+    })
+  })
+
+  test('toggles tournament inclusion in global stats', async () => {
+    prismaMock.tournament.update.mockResolvedValue({ id: 't1' } as never)
+
+    const formData = buildFormData({
+      id: 't1',
+      includeInGlobalStats: 'on',
+      returnTo: '/admin?q=t1',
+    })
+
+    await expectRedirect(
+      () => toggleTournamentGlobalStatsAction(formData),
+      '/admin?q=t1&notice=Tournament+included+in+global+stats.'
+    )
+
+    expect(prismaMock.tournament.update).toHaveBeenCalledWith({
+      where: { id: 't1' },
+      data: {
+        includeInGlobalStats: true,
+      },
     })
   })
 
