@@ -40,10 +40,8 @@ describe('stats tournaments page', () => {
 
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('Global Stats Tournaments')
     expect(html).toContain('Included Tournament')
-    expect(html).toContain('Other Tournaments')
+    expect(html).toContain('Nebodované turnaje')
     expect(html).toContain('Excluded Tournament')
-    expect(html).toContain('excluded from global stats')
   })
 })

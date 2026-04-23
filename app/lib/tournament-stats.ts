@@ -55,14 +55,9 @@ function averageForMatch(match: MatchAverageRow) {
   return match._sum.darts ? (((match._sum.score ?? 0) / match._sum.darts) * 3) : 0
 }
 
-function getCompletedThrowWhere(tournamentId: string): Prisma.PlayerThrowWhereInput {
+function getTournamentThrowWhere(tournamentId: string): Prisma.PlayerThrowWhereInput {
   return {
     tournamentId,
-    match: {
-      is: {
-        isComplete: true,
-      },
-    },
   }
 }
 
@@ -220,7 +215,7 @@ function summarizeMatchAverages(matchSums: MatchAverageRow[]) {
 }
 
 export async function getTournamentStatsSnapshot(tournamentId: string) {
-  const completedThrowWhere = getCompletedThrowWhere(tournamentId)
+  const tournamentThrowWhere = getTournamentThrowWhere(tournamentId)
 
   const [matches, highScoreRows, bestCheckoutRows, bestLegRows, matchSums] = await Promise.all([
     prisma.match.findMany({
@@ -230,7 +225,7 @@ export async function getTournamentStatsSnapshot(tournamentId: string) {
     }),
     prisma.playerThrow.findMany({
       where: {
-        ...completedThrowWhere,
+        ...tournamentThrowWhere,
         score: {
           gte: 80,
         },
@@ -241,7 +236,7 @@ export async function getTournamentStatsSnapshot(tournamentId: string) {
     }),
     prisma.playerThrow.findMany({
       where: {
-        ...completedThrowWhere,
+        ...tournamentThrowWhere,
         checkout: true,
         score: {
           gte: 60,
@@ -253,7 +248,7 @@ export async function getTournamentStatsSnapshot(tournamentId: string) {
     }),
     prisma.playerThrow.groupBy({
       by: ['tournamentId', 'matchId', 'leg', 'playerId'],
-      where: completedThrowWhere,
+      where: tournamentThrowWhere,
       _sum: {
         score: true,
         darts: true,
@@ -280,7 +275,7 @@ export async function getTournamentStatsSnapshot(tournamentId: string) {
     }),
     prisma.playerThrow.groupBy({
       by: ['tournamentId', 'matchId', 'playerId'],
-      where: completedThrowWhere,
+      where: tournamentThrowWhere,
       _sum: {
         score: true,
         darts: true,

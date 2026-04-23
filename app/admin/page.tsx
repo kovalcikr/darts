@@ -5,6 +5,7 @@ import {
   deleteTournamentAction,
   loginAdminAction,
   logoutAdminAction,
+  toggleTournamentGlobalStatsAction,
   updateTournamentAction,
 } from './actions'
 import {
@@ -236,6 +237,14 @@ export default async function AdminPage({
                   <ActionLink href={`/admin/tournaments/${encodeURIComponent(tournament.id)}`} tone="primary">
                     View Matches
                   </ActionLink>
+                  <form action={toggleTournamentGlobalStatsAction}>
+                    <input name="returnTo" type="hidden" value={returnTo} />
+                    <input name="id" type="hidden" value={tournament.id} />
+                    {tournament.includeInGlobalStats ? null : <input name="includeInGlobalStats" type="hidden" value="on" />}
+                    <ActionButton tone={tournament.includeInGlobalStats ? 'muted' : 'primary'}>
+                      {tournament.includeInGlobalStats ? 'Exclude from stats' : 'Include from stats'}
+                    </ActionButton>
+                  </form>
                   <form action={deleteTournamentAction}>
                     <input name="returnTo" type="hidden" value={returnTo} />
                     <input name="id" type="hidden" value={tournament.id} />

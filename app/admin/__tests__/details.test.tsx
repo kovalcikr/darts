@@ -21,6 +21,7 @@ jest.mock('../actions', () => ({
   deleteMatchAction: jest.fn(),
   deleteThrowAction: jest.fn(),
   deleteTournamentAction: jest.fn(),
+  toggleTournamentGlobalStatsAction: jest.fn(),
   updateMatchAction: jest.fn(),
   updateThrowAction: jest.fn(),
   updateTournamentAction: jest.fn(),
@@ -74,6 +75,7 @@ describe('admin detail pages', () => {
     expect(html).toContain('Season: 2026')
     expect(html).toContain('Date:')
     expect(html).toContain('Excluded from global stats')
+    expect(html).toContain('Include from stats')
     expect(html).toContain('Alice vs Bob')
     expect(html).toContain('View Throws')
     expect(html).not.toContain('140 points')

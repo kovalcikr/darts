@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import prisma from '@/app/lib/db'
 import { formatTournamentEventDate } from '@/app/lib/tournament-metadata'
 import type { PageSearchParams, RouteParams } from '@/app/lib/next-types'
-import { deleteMatchAction, deleteTournamentAction, updateMatchAction, updateTournamentAction } from '../../actions'
+import { deleteMatchAction, deleteTournamentAction, toggleTournamentGlobalStatsAction, updateMatchAction, updateTournamentAction } from '../../actions'
 import { isAdminAuthenticated } from '../../auth'
 import ConfirmSubmitButton from '../../ConfirmSubmitButton'
 import {
@@ -137,6 +137,14 @@ export default async function AdminTournamentPage({
 
             <div className="flex flex-wrap gap-3">
               <ActionLink href="/admin">Back to Tournaments</ActionLink>
+              <form action={toggleTournamentGlobalStatsAction}>
+                <input name="returnTo" type="hidden" value={returnTo} />
+                <input name="id" type="hidden" value={tournament.id} />
+                {tournament.includeInGlobalStats ? null : <input name="includeInGlobalStats" type="hidden" value="on" />}
+                <ActionButton tone={tournament.includeInGlobalStats ? 'muted' : 'primary'}>
+                  {tournament.includeInGlobalStats ? 'Exclude from stats' : 'Include from stats'}
+                </ActionButton>
+              </form>
               <form action={deleteTournamentAction}>
                 <input name="returnTo" type="hidden" value="/admin" />
                 <input name="id" type="hidden" value={tournament.id} />

@@ -2,36 +2,20 @@ import { Header } from "@/app/components/header";
 import { getResults } from "@/app/lib/cuescore";
 import { getPlayers } from "@/app/lib/players";
 import prisma from "@/app/lib/db";
-import { getCachedTournamentStats } from "@/app/lib/tournament-stats";
+import { getTournamentStatsSnapshot } from "@/app/lib/tournament-stats";
 import { randomUUID } from "crypto";
-import { unstable_cache } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import type { RouteParams } from "@/app/lib/next-types";
 
-const cachedTournament = unstable_cache(async (tournamentId) => {
-    console.log("Fetching tournament data from DB");
-    return await prisma.tournament.findUnique({
-        where: {
-            id: tournamentId
-        }
-    });
-});
-
-const cachedResults = unstable_cache(async (tournmentId) => {
-    console.log("Fetching tournament results from DB");
-    return await getResults(tournmentId);
-});
-
-const cachedPlayers = unstable_cache(async (tournamentId) => {
-    console.log("Fetching players data from DB ");
-    return await getPlayers([tournamentId]);
-})
-
 export default async function TournamentStats({ params }: { params: RouteParams<{ id: string }> }) {
     const { id } = await params;
 
-    const tournament = await cachedTournament(id);
+    const tournament = await prisma.tournament.findUnique({
+        where: {
+            id,
+        }
+    });
 
     if (!tournament) {
         return (
@@ -41,9 +25,9 @@ export default async function TournamentStats({ params }: { params: RouteParams<
         )
     }
 
-    const results = await cachedResults(id);
-    const players = await cachedPlayers(id);
-    const { matches, highScore, bestCheckout, bestCoc, bLeg, bestLegDarts, bLegPlayers, bestAvg, avgPP } = await getCachedTournamentStats(id);
+    const results = await getResults(id);
+    const players = await getPlayers([id]);
+    const { matches, highScore, bestCheckout, bestCoc, bLeg, bestLegDarts, bLegPlayers, bestAvg, avgPP } = await getTournamentStatsSnapshot(id);
 
     function avg(match) {
         return match._sum.darts ? ((match._sum.score || 0) / match._sum.darts * 3) : 0;

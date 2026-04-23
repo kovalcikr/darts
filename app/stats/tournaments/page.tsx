@@ -34,9 +34,7 @@ export default async function Tournaments({ searchParams }: { searchParams: Page
             <main className="flex-auto">
                 <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                     <section>
-                        <h2 className="text-lg font-semibold text-white">Global Stats Tournaments</h2>
-                        <p className="mt-2 text-sm text-gray-400">These tournaments are included in season-wide statistics.</p>
-                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {included.map(t => {
                             const seasonLabel = `Sezóna ${t.season ?? season}`;
                             const dateLabel = formatTournamentEventDate(t.eventDate) ?? "Dátum neznámy";
@@ -59,12 +57,9 @@ export default async function Tournaments({ searchParams }: { searchParams: Page
                         </div>
                     </section>
 
+                    {excluded.length > 0 ? (
                     <section className="mt-12">
-                        <h2 className="text-lg font-semibold text-white">Other Tournaments</h2>
-                        <p className="mt-2 text-sm text-gray-400">These tournaments are excluded from global stats, but local tournament stats remain available.</p>
-                        {excluded.length === 0 ? (
-                            <p className="mt-6 text-sm text-gray-500">No excluded tournaments for this season.</p>
-                        ) : (
+                        <h2 className="text-lg font-semibold text-white">Nebodované turnaje</h2>
                             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {excluded.map(t => {
                                     const seasonLabel = `Sezóna ${t.season ?? season}`;
@@ -85,8 +80,8 @@ export default async function Tournaments({ searchParams }: { searchParams: Page
                                     );
                                 })}
                             </div>
-                        )}
                     </section>
+                    ) : null}
                 </div>
             </main>
         </div>
