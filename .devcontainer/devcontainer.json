@@ -7,11 +7,11 @@
 	"workspaceFolder": "/workspace",
 	// "build": {
 	// 	"dockerfile": "Dockerfile",
-	// 	// Update 'VARIANT' to pick a Node version: 16, 14, 12.
+	// 	// Update 'VARIANT' to pick a Node version: 22, 20.
 	// 	// Append -bullseye or -buster to pin to an OS version.
 	// 	// Use -bullseye variants on local on arm64/Apple Silicon.
 	// 	"args": { 
-	// 		"VARIANT": "20-bullseye"
+	// 		"VARIANT": "22-bullseye"
 	// 	}
 	// },
 

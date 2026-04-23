@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import getTournamentInfo from "./cuescore";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { upsertTournament, findTournamentsByName, findTournamentsByYear } from "./data";
+import type { CueScoreTournament } from "./integrations/cuescore/types";
 
 export async function openTournamentForm(prevState: any, data: FormData) {
     const tournamentId = data.get('tournamentId') as string;
@@ -17,13 +18,43 @@ export async function openTournamentForm(prevState: any, data: FormData) {
 
 export async function openTournament(tournamentId: string) {
     const tournament = await getTournamentInfo(tournamentId);
-    await createTournament(tournament);
-    revalidateTag("tournaments");
+    await createTournament(tournament, tournamentId);
+    revalidateTag("tournaments", "max");
     revalidatePath("/stats/tournaments");
 }
 
-export async function createTournament({ tournamentId, name }) {
-    return upsertTournament(String(tournamentId), name);
+type TournamentLike = Partial<CueScoreTournament> & {
+    id?: string | number
+    tournamentName?: string
+    title?: string
+}
+
+function normalizeTournament(
+    tournament: TournamentLike | undefined,
+    requestedTournamentId?: string
+) {
+    const tournamentId = tournament?.tournamentId ?? tournament?.id ?? requestedTournamentId;
+    const name =
+        tournament?.name ??
+        tournament?.tournamentName ??
+        tournament?.title ??
+        (tournamentId ? `Local Tournament ${tournamentId}` : undefined);
+
+    if (!tournamentId || !name) {
+        throw new Error(
+            `Invalid tournament payload from CueScore: ${JSON.stringify(tournament ?? null)}`
+        );
+    }
+
+    return {
+        tournamentId: String(tournamentId),
+        name: String(name),
+    };
+}
+
+export async function createTournament(tournament: TournamentLike, requestedTournamentId?: string) {
+    const normalizedTournament = normalizeTournament(tournament, requestedTournamentId);
+    return upsertTournament(normalizedTournament.tournamentId, normalizedTournament.name);
 }
 
 export async function getTournaments(year: string) {

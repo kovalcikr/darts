@@ -3,7 +3,7 @@
 import { undoThrow } from "@/app/lib/playerThrow";
 import GamepadButton from "./gamepad-button";
 import { finishMatch } from "@/app/lib/cuescore";
-import { Match } from "@prisma/client";
+import type { Match } from "@/prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react"
 

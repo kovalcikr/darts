@@ -1,9 +1,11 @@
+import 'server-only'
+
 /**
  * This file contains all the functions that interact with the database.
  * This is done to make the application more testable, by allowing to mock the data access layer.
  */
 import prisma from "./db";
-import { Prisma } from '@prisma/client'
+import type { Prisma } from '@/prisma/client'
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 

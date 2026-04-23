@@ -1,7 +1,8 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
+import type { RouteParams } from '@/app/lib/next-types';
 
 async function fetchServerData(tournamentId, test) {
     const response = await fetch(`/api/dashboard/tournament/${tournamentId}${test ? `?test=${test}` : ''}`);
@@ -11,7 +12,8 @@ async function fetchServerData(tournamentId, test) {
     return response.json();
 }
 
-export default function DashboardPage({ params }: { params: { tournamentId: string } }) {
+export default function DashboardPage({ params }: { params: RouteParams<{ tournamentId: string }> }) {
+    const { tournamentId } = use(params);
     const searchParams = useSearchParams();
 
     const [data, setData] = useState(null);
@@ -22,7 +24,7 @@ export default function DashboardPage({ params }: { params: { tournamentId: stri
 
         const fetchData = async () => {
             try {
-                const serverData = await fetchServerData(params.tournamentId, searchParams.get('test'));
+                const serverData = await fetchServerData(tournamentId, searchParams.get('test'));
                 setData(serverData);
             } catch (err) {
                 setError(err.message);
@@ -33,7 +35,7 @@ export default function DashboardPage({ params }: { params: { tournamentId: stri
         intervalId = setInterval(fetchData, 1000); // Poll every second
 
         return () => clearInterval(intervalId); // Cleanup on unmount
-    }, [params.tournamentId, searchParams]);
+    }, [tournamentId, searchParams]);
 
     if (error) {
         return <div>Error: {error}</div>;
@@ -146,7 +148,9 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
                 </p>
             </div>
             {average && (
-                <p className="text-xl md:text-sm font-semibold text-gray-400 mt-1">Average: {average}</p>
+                <p className="text-sm md:text-lg text-gray-400 mt-1">
+                    Average: <span className="font-semibold text-white">{average}</span>
+                </p>
             )}
         </div>
     )

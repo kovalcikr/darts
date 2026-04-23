@@ -1,7 +1,7 @@
 import { startMatch } from "@/app/lib/match";
 import PlayerName from "./player-name";
 import { revalidatePath } from "next/cache";
-import { Match } from "@prisma/client";
+import type { Match } from "@/prisma/client";
 import PlayerLegs from "./player-legs";
 import { Player } from "@/app/lib/model/fullmatch";
 

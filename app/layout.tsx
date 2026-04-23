@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/next'
 
-const inter = Inter({ subsets: ['latin'] })
+let VercelTelemetry: null | (() => React.JSX.Element) = null
+
+if (process.env.NODE_ENV === 'production') {
+  VercelTelemetry = require('./components/VercelTelemetry').default
+}
 
 export const metadata: Metadata = {
   title: 'Relax Darts Cup',
@@ -18,10 +19,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className="font-sans">
         {children}
-        <Analytics />
-        <SpeedInsights />
+        {VercelTelemetry ? <VercelTelemetry /> : null}
       </body>
     </html>
   )

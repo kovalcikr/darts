@@ -1,8 +1,10 @@
 import { getFullMatch } from "@/app/lib/match";
 import Link from "next/link";
+import type { RouteParams } from "@/app/lib/next-types";
 
-export default async function MatchPage({ params }: { params: { id: string, matchId: string } }) {
-    const fullMatch = await getFullMatch(params.matchId, false);
+export default async function MatchPage({ params }: { params: RouteParams<{ id: string, matchId: string }> }) {
+    const { id, matchId } = await params;
+    const fullMatch = await getFullMatch(matchId, false);
 
     if (!fullMatch) {
         return (
@@ -25,7 +27,7 @@ export default async function MatchPage({ params }: { params: { id: string, matc
                                 <nav className="text-sm leading-6 font-semibold text-gray-400">
                                     <ul className="flex space-x-4 md:space-x-8">
                                         <li>
-                                            <Link className="hover:text-sky-400 transition-colors" href={`/stats/tournaments/${params.id}`}>Späť na turnaj</Link>
+                                            <Link className="hover:text-sky-400 transition-colors" href={`/stats/tournaments/${id}`}>Späť na turnaj</Link>
                                         </li>
                                     </ul>
                                 </nav>

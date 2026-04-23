@@ -1,7 +1,7 @@
 'use client'
 
 import { startMatch } from "@/app/lib/match";
-import { Match } from "@prisma/client";
+import type { Match } from "@/prisma/client";
 import { useFormStatus } from "react-dom";
 
 export default function ChoosePlayer({ match, table }: { match: Match, table: string }) {

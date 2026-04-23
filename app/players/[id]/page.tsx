@@ -3,10 +3,19 @@ import { getPlayers } from "@/app/lib/players"
 import { getTournaments } from "@/app/lib/tournament"
 import { randomUUID } from "crypto"
 import Link from "next/link"
+import type { PageSearchParams, RouteParams } from "@/app/lib/next-types"
 
-export default async function Player({ params, searchParams }: { params: { id: string }, searchParams: { [key: string]: string | string[] | undefined } }) {
+export default async function Player({
+    params,
+    searchParams,
+}: {
+    params: RouteParams<{ id: string }>
+    searchParams: PageSearchParams
+}) {
+    const { id } = await params;
+    const resolvedSearchParams = await searchParams;
 
-    const season = searchParams.season as string || "2025";
+    const season = resolvedSearchParams.season as string || "2026";
     const tournamentIds = await getTournaments(season)
     const players = await getPlayers(tournamentIds)
 
@@ -21,10 +30,10 @@ export default async function Player({ params, searchParams }: { params: { id: s
                 {
                     OR: [
                         {
-                            playerAId: params.id
+                            playerAId: id
                         },
                         {
-                            playerBId: params.id
+                            playerBId: id
                         }
                     ]
                 }
@@ -39,7 +48,7 @@ export default async function Player({ params, searchParams }: { params: { id: s
     const playerOppornents = new Map();
     matches.forEach(match => {
         playerTournaments.add(match.tournamentId);
-        const isPlayerA = match.playerAId === params.id;
+        const isPlayerA = match.playerAId === id;
         const opponentId = isPlayerA ? match.playerBId : match.playerAId;
 
         playerOppornents.set(opponentId, (playerOppornents.get(opponentId) || 0) + 1);
@@ -56,7 +65,7 @@ export default async function Player({ params, searchParams }: { params: { id: s
     const throws = await prisma.playerThrow.aggregate({
         where: {
             tournamentId: { in: tournamentIds },
-            playerId: params.id
+            playerId: id
         },
         _count: { id: true },
         _sum: { score: true, darts: true },
@@ -66,7 +75,7 @@ export default async function Player({ params, searchParams }: { params: { id: s
     const throwsOver80 = await prisma.playerThrow.groupBy({
         by: ["score"],
         where: {
-            playerId: params.id,
+            playerId: id,
             tournamentId: { in: tournamentIds },
             score: { gte: 80 }
         },
@@ -76,7 +85,7 @@ export default async function Player({ params, searchParams }: { params: { id: s
     const checkouts = await prisma.playerThrow.findMany({
         where: {
             checkout: true,
-            playerId: params.id,
+            playerId: id,
             tournamentId: { in: tournamentIds }
         },
         orderBy: { score: "desc" }
@@ -85,7 +94,7 @@ export default async function Player({ params, searchParams }: { params: { id: s
     const legs = await prisma.playerThrow.groupBy({
         by: ["tournamentId", "matchId", "leg"],
         where: {
-            playerId: params.id,
+            playerId: id,
             tournamentId: { in: tournamentIds }
         },
         _sum: { score: true, darts: true },
@@ -96,7 +105,7 @@ export default async function Player({ params, searchParams }: { params: { id: s
     const matchSums = await prisma.playerThrow.groupBy({
         by: ["tournamentId", "matchId"],
         where: {
-            playerId: params.id,
+            playerId: id,
             tournamentId: { in: tournamentIds }
         },
         _sum: { score: true, darts: true }
@@ -197,7 +206,7 @@ export default async function Player({ params, searchParams }: { params: { id: s
                 <div className="max-w-7xl mx-auto">
                     <div className="py-4 px-4">
                         <div className="relative flex items-center">
-                            <h1 className="font-bold text-xl text-white">Relax Darts Cup: <span className="text-sky-400">{players[params.id]}</span></h1>
+                            <h1 className="font-bold text-xl text-white">Relax Darts Cup: <span className="text-sky-400">{players[id]}</span></h1>
                             <div className="relative flex items-center ml-auto">
                                 <nav className="text-sm leading-6 font-semibold text-gray-400">
                                     <ul className="flex space-x-4 md:space-x-8">

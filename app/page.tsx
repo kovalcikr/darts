@@ -3,6 +3,7 @@ import prisma from "./lib/db";
 import { getPlayers } from "./lib/players";
 import { getTournaments } from "./lib/tournament";
 import Link from "next/link";
+import type { PageSearchParams } from "./lib/next-types";
 
 export const revalidate = false
 export const dynamic = 'force-dynamic'
@@ -12,9 +13,10 @@ import SeasonSelector from "./components/SeasonSelector";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: PageSearchParams;
 }) {
-  const season = searchParams.season as string || "2025";
+  const resolvedSearchParams = await searchParams;
+  const season = resolvedSearchParams.season as string || "2026";
   const tournaments = await getTournaments(season)
   const matchesCount = await prisma.match.aggregate({
     _count: {

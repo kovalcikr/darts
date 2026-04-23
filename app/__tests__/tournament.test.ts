@@ -43,6 +43,21 @@ describe('tournament', () => {
         expect(data.upsertTournament).toHaveBeenCalledWith('123', 'New Tournament');
     });
 
+    test('create tournament falls back to requested id and local name', async () => {
+        jest.mocked(data.upsertTournament).mockResolvedValue(null);
+        await createTournament({} as any, 'local-smoke');
+        expect(data.upsertTournament).toHaveBeenCalledWith('local-smoke', 'Local Tournament local-smoke');
+    });
+
+    test('open tournament falls back to requested id when gateway payload omits it', async () => {
+        jest.mocked(getTournamentInfo).mockResolvedValue({} as any);
+        jest.mocked(data.upsertTournament).mockResolvedValue(null);
+
+        await openTournament('local-smoke');
+
+        expect(data.upsertTournament).toHaveBeenCalledWith('local-smoke', 'Local Tournament local-smoke');
+    });
+
     test('get tournaments 2024', async () => {
         const tournamentNames = [];
         for (let i = 13; i <= 24; i++) {
@@ -59,6 +74,13 @@ describe('tournament', () => {
         const tournaments = await getTournaments("2025");
         expect(data.findTournamentsByYear).toHaveBeenCalledWith("2025");
         expect(tournaments).toEqual(['456']);
+    });
+
+    test('get tournaments 2026', async () => {
+        jest.mocked(data.findTournamentsByYear).mockResolvedValue([{ id: '789', name: 'Relax Darts CUP 1 2026' }] as any);
+        const tournaments = await getTournaments("2026");
+        expect(data.findTournamentsByYear).toHaveBeenCalledWith("2026");
+        expect(tournaments).toEqual(['789']);
     });
 
     test('get cached tournaments', async () => {

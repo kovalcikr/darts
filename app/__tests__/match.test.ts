@@ -2,7 +2,7 @@ import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import * as match from '../lib/match';
 import getTournamentInfo from '../lib/cuescore';
 import { findLastThrow, findMatchAvg } from '../lib/playerThrow';
-import { Match, Tournament } from '@prisma/client';
+import type { Match, Tournament } from '@/prisma/client';
 import * as data from '../lib/data';
 
 jest.mock('../lib/cuescore', () => ({
