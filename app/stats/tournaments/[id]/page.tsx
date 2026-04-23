@@ -1,6 +1,7 @@
 import { Header } from "@/app/components/header";
 import { getResults } from "@/app/lib/cuescore";
 import { getPlayers } from "@/app/lib/players";
+import prisma from "@/app/lib/db";
 import { getCachedTournamentStats } from "@/app/lib/tournament-stats";
 import { randomUUID } from "crypto";
 import { unstable_cache } from "next/cache";

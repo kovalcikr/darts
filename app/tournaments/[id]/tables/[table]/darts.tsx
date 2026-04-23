@@ -24,6 +24,7 @@ export default async function Darts({ table, matchId, slow, reset }: { table: st
       runTo: 3,
       playerALegs: 1,
       playerBlegs: 2,
+      isComplete: false,
       firstPlayer: "1",
       tournamentId: "test",
     },
