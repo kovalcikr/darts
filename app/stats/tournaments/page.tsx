@@ -1,11 +1,13 @@
 import { getCachedTournaments } from "@/app/lib/tournament"
 import Link from "next/link";
+import type { PageSearchParams } from "@/app/lib/next-types";
 
 export const dynamic = 'force-dynamic'
 
-export default async function Tournaments({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+export default async function Tournaments({ searchParams }: { searchParams: PageSearchParams }) {
+    const resolvedSearchParams = await searchParams;
 
-    const season = searchParams.season as string || "2026";
+    const season = resolvedSearchParams.season as string || "2026";
     const tournaments = (await getCachedTournaments(season)).sort((t1, t2) => t1.name.localeCompare(t2.name));
 
     return (

@@ -2,6 +2,7 @@ import { getCuescoreMatchCached, getMatch } from "@/app/lib/match";
 import { getPlayerThrowInfo } from "@/app/lib/playerThrow";
 import { unstable_cache } from "next/cache";
 import { NextRequest } from "next/server";
+import type { RouteParams } from "@/app/lib/next-types";
 
 const cachedMatch1 = unstable_cache(async (tournamentId: string, table: string) => {
     return await getCuescoreMatchCached(tournamentId, table);
@@ -98,11 +99,11 @@ function getTableId(table: string, test: boolean) {
     return (test ? '' : '1') + table
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: RouteParams<{ id: string }> }) {
     const searchParams = request.nextUrl.searchParams
     const test = searchParams.get('test')
 
-    const tournamentId = params.id;
+    const { id: tournamentId } = await params;
 
     const match1 = await cachedMatch1(tournamentId, getTableId('1', test == 'true'));
     const match2 = await cachedMatch2(tournamentId, getTableId('2', test == 'true'));

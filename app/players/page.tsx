@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { getRankings } from "../lib/cuescore";
+import type { PageSearchParams } from "../lib/next-types";
 
-export default async function Players({searchParams}: {searchParams: { [key: string]: string | string[] | undefined }}) {
-    const season = searchParams.season as string || "2026";
+export default async function Players({searchParams}: {searchParams: PageSearchParams}) {
+    const resolvedSearchParams = await searchParams;
+    const season = resolvedSearchParams.season as string || "2026";
     const rankings = season == "2026" ? "72952249" : (season == "2024" ? "43953514" : "52708102");
     const players = await getRankings(rankings);
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { openTournamentForm } from "./lib/tournament";
 import Link from "next/link";
 
@@ -23,7 +24,7 @@ export default function Tournament({ props }) {
         message: '',
     }
 
-    const [state, formAction] = useFormState(openTournamentForm, initialState)
+    const [state, formAction] = useActionState(openTournamentForm, initialState)
 
     return (
         <div className="w-full min-h-screen bg-gray-900 text-gray-300">

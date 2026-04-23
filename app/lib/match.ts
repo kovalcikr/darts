@@ -110,7 +110,7 @@ export async function startMatch(formData) {
   revalidatePath('/tournaments/[id]/tables/[table]', 'page');
   const cacheTag = `match${formData.get('table')}`
   console.log('revalidating tag', cacheTag)
-  revalidateTag(cacheTag)
+  revalidateTag(cacheTag, 'max')
 }
 
 export async function resetMatch(formData) {
