@@ -7,7 +7,10 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/__integration_tests__/**/*.test.ts'],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
+  moduleNameMapper: {
+    ...pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
+    '^server-only$': '<rootDir>/app/__tests__/server-only.ts',
+  },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.json', useESM: true }],
   },

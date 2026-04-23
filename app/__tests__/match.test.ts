@@ -33,6 +33,7 @@ const mockMatch: Match & { tournament: Tournament } = {
     runTo: 5,
     playerALegs: 1,
     playerBlegs: 0,
+    isComplete: false,
     firstPlayer: 'pA',
     tournamentId: 't1',
     tournament: { id: 't1', name: 'Test Tournament' }

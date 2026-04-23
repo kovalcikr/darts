@@ -45,11 +45,14 @@ model Match {
   runTo        Int
   playerALegs  Int     @default(0)
   playerBlegs  Int     @default(0)
+  isComplete   Boolean @default(false)
   firstPlayer  String?
   tournamentId String?
 
   throwsList     PlayerThrow[]
   tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+
+  @@index([tournamentId, isComplete])
 }
 
 model Tournament {

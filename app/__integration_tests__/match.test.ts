@@ -65,6 +65,7 @@ describe('Match Integration Tests', () => {
         let match = await findMatch(matchData.matchId);
         expect(match).not.toBeNull();
         expect(match?.playerAName).toBe('Player A');
+        expect(match?.isComplete).toBe(false);
 
         // Update
         const updatedMatchData = { ...matchData, playerA: { ...matchData.playerA, name: 'Player A Updated' } };
@@ -86,7 +87,7 @@ describe('Match Integration Tests', () => {
         await updateMatchFirstPlayer(matchData.matchId, 'pA');
         await prismaTest.match.update({
             where: { id: matchData.matchId },
-            data: { playerALegs: 2, playerBlegs: 1 }
+            data: { playerALegs: 2, playerBlegs: 1, isComplete: true }
         });
 
         await resetMatchData(matchData.matchId);
@@ -94,32 +95,66 @@ describe('Match Integration Tests', () => {
         expect(match?.firstPlayer).toBeNull();
         expect(match?.playerALegs).toBe(0);
         expect(match?.playerBlegs).toBe(0);
+        expect(match?.isComplete).toBe(false);
     });
 
     test('should update match legs', async () => {
         await setupTestData();
-        await updateMatchLegs(matchData.matchId, 'pA', 'pA', 0, 0);
+        await updateMatchLegs(matchData.matchId, 'pA', 'pA', 0, 0, matchData.raceTo);
         let match = await findMatch(matchData.matchId);
         expect(match?.playerALegs).toBe(1);
+        expect(match?.isComplete).toBe(false);
 
-        await updateMatchLegs(matchData.matchId, 'pA', 'pB', 1, 0);
+        await updateMatchLegs(matchData.matchId, 'pA', 'pB', 1, 0, matchData.raceTo);
         match = await findMatch(matchData.matchId);
         expect(match?.playerBlegs).toBe(1);
+        expect(match?.isComplete).toBe(false);
     });
 
     test('should decrement match legs', async () => {
         await setupTestData();
         await prismaTest.match.update({
             where: { id: matchData.matchId },
-            data: { playerALegs: 2, playerBlegs: 1 }
+            data: { playerALegs: 2, playerBlegs: 1, isComplete: true }
         });
 
-        await decrementMatchLegs(matchData.matchId, 'pA', 'pA', 2, 1);
+        await decrementMatchLegs(matchData.matchId, 'pA', 'pA', 2, 1, matchData.raceTo);
         let match = await findMatch(matchData.matchId);
         expect(match?.playerALegs).toBe(1);
+        expect(match?.isComplete).toBe(false);
 
-        await decrementMatchLegs(matchData.matchId, 'pA', 'pB', match!.playerALegs, match!.playerBlegs);
+        await decrementMatchLegs(matchData.matchId, 'pA', 'pB', match!.playerALegs, match!.playerBlegs, matchData.raceTo);
         match = await findMatch(matchData.matchId);
         expect(match?.playerBlegs).toBe(0);
+        expect(match?.isComplete).toBe(false);
+    });
+
+    test('should sync legs and completion state from CueScore scores when provided', async () => {
+        await prismaTest.tournament.create({ data: tournament });
+
+        await upsertMatch({
+            ...matchData,
+            scoreA: 5,
+            scoreB: 3,
+        });
+
+        const match = await findMatch(matchData.matchId);
+        expect(match?.playerALegs).toBe(5);
+        expect(match?.playerBlegs).toBe(3);
+        expect(match?.isComplete).toBe(true);
+    });
+
+    test('should mark a match complete when the closing leg is added', async () => {
+        await setupTestData();
+        await prismaTest.match.update({
+            where: { id: matchData.matchId },
+            data: { playerALegs: 4, playerBlegs: 3, isComplete: false }
+        });
+
+        await updateMatchLegs(matchData.matchId, 'pA', 'pA', 4, 3, matchData.raceTo);
+
+        const match = await findMatch(matchData.matchId);
+        expect(match?.playerALegs).toBe(5);
+        expect(match?.isComplete).toBe(true);
     });
 });
