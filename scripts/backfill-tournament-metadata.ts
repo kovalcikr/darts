@@ -1,5 +1,11 @@
-import prisma from '../app/lib/db'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from '../prisma/client'
+import { getDatabaseUrl } from '../app/lib/database-url'
 import { inferTournamentSeasonFromName } from '../app/lib/tournament-metadata'
+
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: getDatabaseUrl() }),
+})
 
 async function main() {
   const tournaments = await prisma.tournament.findMany({

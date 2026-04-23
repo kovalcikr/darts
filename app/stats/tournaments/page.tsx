@@ -34,18 +34,24 @@ export default async function Tournaments({ searchParams }: { searchParams: Page
             <main className="flex-auto">
                 <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {tournaments.map(t => (
+                        {tournaments.map(t => {
+                            const seasonLabel = `Sezóna ${t.season ?? season}`;
+                            const dateLabel = formatTournamentEventDate(t.eventDate) ?? "Dátum neznámy";
+
+                            return (
                             <li key={t.id} className="list-none">
                                 <Link href={`/stats/tournaments/${t.id}`}>
                                     <div className="block bg-gray-800 p-6 rounded-xl shadow-lg hover:bg-gray-700/80 hover:ring-1 hover:ring-sky-500 transition-all duration-200 h-full">
                                         <h2 className="font-bold text-lg text-white">{t.name}</h2>
-                                        <p className="mt-2 text-sm text-gray-400">
-                                            {formatTournamentEventDate(t.eventDate) ?? `Sezóna ${t.season ?? season}`}
-                                        </p>
+                                        <div className="mt-2 space-y-1 text-sm text-gray-400">
+                                            <p>{seasonLabel}</p>
+                                            <p>{dateLabel}</p>
+                                        </div>
                                     </div>
                                 </Link>
                             </li>
-                        ))
+                            );
+                        })
                         }
                     </div>
                 </div>
