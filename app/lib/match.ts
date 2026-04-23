@@ -26,7 +26,10 @@ export async function getCuescoreMatchCached(tournamentId: string, tableName: st
   console.log('getCuescoreMatchCached', tournamentId, tableName);
   const tournament = await getTournamentInfo(tournamentId);
   for (let match of tournament.matches) {
-    if (match.matchstatus == 'playing' && match?.table.name == tableName) return match;
+    if (match.matchstatus == 'playing' && match?.table.name == tableName) {
+      match.matchId = String(match.matchId);
+      return match;
+    }
   }
 }
 

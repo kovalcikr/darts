@@ -1,5 +1,5 @@
 import { getCuescoreMatchCached, getMatch } from "@/app/lib/match";
-import { getPlayerThrowInfo } from "@/app/lib/playerThrow";
+import { findMatchAvg, getPlayerThrowInfo } from "@/app/lib/playerThrow";
 import { unstable_cache } from "next/cache";
 import { NextRequest } from "next/server";
 import type { RouteParams } from "@/app/lib/next-types";
@@ -112,19 +112,19 @@ export async function GET(request: NextRequest, { params }: { params: RouteParam
     const match5 = await cachedMatch5(tournamentId, getTableId('5', test == 'true'));
     const match6 = await cachedMatch6(tournamentId, getTableId('6', test == 'true'));
 
-    const matchInfo1 = match1?.matchId && await cachedMatchInfo1(tournamentId, match1?.matchId?.toString(), (match1?.scoreA || 0) + (match1?.scoreB || 0) + 1, match1?.playerA.playerId.toString(), match1?.playerB.playerId.toString());
-    const matchInfo2 = match2?.matchId && await cachedMatchInfo2(tournamentId, match2?.matchId?.toString(), (match2?.scoreA || 0) + (match2?.scoreB || 0) + 1, match2?.playerA.playerId.toString(), match2?.playerB.playerId.toString());
-    const matchInfo3 = match3?.matchId && await cachedMatchInfo3(tournamentId, match3?.matchId?.toString(), (match3?.scoreA || 0) + (match3?.scoreB || 0) + 1, match3?.playerA.playerId.toString(), match3?.playerB.playerId.toString());
-    const matchInfo4 = match4?.matchId && await cachedMatchInfo4(tournamentId, match4?.matchId?.toString(), (match4?.scoreA || 0) + (match4?.scoreB || 0) + 1, match4?.playerA.playerId.toString(), match4?.playerB.playerId.toString());
-    const matchInfo5 = match5?.matchId && await cachedMatchInfo5(tournamentId, match5?.matchId?.toString(), (match5?.scoreA || 0) + (match5?.scoreB || 0) + 1, match5?.playerA.playerId.toString(), match5?.playerB.playerId.toString());
-    const matchInfo6 = match6?.matchId && await cachedMatchInfo6(tournamentId, match6?.matchId?.toString(), (match6?.scoreA || 0) + (match6?.scoreB || 0) + 1, match6?.playerA.playerId.toString(), match6?.playerB.playerId.toString());
+    const matchInfo1 = match1?.matchId && await cachedMatchInfo1(tournamentId, String(match1.matchId), (match1?.scoreA || 0) + (match1?.scoreB || 0) + 1, match1?.playerA.playerId.toString(), match1?.playerB.playerId.toString());
+    const matchInfo2 = match2?.matchId && await cachedMatchInfo2(tournamentId, String(match2.matchId), (match2?.scoreA || 0) + (match2?.scoreB || 0) + 1, match2?.playerA.playerId.toString(), match2?.playerB.playerId.toString());
+    const matchInfo3 = match3?.matchId && await cachedMatchInfo3(tournamentId, String(match3.matchId), (match3?.scoreA || 0) + (match3?.scoreB || 0) + 1, match3?.playerA.playerId.toString(), match3?.playerB.playerId.toString());
+    const matchInfo4 = match4?.matchId && await cachedMatchInfo4(tournamentId, String(match4.matchId), (match4?.scoreA || 0) + (match4?.scoreB || 0) + 1, match4?.playerA.playerId.toString(), match4?.playerB.playerId.toString());
+    const matchInfo5 = match5?.matchId && await cachedMatchInfo5(tournamentId, String(match5.matchId), (match5?.scoreA || 0) + (match5?.scoreB || 0) + 1, match5?.playerA.playerId.toString(), match5?.playerB.playerId.toString());
+    const matchInfo6 = match6?.matchId && await cachedMatchInfo6(tournamentId, String(match6.matchId), (match6?.scoreA || 0) + (match6?.scoreB || 0) + 1, match6?.playerA.playerId.toString(), match6?.playerB.playerId.toString());
 
-    const firstPlayer1 = match1?.matchId && (await cachedFirstPlayer1(match1.matchId.toString()))?.firstPlayer;
-    const firstPlayer2 = match2?.matchId && (await cachedFirstPlayer2(match2.matchId.toString()))?.firstPlayer;
-    const firstPlayer3 = match3?.matchId && (await cachedFirstPlayer3(match3.matchId.toString()))?.firstPlayer;
-    const firstPlayer4 = match4?.matchId && (await cachedFirstPlayer4(match4.matchId.toString()))?.firstPlayer;
-    const firstPlayer5 = match5?.matchId && (await cachedFirstPlayer5(match5.matchId.toString()))?.firstPlayer;
-    const firstPlayer6 = match6?.matchId && (await cachedFirstPlayer6(match6.matchId.toString()))?.firstPlayer;
+    const firstPlayer1 = match1?.matchId && (await cachedFirstPlayer1(String(match1.matchId)))?.firstPlayer;
+    const firstPlayer2 = match2?.matchId && (await cachedFirstPlayer2(String(match2.matchId)))?.firstPlayer;
+    const firstPlayer3 = match3?.matchId && (await cachedFirstPlayer3(String(match3.matchId)))?.firstPlayer;
+    const firstPlayer4 = match4?.matchId && (await cachedFirstPlayer4(String(match4.matchId)))?.firstPlayer;
+    const firstPlayer5 = match5?.matchId && (await cachedFirstPlayer5(String(match5.matchId)))?.firstPlayer;
+    const firstPlayer6 = match6?.matchId && (await cachedFirstPlayer6(String(match6.matchId)))?.firstPlayer;
 
     const match = {
         match1: match1,
@@ -144,7 +144,19 @@ export async function GET(request: NextRequest, { params }: { params: RouteParam
         firstPlayer3: firstPlayer3,
         firstPlayer4: firstPlayer4,
         firstPlayer5: firstPlayer5,
-        firstPlayer6: firstPlayer6
+        firstPlayer6: firstPlayer6,
+        matchAvgA1: match1?.matchId ? await findMatchAvg(String(match1.matchId), String(match1.playerA.playerId)) : null,
+        matchAvgA2: match2?.matchId ? await findMatchAvg(String(match2.matchId), String(match2.playerA.playerId)) : null,
+        matchAvgA3: match3?.matchId ? await findMatchAvg(String(match3.matchId), String(match3.playerA.playerId)) : null,
+        matchAvgA4: match4?.matchId ? await findMatchAvg(String(match4.matchId), String(match4.playerA.playerId)) : null,
+        matchAvgA5: match5?.matchId ? await findMatchAvg(String(match5.matchId), String(match5.playerA.playerId)) : null,
+        matchAvgA6: match6?.matchId ? await findMatchAvg(String(match6.matchId), String(match6.playerA.playerId)) : null,
+        matchAvgB1: match1?.matchId ? await findMatchAvg(String(match1.matchId), String(match1.playerB.playerId)) : null,
+        matchAvgB2: match2?.matchId ? await findMatchAvg(String(match2.matchId), String(match2.playerB.playerId)) : null,
+        matchAvgB3: match3?.matchId ? await findMatchAvg(String(match3.matchId), String(match3.playerB.playerId)) : null,
+        matchAvgB4: match4?.matchId ? await findMatchAvg(String(match4.matchId), String(match4.playerB.playerId)) : null,
+        matchAvgB5: match5?.matchId ? await findMatchAvg(String(match5.matchId), String(match5.playerB.playerId)) : null,
+        matchAvgB6: match6?.matchId ? await findMatchAvg(String(match6.matchId), String(match6.playerB.playerId)) : null,
     }
 
     return new Response(JSON.stringify(match));
