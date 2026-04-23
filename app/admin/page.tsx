@@ -242,7 +242,7 @@ export default async function AdminPage({
                     <input name="id" type="hidden" value={tournament.id} />
                     {tournament.includeInGlobalStats ? null : <input name="includeInGlobalStats" type="hidden" value="on" />}
                     <ActionButton tone={tournament.includeInGlobalStats ? 'muted' : 'primary'}>
-                      {tournament.includeInGlobalStats ? 'Exclude from stats' : 'Include from stats'}
+                      {tournament.includeInGlobalStats ? 'Exclude from stats' : 'Include to stats'}
                     </ActionButton>
                   </form>
                   <form action={deleteTournamentAction}>
