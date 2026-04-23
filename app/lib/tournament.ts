@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import getTournamentInfo from "./cuescore";
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { upsertTournament, findTournamentsBySeason } from "./data";
 import type { CueScoreTournament } from "./integrations/cuescore/types";
 import { inferTournamentSeason, parseTournamentDate } from "./tournament-metadata";
@@ -20,7 +20,6 @@ export async function openTournamentForm(prevState: any, data: FormData) {
 export async function openTournament(tournamentId: string) {
     const tournament = await getTournamentInfo(tournamentId);
     await createTournament(tournament, tournamentId);
-    revalidateTag("tournaments", "max");
     revalidatePath("/stats/tournaments");
 }
 
@@ -92,15 +91,11 @@ export async function getTournaments(year: string) {
     return tournaments
 }
 
-export const getCachedTournaments = unstable_cache(
-    async (year: string) => {
-        const season = Number.parseInt(year, 10);
-        if (Number.isNaN(season)) {
-            return [];
-        }
+export async function getCachedTournaments(year: string) {
+    const season = Number.parseInt(year, 10);
+    if (Number.isNaN(season)) {
+        return [];
+    }
 
-        return await findTournamentsBySeason(season);
-    },
-    ['tournaments-by-year'],
-    { tags: ["tournaments"] }
-);
+    return await findTournamentsBySeason(season);
+}
