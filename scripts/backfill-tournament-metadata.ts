@@ -10,11 +10,15 @@ const prisma = new PrismaClient({
 async function main() {
   const tournaments = await prisma.tournament.findMany({
     where: {
-      season: null,
+      OR: [
+        { season: null },
+        { eventDate: null },
+      ],
     },
     select: {
       id: true,
       name: true,
+      season: true,
       eventDate: true,
     },
   })
@@ -22,11 +26,28 @@ async function main() {
   let updatedCount = 0
 
   for (const tournament of tournaments) {
+    const firstThrow = tournament.eventDate
+      ? null
+      : await prisma.playerThrow.findFirst({
+          where: {
+            tournamentId: tournament.id,
+          },
+          orderBy: {
+            time: 'asc',
+          },
+          select: {
+            time: true,
+          },
+        })
+
+    // The earliest recorded throw corresponds to the first started match.
+    const eventDate = tournament.eventDate ?? firstThrow?.time ?? null
     const season =
-      tournament.eventDate?.getFullYear() ??
+      tournament.season ??
+      eventDate?.getFullYear() ??
       inferTournamentSeasonFromName(tournament.name)
 
-    if (season === null) {
+    if (season === tournament.season && eventDate?.getTime() === tournament.eventDate?.getTime()) {
       continue
     }
 
@@ -36,6 +57,7 @@ async function main() {
       },
       data: {
         season,
+        eventDate,
       },
     })
     updatedCount += 1

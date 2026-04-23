@@ -39,6 +39,8 @@ describe('admin detail pages', () => {
     prismaMock.tournament.findUnique.mockResolvedValue({
       id: 't1',
       name: 'Relax Darts CUP 01 2026',
+      season: 2026,
+      eventDate: new Date('2026-04-23T00:00:00.000Z'),
       _count: { matches: 2 },
     } as never)
     prismaMock.match.findMany.mockResolvedValue([
@@ -68,6 +70,8 @@ describe('admin detail pages', () => {
     const html = renderToStaticMarkup(element)
 
     expect(html).toContain('Relax Darts CUP 01 2026')
+    expect(html).toContain('Season: 2026')
+    expect(html).toContain('Date:')
     expect(html).toContain('Alice vs Bob')
     expect(html).toContain('View Throws')
     expect(html).not.toContain('140 points')
