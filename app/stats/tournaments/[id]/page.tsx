@@ -6,10 +6,20 @@ import { getTournamentStatsSnapshot } from "@/app/lib/tournament-stats";
 import { randomUUID } from "crypto";
 import Image from "next/image";
 import Link from "next/link";
-import type { RouteParams } from "@/app/lib/next-types";
+import type { PageSearchParams, RouteParams } from "@/app/lib/next-types";
+import StatsPageShell from "@/app/components/StatsPageShell";
+import { withSeason } from "@/app/lib/season-links";
 
-export default async function TournamentStats({ params }: { params: RouteParams<{ id: string }> }) {
+export default async function TournamentStats({
+    params,
+    searchParams,
+}: {
+    params: RouteParams<{ id: string }>
+    searchParams: PageSearchParams
+}) {
     const { id } = await params;
+    const resolvedSearchParams = await searchParams;
+    const season = resolvedSearchParams.season as string | undefined;
 
     const tournament = await prisma.tournament.findUnique({
         where: {
@@ -68,30 +78,13 @@ export default async function TournamentStats({ params }: { params: RouteParams<
     }
 
     return (
-        <div className="w-full min-h-screen bg-gray-900 text-gray-300">
-            <header className="sticky top-0 z-40 w-full border-b border-gray-700 bg-gray-900/70 backdrop-blur-sm">
-                <div className="max-w-7xl mx-auto">
-                    <div className="py-4 px-4">
-                        <div className="relative flex items-center">
-                            <h1 className="font-bold text-xl text-white">Relax darts cup: <span className="text-sky-400">{tournament.name}</span></h1>
-                            <div className="relative flex items-center ml-auto">
-                                <nav className="text-sm leading-6 font-semibold text-gray-400">
-                                    <ul className="flex space-x-4 md:space-x-8">
-                                        <li>
-                                            <Link className="hover:text-sky-400 transition-colors" href="/">Domov</Link>
-                                        </li>
-                                        <li>
-                                            <Link className="hover:text-sky-400 transition-colors" href="/stats/tournaments">Späť</Link>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-            <main className="flex-auto">
-                <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <StatsPageShell
+            activeSection="tournaments"
+            season={season}
+            showSeasonSelector={false}
+            subtitle={season ? `Detail turnaja v kontexte sezóny ${season}.` : "Detail turnajových štatistík."}
+            title={<><span className="text-sky-400">{tournament.name}</span></>}
+        >
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                         <div className="lg:col-span-3 bg-gray-800 rounded-xl shadow-lg p-6">
@@ -141,16 +134,14 @@ export default async function TournamentStats({ params }: { params: RouteParams<
                         </div>
 
                         <div className="lg:col-span-3 bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                            <MatchesList matches={matches} tournamentId={id} />
+                            <MatchesList matches={matches} season={season} tournamentId={id} />
                         </div>
                     </div>
-                </div>
-            </main>
-        </div>
+        </StatsPageShell>
     )
 }
 
-function MatchesList({ matches, tournamentId }) {
+function MatchesList({ matches, tournamentId, season }) {
     const roundOrder = {
         "Final": 100,
         "Semi final": 99,
@@ -213,7 +204,7 @@ function MatchesList({ matches, tournamentId }) {
                                 <td className="px-4 py-3 whitespace-nowrap text-center font-mono font-bold text-lg">{match.playerALegs} : {match.playerBlegs}</td>
                                 <td className={`px-4 py-3 whitespace-nowrap ${winnerId === match.playerBId ? 'font-bold text-white' : ''}`}>{match.playerBName}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-right">
-                                    <Link href={`/tournaments/${tournamentId}/match/${match.id}`} className="text-sky-400 hover:text-sky-300 font-semibold">Detail</Link>
+                                    <Link href={withSeason(`/tournaments/${tournamentId}/match/${match.id}`, season)} className="text-sky-400 hover:text-sky-300 font-semibold">Detail</Link>
                                 </td>
                             </tr>
                         )
