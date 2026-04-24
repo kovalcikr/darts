@@ -1,10 +1,24 @@
 import { createLocalRanking, createLocalResults, createLocalTournament } from '../../../../cuescore/mock-data'
 import { CueScoreGateway, CueScoreRanking, CueScoreResults, CueScoreTournament, MatchScoreUpdate } from './types'
 
+export type FakeCueScoreEvent = {
+  type: 'updateMatchScore' | 'finishMatch'
+  tournamentId: string
+  matchId: string
+  scoreA: number
+  scoreB: number
+}
+
+export type FakeCueScoreSnapshot = {
+  tournament: CueScoreTournament | null
+  events: FakeCueScoreEvent[]
+}
+
 type FakeCueScoreStore = {
   tournaments: Map<string, CueScoreTournament>
   rankings: Map<string, CueScoreRanking>
   results: Map<string, CueScoreResults>
+  events: FakeCueScoreEvent[]
 }
 
 declare const globalThis: {
@@ -16,6 +30,7 @@ function createStore(): FakeCueScoreStore {
     tournaments: new Map(),
     rankings: new Map(),
     results: new Map(),
+    events: [],
   }
 }
 
@@ -26,7 +41,17 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value))
+  return structuredClone(value)
+}
+
+function recordEvent(type: FakeCueScoreEvent['type'], input: MatchScoreUpdate) {
+  store.events.push({
+    type,
+    tournamentId: input.tournamentId,
+    matchId: input.matchId,
+    scoreA: input.scoreA,
+    scoreB: input.scoreB,
+  })
 }
 
 function getOrCreateTournament(tournamentId: string): CueScoreTournament {
@@ -51,6 +76,28 @@ function updateStoredMatch(tournamentId: string, matchId: string, update: (match
   update(match)
 }
 
+export function resetFakeCueScoreStore(tournamentId?: string) {
+  if (!tournamentId) {
+    store.tournaments.clear()
+    store.rankings.clear()
+    store.results.clear()
+    store.events = []
+    return
+  }
+
+  store.tournaments.delete(tournamentId)
+  store.rankings.delete(tournamentId)
+  store.results.delete(tournamentId)
+  store.events = store.events.filter((event) => event.tournamentId !== tournamentId)
+}
+
+export function getFakeCueScoreSnapshot(tournamentId: string): FakeCueScoreSnapshot {
+  return {
+    tournament: clone(store.tournaments.get(tournamentId) ?? null),
+    events: clone(store.events.filter((event) => event.tournamentId === tournamentId)),
+  }
+}
+
 export class FakeCueScoreGateway implements CueScoreGateway {
   async getTournament(tournamentId: string): Promise<CueScoreTournament> {
     return clone(getOrCreateTournament(tournamentId))
@@ -64,6 +111,7 @@ export class FakeCueScoreGateway implements CueScoreGateway {
         match.matchstatus = 'playing'
       }
     })
+    recordEvent('updateMatchScore', { tournamentId, matchId, scoreA, scoreB })
   }
 
   async finishMatch({ tournamentId, matchId, scoreA, scoreB }: MatchScoreUpdate): Promise<void> {
@@ -72,6 +120,7 @@ export class FakeCueScoreGateway implements CueScoreGateway {
       match.scoreB = scoreB
       match.matchstatus = 'finished'
     })
+    recordEvent('finishMatch', { tournamentId, matchId, scoreA, scoreB })
   }
 
   async getRanking(rankingId: string): Promise<CueScoreRanking> {

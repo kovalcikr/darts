@@ -40,7 +40,14 @@ function Player({ playerId, image, name }) {
     const { pending } = useFormStatus();
 
     return (
-        <button type="submit" name="firstPlayer" value={playerId} disabled={pending}>
+        <button
+            type="submit"
+            name="firstPlayer"
+            value={playerId}
+            disabled={pending}
+            aria-label={`Start with ${name}`}
+            data-testid={`start-player-${playerId}`}
+        >
             <div className="flex flex-col">
                 <div className={`p-4 m-6 border-slate-400 border-2 bg-blue-300 rounded shadow ${pending && "bg-slate-200"}`}>
                     <div className="flex items-center justify-center flex-row basis-1/2">
