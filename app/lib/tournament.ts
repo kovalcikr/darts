@@ -32,7 +32,9 @@ type TournamentLike = Partial<CueScoreTournament> & {
     eventDate?: string | number | Date
     startDate?: string | number | Date
     startTime?: string | number | Date
+    starttime?: string | number | Date
     date?: string | number | Date
+    displayDate?: string | number | Date
 }
 
 function normalizeTournament(
@@ -49,7 +51,9 @@ function normalizeTournament(
         tournament?.eventDate ??
         tournament?.startDate ??
         tournament?.startTime ??
-        tournament?.date
+        tournament?.starttime ??
+        tournament?.date ??
+        tournament?.displayDate
     );
     const season = inferTournamentSeason({
         explicitSeason: tournament?.season ?? tournament?.year,

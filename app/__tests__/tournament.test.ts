@@ -38,6 +38,24 @@ describe('tournament', () => {
         });
     });
 
+    test('open tournament stores event date from cuescore starttime', async () => {
+        const tournamentId = '72952399';
+        jest.mocked(getTournamentInfo).mockResolvedValue({
+            tournamentId,
+            name: 'Relax Darts CUP 10 2026',
+            starttime: '2026-05-26T16:00:00Z',
+        } as any);
+        jest.mocked(data.upsertTournament).mockResolvedValue(null);
+
+        await openTournament(tournamentId);
+
+        expect(data.upsertTournament).toHaveBeenCalledWith(tournamentId, {
+            name: 'Relax Darts CUP 10 2026',
+            season: 2026,
+            eventDate: new Date('2026-05-26T16:00:00Z'),
+        });
+    });
+
     test('create tournament', async () => {
         const tournament = { tournamentId: '123', name: 'New Tournament' };
         jest.mocked(data.upsertTournament).mockResolvedValue(null);

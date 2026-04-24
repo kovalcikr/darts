@@ -25,6 +25,8 @@ export type CueScoreMatch = {
 export type CueScoreTournament = {
   tournamentId: string | number
   name: string
+  starttime?: string
+  displayDate?: string
   matches: CueScoreMatch[]
 }
 
