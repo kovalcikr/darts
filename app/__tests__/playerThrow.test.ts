@@ -26,6 +26,7 @@ describe('playerThrow', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (prismaMock.$transaction as any).mockImplementation(async (callback: any) => callback(tx));
+        jest.mocked(setScore).mockResolvedValue(undefined as any);
     });
 
     test('addThrowAction stores a normal throw and revalidates the table', async () => {
@@ -66,6 +67,43 @@ describe('playerThrow', () => {
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
         expect(data.updateMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pA', 1, 1, 5, tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
+        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+    });
+
+    test('addThrowAction waits for score sync before revalidating after a checkout', async () => {
+        const currentMatch = {
+            id: 'm1',
+            tournamentId: 't1',
+            playerAId: 'pA',
+            runTo: 5,
+            playerALegs: 1,
+            playerBlegs: 1,
+        };
+        const updatedMatch = {
+            ...currentMatch,
+            playerALegs: 2,
+        };
+        let releaseSetScore: () => void;
+        const setScorePromise = new Promise<void>((resolve) => {
+            releaseSetScore = resolve;
+        });
+
+        jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 441 } } as any);
+        jest.mocked(data.findMatch).mockResolvedValue(currentMatch as any);
+        jest.mocked(data.updateMatchLegs).mockResolvedValue(updatedMatch as any);
+        jest.mocked(setScore).mockReturnValue(setScorePromise as any);
+
+        const actionPromise = addThrowAction('t1', 'm1', 2, 'pA', 60, 2, false, '11');
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
+        expect(revalidatePath).not.toHaveBeenCalled();
+        expect(revalidateTag).not.toHaveBeenCalled();
+
+        releaseSetScore!();
+        await actionPromise;
+
+        expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
@@ -119,6 +157,44 @@ describe('playerThrow', () => {
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
         expect(data.decrementMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pB', 1, 2, 5, tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
+        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+    });
+
+    test('undoThrow waits for score sync before revalidating when reopening a leg', async () => {
+        const currentMatch = {
+            id: 'm1',
+            tournamentId: 't1',
+            playerAId: 'pA',
+            runTo: 5,
+            playerALegs: 1,
+            playerBlegs: 2,
+        };
+        const updatedMatch = {
+            ...currentMatch,
+            playerBlegs: 1,
+        };
+        let releaseSetScore: () => void;
+        const setScorePromise = new Promise<void>((resolve) => {
+            releaseSetScore = resolve;
+        });
+
+        jest.mocked(data.findLastThrow).mockResolvedValue(null);
+        jest.mocked(data.findPreviousLegLastThrow).mockResolvedValue({ id: 'throw-prev', playerId: 'pB' } as any);
+        jest.mocked(data.findMatch).mockResolvedValue(currentMatch as any);
+        jest.mocked(data.decrementMatchLegs).mockResolvedValue(updatedMatch as any);
+        jest.mocked(setScore).mockReturnValue(setScorePromise as any);
+
+        const actionPromise = undoThrow('m1', 3, false, '11');
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
+        expect(revalidatePath).not.toHaveBeenCalled();
+        expect(revalidateTag).not.toHaveBeenCalled();
+
+        releaseSetScore!();
+        await actionPromise;
+
+        expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
