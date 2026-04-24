@@ -85,7 +85,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
           color="bg-purple-400"
           formAction={handleUndo}
         />
-        <input type="text" disabled required value={Number(currentScore)} onChange={e => {
+        <input type="text" data-testid="scoreboard-input" disabled required value={Number(currentScore)} onChange={e => {
           const value = Number(e.target.value);
           if (value >= 0 && value <= 180) setCurrentScore(e.target.value)
         }} className="flex items-center text-center  justify-center border-2 font-bold text-6xl text-white bg-slate-800  " />

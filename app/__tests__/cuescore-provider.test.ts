@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from '@jest/globals';
 import { getCueScoreProviderName } from '../lib/integrations/cuescore';
-import { FakeCueScoreGateway } from '../lib/integrations/cuescore/fake';
+import { FakeCueScoreGateway, getFakeCueScoreSnapshot, resetFakeCueScoreStore } from '../lib/integrations/cuescore/fake';
 
 describe('cuescore provider selection', () => {
     const originalEnv = process.env;
@@ -44,10 +44,7 @@ describe('cuescore provider selection', () => {
 
 describe('fake cuescore gateway', () => {
     beforeEach(() => {
-        const store = (globalThis as any).fakeCueScoreStore;
-        store?.tournaments.clear();
-        store?.rankings.clear();
-        store?.results.clear();
+        resetFakeCueScoreStore();
     });
 
     test('creates a local tournament on first access', async () => {
@@ -171,5 +168,40 @@ describe('fake cuescore gateway', () => {
             scoreA: 1,
             scoreB: 0,
         })).rejects.toThrow('Cannot find local match missing-match');
+    });
+
+    test('exposes test snapshots and can reset a single tournament store', async () => {
+        const gateway = new FakeCueScoreGateway();
+        const tournament = await gateway.getTournament('local-assertions');
+        const matchId = String(tournament.matches[0].matchId);
+
+        await gateway.updateMatchScore({
+            tournamentId: 'local-assertions',
+            matchId,
+            scoreA: 1,
+            scoreB: 0,
+        });
+
+        expect(getFakeCueScoreSnapshot('local-assertions')).toEqual({
+            tournament: expect.objectContaining({
+                tournamentId: 'local-assertions',
+            }),
+            events: [
+                {
+                    type: 'updateMatchScore',
+                    tournamentId: 'local-assertions',
+                    matchId,
+                    scoreA: 1,
+                    scoreB: 0,
+                },
+            ],
+        });
+
+        resetFakeCueScoreStore('local-assertions');
+
+        expect(getFakeCueScoreSnapshot('local-assertions')).toEqual({
+            tournament: null,
+            events: [],
+        });
     });
 });

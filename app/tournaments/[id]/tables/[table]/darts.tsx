@@ -53,12 +53,20 @@ export default async function Darts({ table, matchId, slow, reset }: { table: st
             <ChoosePlayer match={match} table={table} />
             :
             <div className="flex">
-              <div className={`w-1/2 p-1 ${playerLeft.active && "border-2 border-slate-400 rounded bg-yellow-100"}`}>
+              <div
+                className={`w-1/2 p-1 ${playerLeft.active && "border-2 border-slate-400 rounded bg-yellow-100"}`}
+                data-testid={`player-card-${playerLeft.id}`}
+                data-active={playerLeft.active ? "true" : "false"}
+              >
                 <PlayerName player={playerLeft} />
                 <PlayerScore player={playerLeft} />
                 <PlayerLegs player={playerLeft} />
               </div>
-              <div className={`w-1/2 p-1 ${playerRight.active && "border-2 border-slate-400 rounded bg-yellow-100"}`}>
+              <div
+                className={`w-1/2 p-1 ${playerRight.active && "border-2 border-slate-400 rounded bg-yellow-100"}`}
+                data-testid={`player-card-${playerRight.id}`}
+                data-active={playerRight.active ? "true" : "false"}
+              >
                 <PlayerName player={playerRight} />
                 <PlayerScore player={playerRight} />
                 <PlayerLegs player={playerRight} />
