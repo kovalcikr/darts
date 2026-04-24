@@ -1,10 +1,16 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { renderToStaticMarkup } from 'react-dom/server'
+import type { ReactNode } from 'react'
 import TournamentsPage from '../page'
 import { getCachedTournaments } from '@/app/lib/tournament'
 
 jest.mock('@/app/lib/tournament', () => ({
   getCachedTournaments: jest.fn(),
+}))
+
+jest.mock('@/app/components/StatsPageShell', () => ({
+  __esModule: true,
+  default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }))
 
 describe('stats tournaments page', () => {
@@ -41,7 +47,9 @@ describe('stats tournaments page', () => {
     const html = renderToStaticMarkup(element)
 
     expect(html).toContain('Included Tournament')
+    expect(html).toContain('href="/stats/tournaments/t1?season=2026"')
     expect(html).toContain('Nebodované turnaje')
     expect(html).toContain('Excluded Tournament')
+    expect(html).toContain('href="/stats/tournaments/t2?season=2026"')
   })
 })

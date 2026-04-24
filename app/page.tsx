@@ -4,11 +4,11 @@ import { getPlayers } from "./lib/players";
 import { getTournaments } from "./lib/tournament";
 import Link from "next/link";
 import type { PageSearchParams } from "./lib/next-types";
+import StatsPageShell from "./components/StatsPageShell";
+import { withSeason } from "./lib/season-links";
 
 export const revalidate = false
 export const dynamic = 'force-dynamic'
-
-import SeasonSelector from "./components/SeasonSelector";
 
 export default async function Home({
   searchParams,
@@ -156,7 +156,7 @@ export default async function Home({
         <div className="flex flex-row flex-wrap items-center mt-3">
           {playerIds.map(pid =>
           (
-            <Link key={randomUUID()} href={`/players/${pid}`}>
+            <Link key={randomUUID()} href={withSeason(`/players/${pid}`, season)}>
               <div className="rounded-full bg-sky-600/50 px-3 py-1 text-sm font-semibold text-sky-200 mr-2 mb-2 hover:bg-sky-500/50 transition-colors" >{players[pid]}</div>
             </Link>
           ))}
@@ -166,34 +166,13 @@ export default async function Home({
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-900 text-gray-300">
-      <header className="sticky top-0 z-40 w-full border-b border-gray-700 bg-gray-900/70 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto">
-          <div className="py-4 px-4">
-            <div className="relative flex items-center">
-              <div className="font-bold text-xl text-white">Relax Darts Cup</div>
-              <div className="relative flex items-center ml-auto">
-                <nav className="text-sm leading-6 font-semibold text-gray-400">
-                  <ul className="flex space-x-4 md:space-x-8">
-                    <li>
-                      <Link className="hover:text-sky-400 transition-colors" href={`/players?season=${season}`}>Štatistiky hráčov</Link>
-                    </li>
-                    <li>
-                      <Link className="hover:text-sky-400 transition-colors" href={`/stats/tournaments?season=${season}`}>Štatistiky turnajov</Link>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-      <main className="flex-auto">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <StatsPageShell
+      activeSection="overview"
+      season={season}
+      subtitle={`Celkové štatistiky zo všetkých turnajov pre sezónu ${season}.`}
+      title="Celkové štatistiky"
+    >
           <div className="text-center mb-16">
-            <div className="mb-8">
-              <SeasonSelector season={season} />
-            </div>
             <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl tracking-tight">
               Sezóna <span className="text-sky-400">{season}</span>
             </h1>
@@ -220,9 +199,6 @@ export default async function Home({
             {bestLeg.length > 0 && <StatWithNames name="Najlepší leg" value={bestLeg[0]._sum.darts}
               playerIds={Array.from(new Set(bestLeg.map(leg => leg.playerId)))} />}
           </div>
-
-        </div>
-      </main>
-    </div>
+    </StatsPageShell>
   )
 }

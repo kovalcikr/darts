@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { renderToStaticMarkup } from 'react-dom/server'
+import type { ReactNode } from 'react'
 import TournamentStatsPage from '../page'
 import prisma from '@/app/lib/db'
 import { getResults } from '@/app/lib/cuescore'
@@ -25,6 +26,16 @@ jest.mock('@/app/lib/tournament-stats', () => ({
   getTournamentStatsSnapshot: jest.fn(),
 }))
 
+jest.mock('@/app/components/StatsPageShell', () => ({
+  __esModule: true,
+  default: ({ children, season, title }: { children: ReactNode; season?: string; title?: ReactNode }) => (
+    <div data-season={season}>
+      <div>{title}</div>
+      {children}
+    </div>
+  ),
+}))
+
 const prismaMock = prisma as unknown as DeepMockProxy<PrismaClient>
 
 describe('tournament stats page', () => {
@@ -46,7 +57,7 @@ describe('tournament stats page', () => {
     } as never)
     jest.mocked(getTournamentStatsSnapshot).mockResolvedValue({
       matches: [],
-      highScore: [{ player: 'p1', s180: 1, s170: 0 }],
+      highScore: [{ player: 'p1', s180: 1, s170: 0, s80: 0, s100: 0, s133: 0, b170: [] }],
       bestCheckout: [{ playerId: 'p1', score: 120, _sum: { darts: 9, score: 360 } }],
       bestCoc: [],
       bLeg: [],
@@ -58,10 +69,12 @@ describe('tournament stats page', () => {
 
     const element = await TournamentStatsPage({
       params: Promise.resolve({ id: 't1' }),
+      searchParams: Promise.resolve({ season: '2026' }),
     })
 
     const html = renderToStaticMarkup(element)
 
+    expect(html).toContain('data-season="2026"')
     expect(html).toContain('Excluded Cup')
     expect(html).toContain('Najlepší checkout')
     expect(html).toContain('Najlepší priemer')
