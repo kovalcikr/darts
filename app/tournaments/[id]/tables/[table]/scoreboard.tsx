@@ -23,26 +23,27 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
   }
 
   function handleNumber(e: any) {
-    const value = (e.target as HTMLInputElement).value;
-    if (Number(currentScore + value) > 180) {
-      return;
-    }
-    const newScore = Number(currentScore + value);
-    if (impossibleScore.includes(newScore)) {
-      return;
-    }
-    if (currentPlayerScore - newScore == 1) {
-      return;
-    }
-    if (currentPlayerScore < newScore) {
-      return;
-    }
-    if (currentScore === "0") {
-      setCurrentScore(value);
-      return;
-    }
+    const value = (e.currentTarget as HTMLButtonElement).value;
 
-    setCurrentScore(currentScore + value);
+    setCurrentScore((previousScore) => {
+      const nextScore = previousScore === "0" ? value : previousScore + value;
+      const numericScore = Number(nextScore);
+
+      if (numericScore > 180) {
+        return previousScore;
+      }
+      if (impossibleScore.includes(numericScore)) {
+        return previousScore;
+      }
+      if (currentPlayerScore - numericScore == 1) {
+        return previousScore;
+      }
+      if (currentPlayerScore < numericScore) {
+        return previousScore;
+      }
+
+      return nextScore;
+    });
   }
 
   function handleSubmit(e: any) {
@@ -93,9 +94,14 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
           name="<"
           color="bg-blue-500"
           onClick={() => {
-            if (currentScore.length != 0) {
-              setCurrentScore(currentScore.substring(0, currentScore.length - 1))
-            }
+            setCurrentScore((previousScore) => {
+              if (previousScore.length === 0) {
+                return "0";
+              }
+
+              const nextScore = previousScore.substring(0, previousScore.length - 1);
+              return nextScore.length === 0 ? "0" : nextScore;
+            });
           }}
         />
         {items.map((item) => (
