@@ -31,8 +31,8 @@ model PlayerThrow {
   match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
 
   @@index([matchId, leg, playerId])
-  @@index([tournamentId, playerId])
-  @@index([tournamentId, checkout, score])
+  @@index([matchId, playerId])
+  @@index([matchId, leg, time])
 }
 
 model Match {
