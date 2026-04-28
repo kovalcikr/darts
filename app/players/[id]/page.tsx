@@ -7,6 +7,18 @@ import type { PageSearchParams, RouteParams } from "@/app/lib/next-types"
 import StatsPageShell from "@/app/components/StatsPageShell"
 import { withSeason } from "@/app/lib/season-links"
 
+function formatPercentage(numerator: number, denominator: number) {
+    if (denominator <= 0) {
+        return "0.0%"
+    }
+
+    return `${((numerator / denominator) * 100).toFixed(1)}%`
+}
+
+function formatRatioWithPercentage(numerator: number, denominator: number) {
+    return `${numerator} / ${denominator} (${formatPercentage(numerator, denominator)})`
+}
+
 export default async function Player({
     params,
     searchParams,
@@ -20,6 +32,7 @@ export default async function Player({
     const season = resolvedSearchParams.season as string || "2026";
     const tournamentIds = await getTournaments(season)
     const players = await getPlayers(tournamentIds)
+    const playerName = players[id] ?? id
 
     const matches = await prisma.match.findMany({
         where: {
@@ -49,7 +62,9 @@ export default async function Player({
     const playerTournaments = new Set();
     const playerOppornents = new Map();
     matches.forEach(match => {
-        playerTournaments.add(match.tournamentId);
+        if (match.tournamentId) {
+            playerTournaments.add(match.tournamentId);
+        }
         const isPlayerA = match.playerAId === id;
         const opponentId = isPlayerA ? match.playerBId : match.playerAId;
 
@@ -114,6 +129,9 @@ export default async function Player({
     })
     const matchAverages = matchSums.map(match => (match._sum.score || 0) / (match._sum.darts || 1) * 3)
     const bestAvg = matchAverages.sort((a, b) => b - a);
+    const seasonAverage = (((throws._sum?.score || 0) / (throws._sum?.darts || 1)) * 3).toFixed(2)
+    const throwsCount = throws._count.id ?? 0
+    const dartsCount = throws._sum?.darts ?? 0
 
     function StatCard({ title, children }) {
         return (
@@ -136,16 +154,16 @@ export default async function Player({
     function StatWithNames({ name, value, playerIds }) {
         return (
             <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
-                <span className="text-gray-400 font-medium">{name}</span>
-                <div className="flex items-center gap-x-2">
-                    <span className="text-white font-semibold text-lg">{value}</span>
-                    {playerIds.map(pid => (
-                        <Link key={randomUUID()} href={withSeason(`/players/${pid}`, season)}>
-                            <div className="rounded-full bg-gray-600 px-3 py-1 text-sm font-semibold text-gray-200 hover:bg-gray-500 transition-colors">{players[pid]}</div>
-                        </Link>
-                    ))}
+                    <span className="text-gray-400 font-medium">{name}</span>
+                    <div className="flex items-center gap-x-2">
+                        <span className="text-white font-semibold text-lg">{value}</span>
+                        {playerIds.map(pid => (
+                            <Link key={randomUUID()} href={withSeason(`/players/${pid}`, season)}>
+                                <div className="rounded-full bg-gray-600 px-3 py-1 text-sm font-semibold text-gray-200 hover:bg-gray-500 transition-colors">{players[pid] ?? pid}</div>
+                            </Link>
+                        ))}
+                    </div>
                 </div>
-            </div>
         )
     }
 
@@ -207,20 +225,20 @@ export default async function Player({
             activeSection="players"
             season={season}
             subtitle={`Profil hráča a sezónne štatistiky pre ${season}.`}
-            title={<><span className="text-sky-400">{players[id]}</span></>}
+            title={<><span className="text-sky-400">{playerName}</span></>}
         >
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8">
                             <StatCard title="Celkový výkon">
                                 <StatRow label="Sezóna" value={`${season}`} />
-                                <StatRow label="Počet turnajov" value={`${playerTournaments.size} / ${tournamentIds.length} (${(playerTournaments.size / tournamentIds.length * 100).toFixed(1)}%)`} />
-                                <StatRow label="Vyhrané zápasy" value={`${matchesWon} / ${matches.length} (${(matchesWon / matches.length * 100).toFixed(1)}%)`} />
-                                <StatRow label="Vyhrané legy" value={`${wonLegs} / ${playerLegs} (${(wonLegs / playerLegs * 100).toFixed(1)}%)`} />
+                                <StatRow label="Počet turnajov" value={formatRatioWithPercentage(playerTournaments.size, tournamentIds.length)} />
+                                <StatRow label="Vyhrané zápasy" value={formatRatioWithPercentage(matchesWon, matches.length)} />
+                                <StatRow label="Vyhrané legy" value={formatRatioWithPercentage(wonLegs, playerLegs)} />
                             </StatCard>
                             <StatCard title="Priemery a hody">
-                                <StatRow label="Priemer za sezónu" value={((throws._sum?.score || 0) / (throws._sum?.darts || 1) * 3).toFixed(2)} />
-                                <StatRow label="Počet hodov" value={throws._count.id} />
-                                <StatRow label="Počet šípok" value={throws._sum.darts} />
+                                <StatRow label="Priemer za sezónu" value={seasonAverage} />
+                                <StatRow label="Počet hodov" value={throwsCount} />
+                                <StatRow label="Počet šípok" value={dartsCount} />
                                 {frequentOpponents.length > 0 && <StatWithNames name="Najčastejší protihráč" value={`${frequentOpponents[0][1]}x`} playerIds={[frequentOpponents[0][0]]} />}
                             </StatCard>
                         </div>
