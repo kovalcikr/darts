@@ -25,9 +25,15 @@ export default defineConfig([
   },
   globalIgnores([
     ".next/**",
+    ".next-dev/**",
+    "**/.next/**",
+    "**/.next-dev/**",
     "coverage/**",
     "jules-scratch/**",
     "next-env.d.ts",
     "out/**",
+    "playwright-report/**",
+    "prisma/generated/**",
+    "test-results/**",
   ]),
 ]);
