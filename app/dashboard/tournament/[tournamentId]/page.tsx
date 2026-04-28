@@ -43,17 +43,25 @@ export default function DashboardPage({ params }: { params: RouteParams<{ tourna
 
     return (
         <div className="grid grid-cols-3 grid-rows-2 h-screen w-full bg-gray-900 text-gray-300">
-            <TableDashboard tableId="1" match={data?.match1} matchInfo={data?.matchInfo1?.score} lastThrows={data?.matchInfo1?.lastThrows} firstPlayer={data?.firstPlayer1} avgPlayerA={data?.matchAvgA1} avgPlayerB={data?.matchAvgB1} />
-            <TableDashboard tableId="2" match={data?.match2} matchInfo={data?.matchInfo2?.score} lastThrows={data?.matchInfo2?.lastThrows} firstPlayer={data?.firstPlayer2} />
-            <TableDashboard tableId="3" match={data?.match3} matchInfo={data?.matchInfo3?.score} lastThrows={data?.matchInfo3?.lastThrows} firstPlayer={data?.firstPlayer3} />
-            <TableDashboard tableId="4" match={data?.match4} matchInfo={data?.matchInfo4?.score} lastThrows={data?.matchInfo4?.lastThrows} firstPlayer={data?.firstPlayer4} />
-            <TableDashboard tableId="5" match={data?.match5} matchInfo={data?.matchInfo5?.score} lastThrows={data?.matchInfo5?.lastThrows} firstPlayer={data?.firstPlayer5} />
-            <TableDashboard tableId="6" match={data?.match6} matchInfo={data?.matchInfo6?.score} lastThrows={data?.matchInfo6?.lastThrows} firstPlayer={data?.firstPlayer6} />
+            <TableDashboard tableId="1" match={data?.match1} matchInfo={data?.matchInfo1?.score} lastThrows={data?.matchInfo1?.lastThrows} liveState={data?.liveState1} firstPlayer={data?.firstPlayer1} avgPlayerA={data?.matchAvgA1} avgPlayerB={data?.matchAvgB1} />
+            <TableDashboard tableId="2" match={data?.match2} matchInfo={data?.matchInfo2?.score} lastThrows={data?.matchInfo2?.lastThrows} liveState={data?.liveState2} firstPlayer={data?.firstPlayer2} avgPlayerA={data?.matchAvgA2} avgPlayerB={data?.matchAvgB2} />
+            <TableDashboard tableId="3" match={data?.match3} matchInfo={data?.matchInfo3?.score} lastThrows={data?.matchInfo3?.lastThrows} liveState={data?.liveState3} firstPlayer={data?.firstPlayer3} avgPlayerA={data?.matchAvgA3} avgPlayerB={data?.matchAvgB3} />
+            <TableDashboard tableId="4" match={data?.match4} matchInfo={data?.matchInfo4?.score} lastThrows={data?.matchInfo4?.lastThrows} liveState={data?.liveState4} firstPlayer={data?.firstPlayer4} avgPlayerA={data?.matchAvgA4} avgPlayerB={data?.matchAvgB4} />
+            <TableDashboard tableId="5" match={data?.match5} matchInfo={data?.matchInfo5?.score} lastThrows={data?.matchInfo5?.lastThrows} liveState={data?.liveState5} firstPlayer={data?.firstPlayer5} avgPlayerA={data?.matchAvgA5} avgPlayerB={data?.matchAvgB5} />
+            <TableDashboard tableId="6" match={data?.match6} matchInfo={data?.matchInfo6?.score} lastThrows={data?.matchInfo6?.lastThrows} liveState={data?.liveState6} firstPlayer={data?.firstPlayer6} avgPlayerA={data?.matchAvgA6} avgPlayerB={data?.matchAvgB6} />
         </div>
     );
 }
 
-function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer, avgPlayerA, avgPlayerB }: { tableId: string, match: any, matchInfo: any, lastThrows?: any[], firstPlayer?: string, avgPlayerA?: number, avgPlayerB?: number }) {
+function formatAverage(totalScore: number, totalDarts: number) {
+    return totalDarts > 0 ? (totalScore / totalDarts * 3).toFixed(1) : null;
+}
+
+function formatAverageValue(average?: number) {
+    return average && average > 0 ? average.toFixed(1) : null;
+}
+
+function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firstPlayer, avgPlayerA, avgPlayerB }: { tableId: string, match: any, matchInfo: any, lastThrows?: any[], liveState?: any, firstPlayer?: string, avgPlayerA?: number, avgPlayerB?: number }) {
     function nextPlayer(leg: number, throwsA: number, throwsB: number, playerA: string, playerB: string, firstPlayer: string) {
         if ((leg + (throwsA ? throwsA : 0) + (throwsB ? throwsB : 0)) % 2 == 1) {
             return firstPlayer;
@@ -63,11 +71,18 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer, av
     }
 
     const leg = (match?.scoreA || 0) + (match?.scoreB || 0) + 1;
-    const playerAInfo = matchInfo?.find(e => e.playerId == match.playerA.playerId.toString())
-    const playerBInfo = matchInfo?.find(e => e.playerId == match.playerB.playerId.toString())
-    const nextP = nextPlayer(leg, playerAInfo?._count?.score, playerBInfo?._count?.score, match?.playerA?.playerId.toString(), match?.playerB?.playerId.toString(), firstPlayer);
-    const playerAAvgDisplay = avgPlayerA > 0 ? avgPlayerA.toFixed(1) : null;
-    const playerBAvgDisplay = avgPlayerB > 0 ? avgPlayerB.toFixed(1) : null;
+    const playerAId = match?.playerA?.playerId?.toString();
+    const playerBId = match?.playerB?.playerId?.toString();
+    const playerAInfo = matchInfo?.find(e => e.playerId == playerAId)
+    const playerBInfo = matchInfo?.find(e => e.playerId == playerBId)
+    const fallbackNextPlayer = match && firstPlayer ? nextPlayer(leg, playerAInfo?._count?.score, playerBInfo?._count?.score, playerAId, playerBId, firstPlayer) : null;
+    const nextP = liveState?.activePlayerId ?? fallbackNextPlayer;
+    const projectedLastThrows = Array.isArray(liveState?.lastThrows) ? liveState.lastThrows : null;
+    const currentLastThrows = projectedLastThrows ?? lastThrows;
+    const playerAScore = liveState ? liveState.playerAScoreLeft : 501 - (playerAInfo?._sum?.score || 0);
+    const playerBScore = liveState ? liveState.playerBScoreLeft : 501 - (playerBInfo?._sum?.score || 0);
+    const playerAAvgDisplay = liveState ? formatAverage(liveState.playerATotalScore, liveState.playerATotalDarts) : formatAverageValue(avgPlayerA);
+    const playerBAvgDisplay = liveState ? formatAverage(liveState.playerBTotalScore, liveState.playerBTotalDarts) : formatAverageValue(avgPlayerB);
     return (
         <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4">
             <h1 className="absolute top-2 left-2 text-xs md:text-sm font-bold text-gray-500">#{tableId}</h1>
@@ -75,13 +90,13 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, firstPlayer, av
                 <div className="w-full flex flex-col sm:flex-row justify-around items-center sm:space-y-4 sm:space-x-2 md:space-x-4">
                     {match && (<>
                         {match.raceTo != match.scoreA && match.raceTo != match.scoreB && (<>
-                            <Player playerId="1" photo={match.playerA.image} playerName={match.playerA.name} legsWon={match.scoreA} score={501 - (playerAInfo?._sum?.score || 0)} lastThrows={lastThrows?.filter(t => t.playerId == match.playerA.playerId.toString())?.map(t => t.score)} average={playerAAvgDisplay} active={nextP == match.playerA.playerId.toString()} />
+                            <Player playerId="1" photo={match.playerA.image} playerName={match.playerA.name} legsWon={match.scoreA} score={playerAScore} lastThrows={currentLastThrows?.filter(t => t.playerId == playerAId)?.map(t => t.score)} average={playerAAvgDisplay} active={nextP == playerAId} />
 
                             <div className="text-center flex-none my-2 sm:my-0">
                                 <h2 className="text-lg md:text-2xl font-bold text-sky-400">VS</h2>
                             </div>
 
-                            <Player playerId="2" photo={match.playerB.image} playerName={match.playerB.name} legsWon={match.scoreB} score={501 - (playerBInfo?._sum?.score || 0)} lastThrows={lastThrows?.filter(t => t.playerId == match.playerB.playerId.toString())?.map(t => t.score)} average={playerBAvgDisplay} active={nextP == match.playerB.playerId.toString()} />
+                            <Player playerId="2" photo={match.playerB.image} playerName={match.playerB.name} legsWon={match.scoreB} score={playerBScore} lastThrows={currentLastThrows?.filter(t => t.playerId == playerBId)?.map(t => t.score)} average={playerBAvgDisplay} active={nextP == playerBId} />
                         </>)
                         }
                         {match.raceTo == match.scoreA && (

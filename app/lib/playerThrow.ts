@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { setScore } from "./cuescore";
-import { aggregatePlayerThrow, createPlayerThrow, updateMatchLegs, findLastThrow as findLastThrowData, deletePlayerThrow, findPreviousLegLastThrow, aggregateMatchThrows, findManyPlayerThrows, findThrowsByMatchAndLeg, updateMatchFirstPlayer, decrementMatchLegs } from "./data";
+import { aggregatePlayerThrow, createPlayerThrow, updateMatchLegs, findLastThrow as findLastThrowData, deletePlayerThrow, findPreviousLegLastThrow, aggregateMatchThrows, findManyPlayerThrows, findThrowsByMatchAndLeg, updateMatchFirstPlayer, decrementMatchLegs, refreshMatchLiveState } from "./data";
 import { findMatch } from "./data";
 import prisma from "./db";
 
@@ -25,6 +25,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
             match = await findMatch(matchId, tx);
             match = await updateMatchLegs(matchId, match.playerAId, playerId, match.playerALegs, match.playerBlegs, match.runTo, tx);
         }
+        await refreshMatchLiveState(matchId, table, tx);
     });
     if (closeLeg) {
         await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
@@ -59,6 +60,7 @@ export async function undoThrow(matchId, leg, slow, table) {
         } else {
             await deletePlayerThrow(lastThrow.id, tx)
         }
+        await refreshMatchLiveState(matchId, table, tx);
     });
     if (undoCloseLeg && match) {
         await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);

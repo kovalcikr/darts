@@ -38,6 +38,7 @@ describe('playerThrow', () => {
         expect(data.createPlayerThrow).toHaveBeenCalledWith('t1', 'm1', 1, 'pA', 100, 3, false, tx);
         expect(data.findMatch).not.toHaveBeenCalled();
         expect(data.updateMatchLegs).not.toHaveBeenCalled();
+        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
@@ -66,6 +67,7 @@ describe('playerThrow', () => {
         expect(data.createPlayerThrow).toHaveBeenCalledWith('t1', 'm1', 2, 'pA', 60, 2, true, tx);
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
         expect(data.updateMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pA', 1, 1, 5, tx);
+        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
@@ -114,6 +116,7 @@ describe('playerThrow', () => {
 
         expect(data.createPlayerThrow).not.toHaveBeenCalled();
         expect(data.findMatch).not.toHaveBeenCalled();
+        expect(data.refreshMatchLiveState).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).not.toHaveBeenCalled();
         expect(revalidateTag).not.toHaveBeenCalled();
@@ -127,6 +130,7 @@ describe('playerThrow', () => {
         expect(data.findLastThrow).toHaveBeenCalledWith('m1', 2, undefined, tx);
         expect(data.deletePlayerThrow).toHaveBeenCalledWith('throw-1', tx);
         expect(data.findPreviousLegLastThrow).not.toHaveBeenCalled();
+        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
@@ -156,6 +160,7 @@ describe('playerThrow', () => {
         expect(data.deletePlayerThrow).toHaveBeenCalledWith('throw-prev', tx);
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
         expect(data.decrementMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pB', 1, 2, 5, tx);
+        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
@@ -207,6 +212,7 @@ describe('playerThrow', () => {
         expect(data.updateMatchFirstPlayer).toHaveBeenCalledWith('m1', null, tx);
         expect(data.deletePlayerThrow).not.toHaveBeenCalled();
         expect(data.decrementMatchLegs).not.toHaveBeenCalled();
+        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });

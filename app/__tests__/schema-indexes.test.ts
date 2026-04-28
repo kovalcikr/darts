@@ -15,6 +15,8 @@ function getModelBlock(modelName: string) {
 
 describe('Prisma scoreboard and dashboard indexes', () => {
   const playerThrowModel = getModelBlock('PlayerThrow');
+  const matchModel = getModelBlock('Match');
+  const matchLiveStateModel = getModelBlock('MatchLiveState');
 
   test('keeps the active-leg scoring index for current score aggregation', () => {
     expect(playerThrowModel).toContain('@@index([matchId, leg, playerId])');
@@ -31,5 +33,14 @@ describe('Prisma scoreboard and dashboard indexes', () => {
   test('does not add stats-first indexes to the live scoring table', () => {
     expect(playerThrowModel).not.toContain('@@index([tournamentId, playerId])');
     expect(playerThrowModel).not.toContain('@@index([tournamentId, checkout, score])');
+  });
+
+  test('defines a live match projection for dashboard polling', () => {
+    expect(matchModel).toContain('liveState      MatchLiveState?');
+    expect(matchLiveStateModel).toContain('matchId           String   @id');
+    expect(matchLiveStateModel).toContain('playerAScoreLeft  Int      @default(501)');
+    expect(matchLiveStateModel).toContain('playerBScoreLeft  Int      @default(501)');
+    expect(matchLiveStateModel).toContain('lastThrows        Json     @default("[]")');
+    expect(matchLiveStateModel).toContain('@@index([tournamentId, table])');
   });
 });

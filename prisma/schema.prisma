@@ -35,6 +35,26 @@ model PlayerThrow {
   @@index([matchId, leg, time])
 }
 
+model MatchLiveState {
+  matchId           String   @id
+  tournamentId      String
+  table             String?
+  leg               Int
+  playerAScoreLeft  Int      @default(501)
+  playerBScoreLeft  Int      @default(501)
+  playerATotalScore Int      @default(0)
+  playerBTotalScore Int      @default(0)
+  playerATotalDarts Int      @default(0)
+  playerBTotalDarts Int      @default(0)
+  activePlayerId    String?
+  lastThrows        Json     @default("[]")
+  updatedAt         DateTime @updatedAt
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId, table])
+}
+
 model Match {
   id           String  @id @default(cuid())
   round        String
@@ -52,6 +72,7 @@ model Match {
   tournamentId String?
 
   throwsList     PlayerThrow[]
+  liveState      MatchLiveState?
   tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
 
   @@index([tournamentId, isComplete])
