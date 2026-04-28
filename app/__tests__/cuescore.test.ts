@@ -104,7 +104,7 @@ describe('cuescore', () => {
         const result = await getResults(tournamentId);
 
         expect(result).toEqual(expectedData);
-        expect(mockedAxios.get).toHaveBeenCalledWith('https://api.cuescore.com/tournament/?id=123}&results=Result+list', {
+        expect(mockedAxios.get).toHaveBeenCalledWith('https://api.cuescore.com/tournament/?id=123&results=Result+list', {
             headers: {
                 Cookie: ['test_cookie']
             }
