@@ -1,5 +1,6 @@
 import { getCueScoreProviderName } from '@/app/lib/integrations/cuescore'
 import { getFakeCueScoreSnapshot, resetFakeCueScoreStore } from '@/app/lib/integrations/cuescore/fake'
+import { apiError } from '@/app/api/_lib/responses'
 import { NextRequest, NextResponse } from 'next/server'
 
 function isTestCueScoreApiEnabled() {
@@ -11,7 +12,7 @@ function isTestCueScoreApiEnabled() {
 }
 
 function notFoundResponse() {
-  return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  return apiError('NOT_FOUND', 'Not found', { status: 404 })
 }
 
 export async function GET(request: NextRequest) {
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
 
   const tournamentId = request.nextUrl.searchParams.get('tournamentId')?.trim()
   if (!tournamentId) {
-    return NextResponse.json({ error: 'Missing tournamentId' }, { status: 400 })
+    return apiError('MISSING_TOURNAMENT_ID', 'Missing tournamentId', { status: 400 })
   }
 
   return NextResponse.json(getFakeCueScoreSnapshot(tournamentId))
