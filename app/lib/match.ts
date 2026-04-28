@@ -46,6 +46,9 @@ export async function getFullMatch(matchId, slow) {
     await new Promise(resolve => setTimeout(resolve, 2000));  // TODO: remove
   }
   const match = await getMatch(matchId);
+  if (!match) {
+    return null;
+  }
   const leg = match.playerALegs + match.playerBlegs + 1;
   const scores = await getScores(match.id, leg, match.playerAId, match.playerBId, match.firstPlayer);
   const playerALast = (await findLastThrow(match.id, leg, match.playerAId))?.score;

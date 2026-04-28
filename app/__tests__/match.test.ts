@@ -84,6 +84,21 @@ describe('match', () => {
         expect(fullMatch.playerA.score).toBe(501);
     });
 
+    test('getFullMatch returns null when the match does not exist', async () => {
+        jest.mocked(data.findMatch).mockResolvedValue(null);
+
+        const fullMatch = await match.getFullMatch('missing-match', false);
+
+        expect(fullMatch).toBeNull();
+        expect(data.findThrowsByMatchAndLeg).not.toHaveBeenCalled();
+        expect(findLastThrow).not.toHaveBeenCalled();
+        expect(findMatchAvg).not.toHaveBeenCalled();
+        expect(data.findThrowsByMatch).not.toHaveBeenCalled();
+        expect(data.findHighestScoreInMatch).not.toHaveBeenCalled();
+        expect(data.findBestCheckoutInMatch).not.toHaveBeenCalled();
+        expect(data.findBestLegInMatch).not.toHaveBeenCalled();
+    });
+
     test('createMatch', async () => {
         const matchData = {
             matchId: 'm1',
