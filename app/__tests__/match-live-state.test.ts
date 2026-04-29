@@ -35,6 +35,24 @@ describe('match live state projection', () => {
 
     await refreshMatchLiveState('m1', '11');
 
+    expect(prisma.playerThrow.groupBy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: {
+          undoneAt: null,
+          matchId: 'm1',
+        },
+      }),
+    );
+    expect(prisma.playerThrow.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          undoneAt: null,
+          matchId: 'm1',
+          leg: 1,
+        },
+      }),
+    );
     expect(prisma.matchLiveState.upsert).toHaveBeenCalledWith({
       create: expect.objectContaining({
         matchId: 'm1',

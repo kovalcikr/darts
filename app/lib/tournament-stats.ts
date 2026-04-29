@@ -58,6 +58,7 @@ function averageForMatch(match: MatchAverageRow) {
 function getTournamentThrowWhere(tournamentId: string): Prisma.PlayerThrowWhereInput {
   return {
     tournamentId,
+    undoneAt: null,
   }
 }
 

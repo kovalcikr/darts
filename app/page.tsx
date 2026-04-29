@@ -41,6 +41,7 @@ export default async function Home({
       tournamentId: {
         in: tournaments
       },
+      undoneAt: null,
       score: 180
     }
   })
@@ -53,6 +54,7 @@ export default async function Home({
       tournamentId: {
         in: tournaments
       },
+      undoneAt: null,
       score: {
         gte: 171,
         lt: 180
@@ -71,7 +73,8 @@ export default async function Home({
     where: {
       tournamentId: {
         in: tournaments
-      }
+      },
+      undoneAt: null,
     }
   })
 
@@ -80,7 +83,8 @@ export default async function Home({
     where: {
       tournamentId: {
         in: tournaments
-      }
+      },
+      undoneAt: null,
     },
     _sum: {
       score: true,
@@ -99,7 +103,8 @@ export default async function Home({
     where: {
       tournamentId: {
         in: tournaments
-      }
+      },
+      undoneAt: null,
     },
     _sum: {
       score: true,
@@ -121,7 +126,8 @@ export default async function Home({
       checkout: true,
       tournamentId: {
         in: tournaments
-      }
+      },
+      undoneAt: null,
     },
     orderBy: {
       score: "desc"
@@ -135,6 +141,7 @@ export default async function Home({
       tournamentId: {
         in: tournaments
       },
+      undoneAt: null,
       score: bestCheckoutResult[0].score
     }
   }) : [];

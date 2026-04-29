@@ -7,7 +7,7 @@ export default function GamepadButton({
 
   return (
     <button
-      className={`flex h-full min-h-0 items-center justify-center rounded-lg px-2 py-1 text-[clamp(1.25rem,4dvh,2rem)] font-bold ring-1 transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${color}`}
+      className={`flex h-full min-h-0 w-full min-w-0 items-center justify-center rounded-lg px-2 py-1 text-[clamp(1.25rem,4dvh,2rem)] font-bold ring-1 transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${color}`}
       disabled={disabled}
       onClick={onClick}
       value={name}

@@ -82,7 +82,8 @@ export default async function Player({
     const throws = await prisma.playerThrow.aggregate({
         where: {
             tournamentId: { in: tournamentIds },
-            playerId: id
+            playerId: id,
+            undoneAt: null,
         },
         _count: { id: true },
         _sum: { score: true, darts: true },
@@ -94,6 +95,7 @@ export default async function Player({
         where: {
             playerId: id,
             tournamentId: { in: tournamentIds },
+            undoneAt: null,
             score: { gte: 80 }
         },
         _count: { score: true }
@@ -103,7 +105,8 @@ export default async function Player({
         where: {
             checkout: true,
             playerId: id,
-            tournamentId: { in: tournamentIds }
+            tournamentId: { in: tournamentIds },
+            undoneAt: null,
         },
         orderBy: { score: "desc" }
     })
@@ -112,7 +115,8 @@ export default async function Player({
         by: ["tournamentId", "matchId", "leg"],
         where: {
             playerId: id,
-            tournamentId: { in: tournamentIds }
+            tournamentId: { in: tournamentIds },
+            undoneAt: null,
         },
         _sum: { score: true, darts: true },
         having: { score: { _sum: { equals: 501 } } }
@@ -123,7 +127,8 @@ export default async function Player({
         by: ["tournamentId", "matchId"],
         where: {
             playerId: id,
-            tournamentId: { in: tournamentIds }
+            tournamentId: { in: tournamentIds },
+            undoneAt: null,
         },
         _sum: { score: true, darts: true }
     })

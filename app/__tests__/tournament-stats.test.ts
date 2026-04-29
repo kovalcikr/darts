@@ -57,6 +57,7 @@ describe('tournament stats', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           tournamentId: 't1',
+          undoneAt: null,
         }),
       })
     )
@@ -65,6 +66,7 @@ describe('tournament stats', () => {
       expect.objectContaining({
         where: {
           tournamentId: 't1',
+          undoneAt: null,
         },
       })
     )

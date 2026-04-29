@@ -61,7 +61,7 @@ async function waitForActivePlayer(page: Page, playerId: string) {
 async function enterScore(page: Page, score: number, checkout = false) {
   const scoreInput = page.getByTestId('scoreboard-input');
 
-  await expect(scoreInput).toHaveValue('0');
+  await expect(scoreInput).toHaveText('0');
 
   if (score !== 0) {
     for (const digit of String(score)) {
@@ -77,7 +77,7 @@ async function enterScore(page: Page, score: number, checkout = false) {
     return;
   }
 
-  await expect(scoreInput).toHaveValue('0');
+  await expect(scoreInput).toHaveText('0');
 }
 
 async function playTurn(
@@ -149,6 +149,10 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   await page.getByTestId(`start-player-${playerAId}`).click();
 
   await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'UNDO' })).toBeEnabled();
+  await expect(page.getByTestId('scoreboard-backspace')).toBeEnabled();
+  await expect(page.getByRole('button', { name: '1' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'OK' })).toBeEnabled();
   await waitForActivePlayer(page, playerAId);
 
   await playTurn(page, 180, playerBId);
@@ -159,8 +163,22 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   await waitForActivePlayer(page, playerAId);
   await expectPlayerScore(page, playerAId, 501);
   await expectPlayerScore(page, playerBId, 501);
+  await expect(page.getByTestId('scoreboard-throw-history')).toContainText('180');
+  await expect(page.locator('[data-testid^="scoreboard-history-undone-"]')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'REDO' })).toBeEnabled();
+
+  await page.getByRole('button', { name: 'REDO' }).click();
+  await waitForActivePlayer(page, playerBId);
+  await expectPlayerScore(page, playerAId, 321);
+  await expectPlayerScore(page, playerBId, 501);
+
+  await page.getByRole('button', { name: 'UNDO' }).click();
+  await waitForActivePlayer(page, playerAId);
+  await expectPlayerScore(page, playerAId, 501);
+  await expectPlayerScore(page, playerBId, 501);
 
   await playTurn(page, 180, playerBId);
+  await expect(page.getByRole('button', { name: 'REDO' })).toBeDisabled();
   await playTurn(page, 0, playerAId);
   await playTurn(page, 180, playerBId);
   await playTurn(page, 0, playerAId);
