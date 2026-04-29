@@ -12,6 +12,14 @@ type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "
 
 const getPrismaClient = (tx?: PrismaTransactionClient) => tx || prisma;
 
+type MatchLiveThrow = {
+    playerId: string
+    score: number
+    darts: number
+    checkout: boolean
+    leg: number
+}
+
 export type TournamentUpsertInput = {
     name: string
     season?: number | null
@@ -46,6 +54,22 @@ function getSyncedMatchLegState(match: {
         playerBlegs,
         isComplete: isMatchComplete(runTo, playerALegs, playerBlegs),
     };
+}
+
+function findPlayerGroup<T extends { playerId: string }>(groups: T[], playerId: string) {
+    return groups.find(group => group.playerId === playerId);
+}
+
+function getNextActivePlayer(leg: number, throwCount: number, playerAId: string, playerBId: string, firstPlayer?: string | null) {
+    if (!firstPlayer) {
+        return null;
+    }
+
+    if ((leg + throwCount) % 2 == 1) {
+        return firstPlayer;
+    }
+
+    return firstPlayer == playerAId ? playerBId : playerAId;
 }
 
 export async function upsertTournament(tournamentId: string, tournament: TournamentUpsertInput, tx?: PrismaTransactionClient) {
@@ -225,11 +249,128 @@ export async function findMatch(matchId: string, tx?: PrismaTransactionClient) {
     });
 }
 
+export async function findMatchLiveStates(matchIds: string[], tx?: PrismaTransactionClient) {
+    if (matchIds.length === 0) {
+        return [];
+    }
+
+    const client = getPrismaClient(tx);
+    return client.matchLiveState.findMany({
+        where: {
+            matchId: {
+                in: matchIds,
+            },
+        },
+    });
+}
+
+export async function refreshMatchLiveState(matchId: string, table?: string | null, tx?: PrismaTransactionClient) {
+    const client = getPrismaClient(tx);
+    const match = await client.match.findUnique({
+        where: { id: matchId },
+    });
+
+    if (!match?.tournamentId) {
+        return null;
+    }
+
+    const leg = match.playerALegs + match.playerBlegs + 1;
+    const matchTotals = await client.playerThrow.groupBy({
+        by: ['playerId'],
+        _sum: {
+            score: true,
+            darts: true,
+        },
+        where: {
+            matchId,
+        },
+    });
+    const legTotals = await client.playerThrow.groupBy({
+        by: ['playerId'],
+        _sum: {
+            score: true,
+        },
+        _count: {
+            id: true,
+        },
+        where: {
+            matchId,
+            leg,
+            playerId: {
+                in: [match.playerAId, match.playerBId],
+            },
+        },
+    });
+    const lastThrows = await client.playerThrow.findMany({
+        where: {
+            matchId,
+            leg,
+        },
+        orderBy: {
+            time: 'desc',
+        },
+        take: 6,
+        select: {
+            playerId: true,
+            score: true,
+            darts: true,
+            checkout: true,
+            leg: true,
+        },
+    });
+
+    const playerAMatchTotals = findPlayerGroup(matchTotals, match.playerAId);
+    const playerBMatchTotals = findPlayerGroup(matchTotals, match.playerBId);
+    const playerALegTotals = findPlayerGroup(legTotals, match.playerAId);
+    const playerBLegTotals = findPlayerGroup(legTotals, match.playerBId);
+    const throwCount = (playerALegTotals?._count.id ?? 0) + (playerBLegTotals?._count.id ?? 0);
+    const serializedLastThrows: MatchLiveThrow[] = lastThrows.map(lastThrow => ({
+        playerId: lastThrow.playerId,
+        score: lastThrow.score,
+        darts: lastThrow.darts,
+        checkout: lastThrow.checkout,
+        leg: lastThrow.leg,
+    }));
+
+    return client.matchLiveState.upsert({
+        create: {
+            matchId: match.id,
+            tournamentId: match.tournamentId,
+            table: table ?? null,
+            leg,
+            playerAScoreLeft: 501 - (playerALegTotals?._sum.score ?? 0),
+            playerBScoreLeft: 501 - (playerBLegTotals?._sum.score ?? 0),
+            playerATotalScore: playerAMatchTotals?._sum.score ?? 0,
+            playerBTotalScore: playerBMatchTotals?._sum.score ?? 0,
+            playerATotalDarts: playerAMatchTotals?._sum.darts ?? 0,
+            playerBTotalDarts: playerBMatchTotals?._sum.darts ?? 0,
+            activePlayerId: getNextActivePlayer(leg, throwCount, match.playerAId, match.playerBId, match.firstPlayer),
+            lastThrows: serializedLastThrows,
+        },
+        update: {
+            tournamentId: match.tournamentId,
+            ...(table === undefined ? {} : { table }),
+            leg,
+            playerAScoreLeft: 501 - (playerALegTotals?._sum.score ?? 0),
+            playerBScoreLeft: 501 - (playerBLegTotals?._sum.score ?? 0),
+            playerATotalScore: playerAMatchTotals?._sum.score ?? 0,
+            playerBTotalScore: playerBMatchTotals?._sum.score ?? 0,
+            playerATotalDarts: playerAMatchTotals?._sum.darts ?? 0,
+            playerBTotalDarts: playerBMatchTotals?._sum.darts ?? 0,
+            activePlayerId: getNextActivePlayer(leg, throwCount, match.playerAId, match.playerBId, match.firstPlayer),
+            lastThrows: serializedLastThrows,
+        },
+        where: {
+            matchId: match.id,
+        },
+    });
+}
+
 export async function upsertMatch(match, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     const syncedMatchLegState = getSyncedMatchLegState(match);
 
-    return client.match.upsert({
+    const persistedMatch = await client.match.upsert({
         create: {
             id: String(match.matchId),
             tournamentId: String(match.tournamentId),
@@ -258,22 +399,28 @@ export async function upsertMatch(match, tx?: PrismaTransactionClient) {
             id: String(match.matchId)
         }
     });
+
+    await refreshMatchLiveState(String(match.matchId), match.table?.name ? String(match.table.name) : undefined, tx);
+    return persistedMatch;
 }
 
 export async function updateMatchFirstPlayer(matchId: string, playerId: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
-    return client.match.update({
+    const match = await client.match.update({
         data: {
             firstPlayer: playerId
         }, where: {
             id: matchId
         }
     });
+
+    await refreshMatchLiveState(matchId, undefined, tx);
+    return match;
 }
 
 export async function resetMatchData(matchId: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
-    return client.match.update({
+    const match = await client.match.update({
         data: {
             firstPlayer: null,
             playerALegs: 0,
@@ -288,6 +435,9 @@ export async function resetMatchData(matchId: string, tx?: PrismaTransactionClie
             id: matchId
         }
     });
+
+    await refreshMatchLiveState(matchId, undefined, tx);
+    return match;
 }
 
 export async function findThrowsByMatchAndLeg(matchId: string, leg: number, playerA: string, playerB: string, tx?: PrismaTransactionClient) {
