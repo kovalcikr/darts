@@ -84,6 +84,21 @@ describe('match', () => {
         expect(fullMatch.playerA.score).toBe(501);
     });
 
+    test('getFullMatch returns null when the match does not exist', async () => {
+        jest.mocked(data.findMatch).mockResolvedValue(null);
+
+        const fullMatch = await match.getFullMatch('missing-match', false);
+
+        expect(fullMatch).toBeNull();
+        expect(data.findThrowsByMatchAndLeg).not.toHaveBeenCalled();
+        expect(findLastThrow).not.toHaveBeenCalled();
+        expect(findMatchAvg).not.toHaveBeenCalled();
+        expect(data.findThrowsByMatch).not.toHaveBeenCalled();
+        expect(data.findHighestScoreInMatch).not.toHaveBeenCalled();
+        expect(data.findBestCheckoutInMatch).not.toHaveBeenCalled();
+        expect(data.findBestLegInMatch).not.toHaveBeenCalled();
+    });
+
     test('createMatch', async () => {
         const matchData = {
             matchId: 'm1',
@@ -130,14 +145,14 @@ describe('match', () => {
 
     test('getScores', async () => {
         jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue([
-            { playerId: 'pA', _sum: { score: 100 }, _count: { score: 2 } },
-            { playerId: 'pB', _sum: { score: 50 }, _count: { score: 1 } },
+            { playerId: 'pA', _sum: { score: 100, darts: 5 }, _count: { score: 2 } },
+            { playerId: 'pB', _sum: { score: 50, darts: 2 }, _count: { score: 1 } },
         ] as any);
         const scores = await match.getScores('m1', 1, 'pA', 'pB', 'pA');
         expect(scores.playerA).toBe(401);
         expect(scores.playerB).toBe(451);
-        expect(scores.playerADarts).toBe(6);
-        expect(scores.playerBDarts).toBe(3);
+        expect(scores.playerADarts).toBe(5);
+        expect(scores.playerBDarts).toBe(2);
     });
 
     test('nextPlayer', async () => {

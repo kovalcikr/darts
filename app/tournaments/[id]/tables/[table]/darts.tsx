@@ -6,9 +6,10 @@ import { getFullMatch } from "@/app/lib/match";
 import Winner from "./winner";
 import ChoosePlayer from "./choose-player";
 import PlayerName from "./player-name";
+import Wait from "./wait";
 
 
-export default async function Darts({ table, matchId, slow, reset }: { table: string, matchId: string, slow: boolean, reset: boolean }) {
+export default async function Darts({ table, matchId, slow, reset, tournamentId }: { table: string, matchId: string, slow: boolean, reset: boolean, tournamentId?: string }) {
 
   const fakeMatch = {
     tournament: { id: "10", name: "ABC" },
@@ -34,6 +35,10 @@ export default async function Darts({ table, matchId, slow, reset }: { table: st
     currentLeg: 1,
   };
   const fullMatch = table === "test" ? fakeMatch : await getFullMatch(matchId, slow);
+
+  if (!fullMatch) {
+    return <Wait id={tournamentId ?? ""} table={table} />;
+  }
 
   const match = fullMatch.match;
   const playerAAvg = fullMatch.playerA.matchAvg;

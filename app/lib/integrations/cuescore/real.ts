@@ -54,7 +54,7 @@ export class RealCueScoreGateway implements CueScoreGateway {
 
   async getResults(tournamentId: string): Promise<CueScoreResults> {
     const cookie = await auth()
-    const url = `https://api.cuescore.com/tournament/?id=${tournamentId}}&results=Result+list`
+    const url = `https://api.cuescore.com/tournament/?id=${tournamentId}&results=Result+list`
     const res = await axios.get(url, {
       headers: {
         Cookie: cookie,

@@ -15,5 +15,12 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
   },
-  testPathIgnorePatterns: ['/node_modules/', '/__integration_tests__/'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/__integration_tests__/',
+    '/tests/ui/',
+    '/tests/e2e/',
+    '/playwright-report/',
+    '/test-results/',
+  ],
 };

@@ -14,7 +14,7 @@ export default function TournamentHeader({ tournament, round, format, table, mat
             alt={tournament.name}
             width={48}
             height={48}
-            className="w-12"
+            className="h-12 w-12"
           />
         </div>
         <div className="flex flex-col pl-3">

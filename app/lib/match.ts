@@ -46,6 +46,9 @@ export async function getFullMatch(matchId, slow) {
     await new Promise(resolve => setTimeout(resolve, 2000));  // TODO: remove
   }
   const match = await getMatch(matchId);
+  if (!match) {
+    return null;
+  }
   const leg = match.playerALegs + match.playerBlegs + 1;
   const scores = await getScores(match.id, leg, match.playerAId, match.playerBId, match.firstPlayer);
   const playerALast = (await findLastThrow(match.id, leg, match.playerAId))?.score;
@@ -142,8 +145,8 @@ export async function getScores(matchId: string, leg: number, playerA: string, p
   return {
     playerA: 501 - (playerAScore?._sum.score ? playerAScore?._sum.score : 0),
     playerB: 501 - (playerBScore?._sum.score ? playerBScore?._sum.score : 0),
-    playerADarts: playerAScore?._count.score ? playerAScore._count.score * 3 : 0,
-    playerBDarts: playerBScore?._count.score ? playerBScore._count.score * 3 : 0,
+    playerADarts: playerAScore?._sum.darts ? playerAScore._sum.darts : 0,
+    playerBDarts: playerBScore?._sum.darts ? playerBScore._sum.darts : 0,
     nextPlayer: await nextPlayer(leg, playerAScore?._count.score, playerBScore?._count.score, playerA, playerB, firstPlayer)
   }
 }

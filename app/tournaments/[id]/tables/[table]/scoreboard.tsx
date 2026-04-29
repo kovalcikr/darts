@@ -11,38 +11,43 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
   const [currentScore, setCurrentScore] = useState("0");
   const [disabledOK, setDisabledOK] = useState(false);
   const [dartsCount, setDartsCount] = useState(false);
+  const currentScoreRef = useRef("0");
   const darts3ref = useRef(null);
+
+  function setEnteredScore(score: string) {
+    currentScoreRef.current = score;
+    setCurrentScore(score);
+  }
 
   async function handleUndo() {
     await undoThrow(matchId, leg, slow, table);
-    setCurrentScore("0");
+    setEnteredScore("0");
   }
 
   function handleClr() {
-    setCurrentScore("0");
+    setEnteredScore("0");
   }
 
   function handleNumber(e: any) {
-    const value = (e.target as HTMLInputElement).value;
-    if (Number(currentScore + value) > 180) {
+    const value = (e.currentTarget as HTMLButtonElement).value;
+    const previousScore = currentScoreRef.current;
+    const nextScore = previousScore === "0" ? value : previousScore + value;
+    const numericScore = Number(nextScore);
+
+    if (numericScore > 180) {
       return;
     }
-    const newScore = Number(currentScore + value);
-    if (impossibleScore.includes(newScore)) {
+    if (impossibleScore.includes(numericScore)) {
       return;
     }
-    if (currentPlayerScore - newScore == 1) {
+    if (currentPlayerScore - numericScore == 1) {
       return;
     }
-    if (currentPlayerScore < newScore) {
-      return;
-    }
-    if (currentScore === "0") {
-      setCurrentScore(value);
+    if (currentPlayerScore < numericScore) {
       return;
     }
 
-    setCurrentScore(currentScore + value);
+    setEnteredScore(nextScore);
   }
 
   function handleSubmit(e: any) {
@@ -66,8 +71,8 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
           disabled={disabledOK}
           formAction={async (formData: FormData) => {
             const dartsCount = Number(formData.get('darts'));
-            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), dartsCount, slow, table);
-            setCurrentScore("0")
+            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScoreRef.current), dartsCount, slow, table);
+            setEnteredScore("0")
             darts3ref.current.checked = true;
             setDartsCount(false);
           }}
@@ -93,9 +98,9 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
           name="<"
           color="bg-blue-500"
           onClick={() => {
-            if (currentScore.length != 0) {
-              setCurrentScore(currentScore.substring(0, currentScore.length - 1))
-            }
+            const previousScore = currentScoreRef.current;
+            const nextScore = previousScore.substring(0, previousScore.length - 1);
+            setEnteredScore(nextScore.length === 0 ? "0" : nextScore);
           }}
         />
         {items.map((item) => (
@@ -121,12 +126,14 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
           color="bg-green-500"
           disabled={disabledOK}
           formAction={async () => {
-            if (currentPlayerScore == Number(currentScore)) {
+            const submittedScore = Number(currentScoreRef.current);
+
+            if (currentPlayerScore == submittedScore) {
               setDartsCount(true);
               return;
             }
-            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScore), 3, slow, table);
-            setCurrentScore("0")
+            await addThrowAction(tournamentId, matchId, leg, player, submittedScore, 3, slow, table);
+            setEnteredScore("0")
           }}
         />
       </>

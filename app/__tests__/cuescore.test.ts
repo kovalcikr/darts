@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import axios from 'axios';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import getTournamentInfo, { setScore, finishMatch, getRankings, getResults } from '../lib/cuescore';
 
 jest.mock('axios');
@@ -74,6 +75,9 @@ describe('cuescore', () => {
                 Cookie: ['test_cookie']
             }
         });
+        expect(revalidatePath).toHaveBeenCalledWith('/stats/tournaments/1');
+        expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
+        expect(revalidateTag).toHaveBeenCalledWith('match5', 'max');
     });
 
     test('finishMatch error', async () => {
@@ -104,7 +108,7 @@ describe('cuescore', () => {
         const result = await getResults(tournamentId);
 
         expect(result).toEqual(expectedData);
-        expect(mockedAxios.get).toHaveBeenCalledWith('https://api.cuescore.com/tournament/?id=123}&results=Result+list', {
+        expect(mockedAxios.get).toHaveBeenCalledWith('https://api.cuescore.com/tournament/?id=123&results=Result+list', {
             headers: {
                 Cookie: ['test_cookie']
             }

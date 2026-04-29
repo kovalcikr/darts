@@ -445,7 +445,8 @@ export async function findThrowsByMatchAndLeg(matchId: string, leg: number, play
     return client.playerThrow.groupBy({
         by: ['playerId'],
         _sum: {
-            score: true
+            score: true,
+            darts: true,
         },
         _count: {
             score: true
