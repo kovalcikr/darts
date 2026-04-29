@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { withSeason } from "../lib/season-links";
 import SeasonSelector from "./SeasonSelector";
 
-type StatsSection = "overview" | "players" | "tournaments";
+type StatsSection = "overview" | "players" | "tournaments" | "dashboard";
 
 type StatsPageShellProps = {
   title: ReactNode
@@ -18,6 +18,7 @@ const SECTION_LINKS: Array<{ id: StatsSection; label: string; href: string }> = 
   { id: "overview", label: "Prehľad", href: "/" },
   { id: "players", label: "Hráči", href: "/players" },
   { id: "tournaments", label: "Turnaje", href: "/stats/tournaments" },
+  { id: "dashboard", label: "Dashboard", href: "/dashboard" },
 ];
 
 function linkClasses(active: boolean) {

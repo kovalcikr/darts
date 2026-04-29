@@ -18,6 +18,7 @@ describe('StatsPageShell', () => {
     expect(html).toContain('href="/?season=2025"')
     expect(html).toContain('href="/players?season=2025"')
     expect(html).toContain('href="/stats/tournaments?season=2025"')
+    expect(html).toContain('href="/dashboard?season=2025"')
     expect(html).toContain('data-season-selector="true"')
   })
 
