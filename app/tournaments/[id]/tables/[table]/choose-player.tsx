@@ -7,7 +7,7 @@ import { useFormStatus } from "react-dom";
 export default function ChoosePlayer({ match, table }: { match: Match, table: string }) {
 
     return (
-        <div className="flex flex-col text-center text-gray-800 font-bold">
+        <div className="flex flex-col text-center font-bold text-white">
             <div className="text-3xl">
                 First to play:
             </div>
@@ -49,9 +49,9 @@ function Player({ playerId, image, name }) {
             data-testid={`start-player-${playerId}`}
         >
             <div className="flex flex-col">
-                <div className={`p-4 m-6 border-slate-400 border-2 bg-blue-300 rounded shadow ${pending && "bg-slate-200"}`}>
+                <div className={`m-6 rounded-lg bg-gray-800/50 p-4 ring-1 ring-white/10 transition hover:bg-gray-800 hover:ring-sky-500/40 ${pending ? "opacity-60" : ""}`}>
                     <div className="flex items-center justify-center flex-row basis-1/2">
-                        <img src={image} alt={name} width={56} height={56} className="w-14 " />
+                        <img src={image} alt={name} width={56} height={56} className="w-14 rounded-full ring-1 ring-white/10" />
                         <div className={"flex items-center justify-center text-center p-2 text-3xl"}>
                             {name}
                         </div>

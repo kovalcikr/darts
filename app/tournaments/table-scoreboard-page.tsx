@@ -32,7 +32,7 @@ export default async function TableScoreboardPage({
   }
 
   return (
-    <Suspense fallback={<div className="flex h-dvh bg-slate-300 text-center text-2xl text-blue-700"><div className="m-auto">Loading...</div></div>}>
+    <Suspense fallback={<div className="flex h-dvh bg-gray-900 text-center text-2xl text-sky-300"><div className="m-auto">Loading...</div></div>}>
       <Darts table={table} matchId={match.id} slow={slow} reset={reset} tournamentId={tournamentId} />
     </Suspense>
   )

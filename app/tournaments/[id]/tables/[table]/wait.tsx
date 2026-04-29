@@ -16,15 +16,15 @@ export default function Wait({ id, table }) {
   }, [reloadHref, router])
 
   return (
-    <div className="flex flex-col h-dvh bg-slate-300 align-middle text-center text-2xl text-blue-700">
-      <div className="flex-col m-auto">
-        <div className="text-black">Waiting for match to start...</div>
+    <div className="flex h-dvh flex-col bg-gray-900 text-center text-2xl text-sky-300">
+      <div className="m-auto flex-col rounded-lg bg-gray-800/50 p-6 ring-1 ring-white/10">
+        <div className="text-white">Waiting for match to start...</div>
         <div>
-          <a href={reloadHref} >Reload</a>
+          <a className="text-sm font-semibold text-sky-300 hover:text-sky-200" href={reloadHref}>Reload</a>
         </div>
       </div>
       <div>
-          <a className="text-red-400" href={`/tables`} >Exit Tournament</a>
+          <a className="text-sm font-semibold text-gray-400 hover:text-sky-300" href={`/tables`}>Exit Tournament</a>
         </div>
     </div>
   )
