@@ -1,10 +1,14 @@
 import prisma from '@/app/lib/db'
+import { getActiveTournament } from '@/app/lib/active-tournament'
 import { formatTournamentEventDate } from '@/app/lib/tournament-metadata'
 import type { PageSearchParams } from '@/app/lib/next-types'
 import {
+  clearActiveTournamentAction,
+  createActiveTournamentAction,
   deleteTournamentAction,
   loginAdminAction,
   logoutAdminAction,
+  setActiveTournamentAction,
   toggleTournamentGlobalStatsAction,
   updateTournamentAction,
 } from './actions'
@@ -130,7 +134,7 @@ export default async function AdminPage({
       }
     : undefined
 
-  const [tournaments, throwCountsByTournament] = await Promise.all([
+  const [tournaments, throwCountsByTournament, activeTournament] = await Promise.all([
     prisma.tournament.findMany({
       where: tournamentWhere,
       include: {
@@ -146,11 +150,13 @@ export default async function AdminPage({
         id: true,
       },
     }),
+    getActiveTournament(),
   ])
 
   const throwCountMap = new Map<string, number>(
     throwCountsByTournament.map((item) => [item.tournamentId, item._count.id])
   )
+  const activeTournamentId = activeTournament?.id ?? null
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
@@ -176,10 +182,16 @@ export default async function AdminPage({
             </form>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-5">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-400">Tournaments</div>
               <div className="mt-2 text-3xl font-semibold text-white">{tournaments.length}</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-5">
+              <div className="text-xs uppercase tracking-[0.25em] text-slate-400">Active</div>
+              <div className="mt-2 truncate text-sm font-semibold text-white">
+                {activeTournament?.name ?? 'Not selected'}
+              </div>
             </div>
             <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-5">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-400">Filter</div>
@@ -190,6 +202,48 @@ export default async function AdminPage({
 
         {notice ? <MessageBanner message={notice} tone="notice" /> : null}
         {error ? <MessageBanner message={error} tone="error" /> : null}
+
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Active Tournament</h2>
+              {activeTournament ? (
+                <div className="mt-3 space-y-1 text-sm text-slate-300">
+                  <p className="font-semibold text-cyan-100">{activeTournament.name}</p>
+                  <p className="text-slate-400">ID: {activeTournament.id}</p>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-slate-400">
+                  No active tournament is selected for fixed table and dashboard URLs.
+                </p>
+              )}
+              <div className="mt-5 flex flex-wrap gap-3">
+                <ActionLink href="/dashboard" tone="primary">
+                  Open Dashboard
+                </ActionLink>
+                {activeTournament ? (
+                  <ActionLink href="/tables">
+                    Open Tables
+                  </ActionLink>
+                ) : null}
+                {activeTournament ? (
+                  <form action={clearActiveTournamentAction}>
+                    <input name="returnTo" type="hidden" value={returnTo} />
+                    <ActionButton tone="muted">Clear Active</ActionButton>
+                  </form>
+                ) : null}
+              </div>
+            </div>
+
+            <form action={createActiveTournamentAction} className="grid w-full gap-4 lg:max-w-md">
+              <input name="returnTo" type="hidden" value={returnTo} />
+              <TextField label="Tournament ID" name="tournamentId" required />
+              <div>
+                <ActionButton>Create and Set Active</ActionButton>
+              </div>
+            </form>
+          </div>
+        </section>
 
         <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6">
           <form className="grid gap-4 md:grid-cols-[1fr_auto_auto] md:items-end">
@@ -213,14 +267,28 @@ export default async function AdminPage({
             <EmptyState>No tournaments matched the current filter.</EmptyState>
           ) : null}
 
-          {tournaments.map((tournament) => (
+          {tournaments.map((tournament) => {
+            const isActiveTournament = tournament.id === activeTournamentId
+
+            return (
             <article
-              className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5"
+              className={`rounded-2xl border p-5 ${
+                isActiveTournament
+                  ? 'border-cyan-400/60 bg-cyan-400/10'
+                  : 'border-slate-800 bg-slate-950/60'
+              }`}
               key={tournament.id}
             >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{tournament.name}</h3>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="text-lg font-semibold text-white">{tournament.name}</h3>
+                    {isActiveTournament ? (
+                      <span className="rounded-full border border-cyan-400/50 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100">
+                        Active
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="mt-1 text-sm text-slate-400">ID: {tournament.id}</p>
                   <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-400">
                     <span>Season: {tournament.season ?? 'unknown'}</span>
@@ -237,6 +305,13 @@ export default async function AdminPage({
                   <ActionLink href={`/admin/tournaments/${encodeURIComponent(tournament.id)}`} tone="primary">
                     View Matches
                   </ActionLink>
+                  {!isActiveTournament ? (
+                    <form action={setActiveTournamentAction}>
+                      <input name="returnTo" type="hidden" value={returnTo} />
+                      <input name="tournamentId" type="hidden" value={tournament.id} />
+                      <ActionButton tone="muted">Set Active</ActionButton>
+                    </form>
+                  ) : null}
                   <form action={toggleTournamentGlobalStatsAction}>
                     <input name="returnTo" type="hidden" value={returnTo} />
                     <input name="id" type="hidden" value={tournament.id} />
@@ -282,7 +357,7 @@ export default async function AdminPage({
                 </EditDisclosure>
               </div>
             </article>
-          ))}
+          )})}
         </SectionShell>
       </div>
     </main>

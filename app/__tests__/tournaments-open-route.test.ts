@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { POST } from '../tournaments/open/route'
-import { openTournament } from '../lib/tournament'
+import { openActiveTournament } from '../lib/tournament'
 
 jest.mock('../lib/tournament', () => ({
-  openTournament: jest.fn(),
+  openActiveTournament: jest.fn(),
 }))
 
 function buildRequest(formValues: Record<string, string>) {
@@ -21,20 +21,20 @@ describe('/tournaments/open route', () => {
     jest.clearAllMocks()
   })
 
-  test('redirects to the opened tournament after a successful POST', async () => {
-    jest.mocked(openTournament).mockResolvedValue(undefined)
+  test('sets the opened tournament active and redirects to fixed tables after a successful POST', async () => {
+    jest.mocked(openActiveTournament).mockResolvedValue(undefined)
 
     const response = await POST(buildRequest({ tournamentId: 'abc' }))
 
-    expect(openTournament).toHaveBeenCalledWith('abc')
+    expect(openActiveTournament).toHaveBeenCalledWith('abc')
     expect(response.status).toBe(303)
-    expect(response.headers.get('location')).toBe('http://localhost:3000/tournaments/abc')
+    expect(response.headers.get('location')).toBe('http://localhost:3000/tables')
   })
 
   test('redirects back with an error when tournament id is missing', async () => {
     const response = await POST(buildRequest({ tournamentId: '   ' }))
 
-    expect(openTournament).not.toHaveBeenCalled()
+    expect(openActiveTournament).not.toHaveBeenCalled()
     expect(response.status).toBe(303)
     expect(response.headers.get('location')).toBe(
       'http://localhost:3000/tournaments?error=Missing%20tournament%20ID'

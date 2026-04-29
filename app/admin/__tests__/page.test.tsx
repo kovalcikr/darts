@@ -4,11 +4,16 @@ import { mockDeep, mockReset, DeepMockProxy } from 'jest-mock-extended'
 import { renderToStaticMarkup } from 'react-dom/server'
 import prisma from '@/app/lib/db'
 import AdminPage from '../page'
+import { getActiveTournament } from '@/app/lib/active-tournament'
 import * as auth from '../auth'
 
 jest.mock('@/app/lib/db', () => ({
   __esModule: true,
   default: mockDeep<PrismaClient>(),
+}))
+
+jest.mock('@/app/lib/active-tournament', () => ({
+  getActiveTournament: jest.fn(),
 }))
 
 jest.mock('../auth', () => ({
@@ -19,11 +24,14 @@ jest.mock('../auth', () => ({
 }))
 
 jest.mock('../actions', () => ({
+  clearActiveTournamentAction: jest.fn(),
+  createActiveTournamentAction: jest.fn(),
   deleteMatchAction: jest.fn(),
   deleteThrowAction: jest.fn(),
   deleteTournamentAction: jest.fn(),
   loginAdminAction: jest.fn(),
   logoutAdminAction: jest.fn(),
+  setActiveTournamentAction: jest.fn(),
   toggleTournamentGlobalStatsAction: jest.fn(),
   updateMatchAction: jest.fn(),
   updateThrowAction: jest.fn(),
@@ -36,6 +44,7 @@ describe('admin page', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockReset(prismaMock)
+    jest.mocked(getActiveTournament).mockResolvedValue(null)
   })
 
   test('renders login view when unauthenticated', async () => {
@@ -74,6 +83,13 @@ describe('admin page', () => {
         _count: { id: 8 },
       },
     ] as never)
+    jest.mocked(getActiveTournament).mockResolvedValue({
+      id: 't1',
+      name: 'Relax Darts CUP 01 2026',
+      season: 2026,
+      eventDate: new Date('2026-04-23T00:00:00.000Z'),
+      includeInGlobalStats: false,
+    } as never)
 
     const element = await AdminPage({
       searchParams: Promise.resolve({
@@ -85,11 +101,17 @@ describe('admin page', () => {
     const html = renderToStaticMarkup(element)
 
     expect(html).toContain('Relax Darts CUP 01 2026')
+    expect(html).toContain('Active Tournament')
+    expect(html).toContain('Create and Set Active')
+    expect(html).toContain('Clear Active')
+    expect(html).toContain('href="/tables"')
+    expect(html).not.toContain('href="/tournaments/t1"')
     expect(html).toContain('Season: 2026')
     expect(html).toContain('Date:')
     expect(html).toContain('Excluded from global stats')
     expect(html).toContain('Include to stats')
     expect(html).toContain('View Matches')
+    expect(html).toContain('Active')
     expect(html).toContain('Delete Tournament')
     expect(html).toContain('Saved')
     expect(html).toContain('Relax')

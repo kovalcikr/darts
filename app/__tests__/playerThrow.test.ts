@@ -40,7 +40,7 @@ describe('playerThrow', () => {
         expect(data.updateMatchLegs).not.toHaveBeenCalled();
         expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
+        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
@@ -105,7 +105,7 @@ describe('playerThrow', () => {
         releaseSetScore!();
         await actionPromise;
 
-        expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
+        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
@@ -132,7 +132,7 @@ describe('playerThrow', () => {
         expect(data.findPreviousLegLastThrow).not.toHaveBeenCalled();
         expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
+        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
@@ -199,7 +199,7 @@ describe('playerThrow', () => {
         releaseSetScore!();
         await actionPromise;
 
-        expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
+        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 

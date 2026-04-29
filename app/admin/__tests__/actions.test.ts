@@ -3,17 +3,26 @@ import type { PrismaClient } from '@/prisma/client'
 import { DeepMockProxy, mockDeep, mockReset } from 'jest-mock-extended'
 import prisma from '@/app/lib/db'
 import {
+  clearActiveTournamentAction,
+  createActiveTournamentAction,
   createThrowAction,
   deleteMatchAction,
   deleteThrowAction,
   deleteTournamentAction,
   loginAdminAction,
   logoutAdminAction,
+  setActiveTournamentAction,
   toggleTournamentGlobalStatsAction,
   updateMatchAction,
   updateThrowAction,
   updateTournamentAction,
 } from '../actions'
+import {
+  clearActiveTournament,
+  clearActiveTournamentIfMatches,
+  setActiveTournament,
+} from '@/app/lib/active-tournament'
+import { openActiveTournament } from '@/app/lib/tournament'
 import * as auth from '../auth'
 
 const mockRedirect = jest.fn<(url: string) => never>()
@@ -23,6 +32,16 @@ const mockCookies = jest.fn()
 jest.mock('@/app/lib/db', () => ({
   __esModule: true,
   default: mockDeep<PrismaClient>(),
+}))
+
+jest.mock('@/app/lib/active-tournament', () => ({
+  clearActiveTournament: jest.fn(),
+  clearActiveTournamentIfMatches: jest.fn(),
+  setActiveTournament: jest.fn(),
+}))
+
+jest.mock('@/app/lib/tournament', () => ({
+  openActiveTournament: jest.fn(),
 }))
 
 jest.mock('next/cache', () => ({
@@ -145,6 +164,54 @@ describe('admin actions', () => {
     expect(del).toHaveBeenCalledWith('darts-admin-session')
   })
 
+  test('creates a tournament and sets it active from admin', async () => {
+    jest.mocked(openActiveTournament).mockResolvedValue(undefined)
+
+    const formData = buildFormData({
+      tournamentId: 't1',
+      returnTo: '/admin?q=t1',
+    })
+
+    await expectRedirect(
+      () => createActiveTournamentAction(formData),
+      '/admin?q=t1&notice=Tournament+created+and+set+active.'
+    )
+
+    expect(openActiveTournament).toHaveBeenCalledWith('t1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/dashboard')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/tables')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page')
+  })
+
+  test('sets an existing tournament active from admin', async () => {
+    jest.mocked(setActiveTournament).mockResolvedValue(undefined)
+
+    const formData = buildFormData({
+      tournamentId: 't1',
+      returnTo: '/admin',
+    })
+
+    await expectRedirect(() => setActiveTournamentAction(formData), '/admin?notice=Active+tournament+updated.')
+
+    expect(setActiveTournament).toHaveBeenCalledWith('t1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/dashboard')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page')
+  })
+
+  test('clears the active tournament from admin', async () => {
+    jest.mocked(clearActiveTournament).mockResolvedValue(undefined)
+
+    const formData = buildFormData({
+      returnTo: '/admin',
+    })
+
+    await expectRedirect(() => clearActiveTournamentAction(formData), '/admin?notice=Active+tournament+cleared.')
+
+    expect(clearActiveTournament).toHaveBeenCalled()
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/dashboard')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page')
+  })
+
   test('updates tournament and revalidates related pages', async () => {
     prismaMock.tournament.update.mockResolvedValue({ id: 't1', name: 'Updated Cup' } as never)
 
@@ -169,7 +236,7 @@ describe('admin actions', () => {
       },
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin')
-    expect(mockRevalidatePath).toHaveBeenCalledWith('/tournaments/t1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/stats/tournaments/t1')
   })
 
   test('deletes tournament with dependent records in a transaction', async () => {
@@ -200,6 +267,8 @@ describe('admin actions', () => {
     expect(prismaMock.tournament.delete).toHaveBeenCalledWith({
       where: { id: 't1' },
     })
+    expect(clearActiveTournamentIfMatches).toHaveBeenCalledWith('t1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/dashboard')
   })
 
   test('toggles tournament inclusion in global stats', async () => {
@@ -258,8 +327,8 @@ describe('admin actions', () => {
         firstPlayer: 'p1',
       }),
     })
-    expect(mockRevalidatePath).toHaveBeenCalledWith('/tournaments/t1')
-    expect(mockRevalidatePath).toHaveBeenCalledWith('/tournaments/t2')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/stats/tournaments/t1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/stats/tournaments/t2')
   })
 
   test('deletes match', async () => {

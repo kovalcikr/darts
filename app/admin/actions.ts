@@ -4,8 +4,14 @@ import type { Prisma } from '@/prisma/client'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import {
+  clearActiveTournament,
+  clearActiveTournamentIfMatches,
+  setActiveTournament,
+} from '@/app/lib/active-tournament'
 import prisma from '@/app/lib/db'
 import { isMatchComplete } from '@/app/lib/data'
+import { openActiveTournament } from '@/app/lib/tournament'
 import {
   ADMIN_PASSWORD_ENV,
   ADMIN_SESSION_COOKIE,
@@ -154,11 +160,15 @@ function revalidateTournamentPaths(tournamentIds: Array<string | null | undefine
   )
 
   for (const tournamentId of uniqueTournamentIds) {
-    revalidatePath(`/tournaments/${tournamentId}`)
     revalidatePath(`/stats/tournaments/${tournamentId}`)
     revalidatePath(`/stats/tournaments/${tournamentId}/cache`)
-    revalidatePath(`/dashboard/tournament/${tournamentId}`)
   }
+}
+
+function revalidateActiveTournamentPaths() {
+  revalidatePath('/tables')
+  revalidatePath('/dashboard')
+  revalidatePath('/tables/[table]', 'page')
 }
 
 const THROW_TIME_STEP_MS = 1_000
@@ -292,6 +302,62 @@ export async function logoutAdminAction(formData: FormData) {
   redirectWithNotice(returnTo, 'Logged out.')
 }
 
+export async function createActiveTournamentAction(formData: FormData) {
+  const returnTo = getReturnTo(formData)
+  await requireAdminSession(returnTo)
+
+  try {
+    const tournamentId = requireString(formData, 'tournamentId')
+
+    await openActiveTournament(tournamentId)
+
+    revalidateSharedPaths()
+    revalidateAdminPaths([], [tournamentId])
+    revalidateTournamentPaths([tournamentId])
+    revalidateActiveTournamentPaths()
+  } catch (error) {
+    redirectWithError(returnTo, getErrorMessage(error))
+  }
+
+  redirectWithNotice(returnTo, 'Tournament created and set active.')
+}
+
+export async function setActiveTournamentAction(formData: FormData) {
+  const returnTo = getReturnTo(formData)
+  await requireAdminSession(returnTo)
+
+  try {
+    const tournamentId = requireString(formData, 'tournamentId')
+
+    await setActiveTournament(tournamentId)
+
+    revalidateSharedPaths()
+    revalidateAdminPaths([], [tournamentId])
+    revalidateTournamentPaths([tournamentId])
+    revalidateActiveTournamentPaths()
+  } catch (error) {
+    redirectWithError(returnTo, getErrorMessage(error))
+  }
+
+  redirectWithNotice(returnTo, 'Active tournament updated.')
+}
+
+export async function clearActiveTournamentAction(formData: FormData) {
+  const returnTo = getReturnTo(formData)
+  await requireAdminSession(returnTo)
+
+  try {
+    await clearActiveTournament()
+
+    revalidateSharedPaths()
+    revalidateActiveTournamentPaths()
+  } catch (error) {
+    redirectWithError(returnTo, getErrorMessage(error))
+  }
+
+  redirectWithNotice(returnTo, 'Active tournament cleared.')
+}
+
 export async function updateTournamentAction(formData: FormData) {
   const returnTo = getReturnTo(formData)
   await requireAdminSession(returnTo)
@@ -379,10 +445,12 @@ export async function deleteTournamentAction(formData: FormData) {
         where: { id },
       }),
     ])
+    await clearActiveTournamentIfMatches(id)
 
     revalidateSharedPaths()
     revalidateAdminPaths([], [id])
     revalidateTournamentPaths([id])
+    revalidateActiveTournamentPaths()
   } catch (error) {
     redirectWithError(returnTo, getErrorMessage(error))
   }
