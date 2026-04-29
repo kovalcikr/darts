@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GamepadButton from "./gamepad-button";
 import { addThrowAction, undoThrow } from "@/app/lib/playerThrow";
 import GamepadServerButton from "./gamepad-server-button";
@@ -11,8 +11,13 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
   const [currentScore, setCurrentScore] = useState("0");
   const [disabledOK, setDisabledOK] = useState(false);
   const [dartsCount, setDartsCount] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const currentScoreRef = useRef("0");
   const darts3ref = useRef(null);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   function setEnteredScore(score: string) {
     currentScoreRef.current = score;
@@ -68,7 +73,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
       <GamepadServerButton
           name="OK"
           color="bg-green-500 h-20 w-64"
-          disabled={disabledOK}
+          disabled={!hydrated || disabledOK}
           formAction={async (formData: FormData) => {
             const dartsCount = Number(formData.get('darts'));
             await addThrowAction(tournamentId, matchId, leg, player, Number(currentScoreRef.current), dartsCount, slow, table);
@@ -88,6 +93,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
         <GamepadServerButton
           name="UNDO"
           color="bg-purple-400"
+          disabled={!hydrated}
           formAction={handleUndo}
         />
         <input type="text" data-testid="scoreboard-input" disabled required value={Number(currentScore)} onChange={e => {
@@ -97,6 +103,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
         <GamepadButton
           name="<"
           color="bg-blue-500"
+          disabled={!hydrated}
           onClick={() => {
             const previousScore = currentScoreRef.current;
             const nextScore = previousScore.substring(0, previousScore.length - 1);
@@ -108,23 +115,26 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
             key={item}
             name={String(item)}
             color="bg-blue-600"
+            disabled={!hydrated}
             onClick={handleNumber}
           />
         ))}
         <GamepadButton
           name="CLR"
           color="bg-red-400"
+          disabled={!hydrated}
           onClick={handleClr}
         />
         <GamepadButton
           name="0"
           color="bg-blue-600"
+          disabled={!hydrated}
           onClick={handleNumber}
         />
         <GamepadServerButton
           name="OK"
           color="bg-green-500"
-          disabled={disabledOK}
+          disabled={!hydrated || disabledOK}
           formAction={async () => {
             const submittedScore = Number(currentScoreRef.current);
 
