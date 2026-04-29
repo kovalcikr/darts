@@ -146,6 +146,9 @@ export default async function AdminPage({
     }),
     prisma.playerThrow.groupBy({
       by: ['tournamentId'],
+      where: {
+        undoneAt: null,
+      },
       _count: {
         id: true,
       },

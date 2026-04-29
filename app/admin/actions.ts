@@ -556,6 +556,7 @@ export async function createThrowAction(formData: FormData) {
         where: {
           matchId,
           leg,
+          undoneAt: null,
         },
         select: {
           id: true,

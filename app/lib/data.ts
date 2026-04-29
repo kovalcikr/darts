@@ -20,6 +20,17 @@ type MatchLiveThrow = {
     leg: number
 }
 
+export type ScoreboardThrowHistoryItem = {
+    id: string
+    playerId: string
+    score: number
+    darts: number
+    checkout: boolean
+    leg: number
+    status: 'active' | 'undone'
+    activityTime: Date
+}
+
 export type TournamentUpsertInput = {
     name: string
     season?: number | null
@@ -72,6 +83,12 @@ function getNextActivePlayer(leg: number, throwCount: number, playerAId: string,
     return firstPlayer == playerAId ? playerBId : playerAId;
 }
 
+function activeThrowWhere(): Prisma.PlayerThrowWhereInput {
+    return {
+        undoneAt: null,
+    };
+}
+
 export async function upsertTournament(tournamentId: string, tournament: TournamentUpsertInput, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     const eventDate =
@@ -110,6 +127,7 @@ export async function findHighestScoreInMatch(matchId: string, playerId: string,
             score: true,
         },
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
             playerId: playerId,
         },
@@ -124,6 +142,7 @@ export async function findBestCheckoutInMatch(matchId: string, playerId: string,
             score: true,
         },
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
             playerId: playerId,
             checkout: true,
@@ -136,6 +155,7 @@ export async function findBestLegInMatch(matchId: string, playerId: string, tx?:
     const client = getPrismaClient(tx);
     const wonLegs = await client.playerThrow.findMany({
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
             playerId: playerId,
             checkout: true,
@@ -156,6 +176,7 @@ export async function findBestLegInMatch(matchId: string, playerId: string, tx?:
             darts: true,
         },
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
             playerId: playerId,
             leg: {
@@ -175,6 +196,7 @@ export async function findThrowsByMatch(matchId: string, tx?: PrismaTransactionC
     const client = getPrismaClient(tx);
     return client.playerThrow.findMany({
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
         },
         orderBy: {
@@ -282,6 +304,7 @@ export async function refreshMatchLiveState(matchId: string, table?: string | nu
             darts: true,
         },
         where: {
+            ...activeThrowWhere(),
             matchId,
         },
     });
@@ -294,6 +317,7 @@ export async function refreshMatchLiveState(matchId: string, table?: string | nu
             id: true,
         },
         where: {
+            ...activeThrowWhere(),
             matchId,
             leg,
             playerId: {
@@ -303,6 +327,7 @@ export async function refreshMatchLiveState(matchId: string, table?: string | nu
     });
     const lastThrows = await client.playerThrow.findMany({
         where: {
+            ...activeThrowWhere(),
             matchId,
             leg,
         },
@@ -452,6 +477,7 @@ export async function findThrowsByMatchAndLeg(matchId: string, leg: number, play
             score: true
         },
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
             leg: leg,
             playerId: {
@@ -468,6 +494,7 @@ export async function aggregatePlayerThrow(matchId: string, leg: number, playerI
             score: true
         },
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
             leg: leg,
             playerId: playerId
@@ -487,6 +514,22 @@ export async function createPlayerThrow(tournamentId: string, matchId: string, l
             darts: dartsCount,
             checkout: checkout
         }
+    });
+}
+
+export async function invalidateRedoableThrows(matchId: string, tx?: PrismaTransactionClient) {
+    const client = getPrismaClient(tx);
+    return client.playerThrow.updateMany({
+        where: {
+            matchId,
+            undoneAt: {
+                not: null,
+            },
+            redoInvalidatedAt: null,
+        },
+        data: {
+            redoInvalidatedAt: new Date(),
+        },
     });
 }
 
@@ -528,6 +571,7 @@ export async function findLastThrow(matchId: string, leg: number, playerId?: str
     const client = getPrismaClient(tx);
     return client.playerThrow.findFirst({
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
             leg: leg,
             playerId: playerId
@@ -535,6 +579,19 @@ export async function findLastThrow(matchId: string, leg: number, playerId?: str
         orderBy: {
             time: 'desc'
         }
+    });
+}
+
+export async function markPlayerThrowUndone(id: string, tx?: PrismaTransactionClient) {
+    const client = getPrismaClient(tx);
+    return client.playerThrow.update({
+        where: {
+            id,
+        },
+        data: {
+            undoneAt: new Date(),
+            redoInvalidatedAt: null,
+        },
     });
 }
 
@@ -551,6 +608,7 @@ export async function findPreviousLegLastThrow(matchId: string, leg: number, tx?
     const client = getPrismaClient(tx);
     return client.playerThrow.findFirst({
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
             leg: leg - 1,
         },
@@ -568,6 +626,7 @@ export async function aggregateMatchThrows(matchId: string, playerId: string, tx
             darts: true,
         },
         where: {
+            ...activeThrowWhere(),
             matchId: matchId,
             playerId: playerId
         },
@@ -578,6 +637,7 @@ export async function findManyPlayerThrows(tournamentId: string, matchId: string
     const client = getPrismaClient(tx);
     return client.playerThrow.findMany({
         where: {
+            ...activeThrowWhere(),
             tournamentId: tournamentId,
             matchId: matchId,
             leg: leg
@@ -587,6 +647,119 @@ export async function findManyPlayerThrows(tournamentId: string, matchId: string
         },
         take: 6
     });
+}
+
+export async function findRedoableThrow(matchId: string, tx?: PrismaTransactionClient) {
+    const client = getPrismaClient(tx);
+    return client.playerThrow.findFirst({
+        where: {
+            matchId,
+            undoneAt: {
+                not: null,
+            },
+            redoInvalidatedAt: null,
+        },
+        orderBy: [
+            {
+                undoneAt: 'desc',
+            },
+            {
+                time: 'desc',
+            },
+        ],
+    });
+}
+
+export async function restorePlayerThrow(id: string, tx?: PrismaTransactionClient) {
+    const client = getPrismaClient(tx);
+    return client.playerThrow.update({
+        where: {
+            id,
+        },
+        data: {
+            undoneAt: null,
+            redoInvalidatedAt: null,
+        },
+    });
+}
+
+export async function findScoreboardThrowHistory(matchId: string, limit = 6, tx?: PrismaTransactionClient): Promise<ScoreboardThrowHistoryItem[]> {
+    const client = getPrismaClient(tx);
+    const [activeThrows, undoneThrows] = await Promise.all([
+        client.playerThrow.findMany({
+            where: {
+                ...activeThrowWhere(),
+                matchId,
+            },
+            orderBy: [
+                {
+                    time: 'desc',
+                },
+            ],
+            take: limit,
+            select: {
+                id: true,
+                playerId: true,
+                score: true,
+                darts: true,
+                checkout: true,
+                leg: true,
+                time: true,
+            },
+        }),
+        client.playerThrow.findMany({
+            where: {
+                matchId,
+                undoneAt: {
+                    not: null,
+                },
+                redoInvalidatedAt: null,
+            },
+            orderBy: [
+                {
+                    undoneAt: 'desc',
+                },
+                {
+                    time: 'desc',
+                },
+            ],
+            take: limit,
+            select: {
+                id: true,
+                playerId: true,
+                score: true,
+                darts: true,
+                checkout: true,
+                leg: true,
+                undoneAt: true,
+            },
+        }),
+    ]);
+
+    return [
+        ...activeThrows.map(playerThrow => ({
+            id: playerThrow.id,
+            playerId: playerThrow.playerId,
+            score: playerThrow.score,
+            darts: playerThrow.darts,
+            checkout: playerThrow.checkout,
+            leg: playerThrow.leg,
+            status: 'active' as const,
+            activityTime: playerThrow.time,
+        })),
+        ...undoneThrows.map(playerThrow => ({
+            id: playerThrow.id,
+            playerId: playerThrow.playerId,
+            score: playerThrow.score,
+            darts: playerThrow.darts,
+            checkout: playerThrow.checkout,
+            leg: playerThrow.leg,
+            status: 'undone' as const,
+            activityTime: playerThrow.undoneAt ?? new Date(0),
+        })),
+    ]
+        .sort((a, b) => b.activityTime.getTime() - a.activityTime.getTime())
+        .slice(0, limit);
 }
 
 export async function findPlayersByTournament(tournaments: string[], tx?: PrismaTransactionClient) {

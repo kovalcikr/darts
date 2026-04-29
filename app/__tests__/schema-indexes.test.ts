@@ -31,23 +31,27 @@ describe('Prisma scoreboard and dashboard indexes', () => {
     expect(playerThrowModel).toContain('@@index([matchId, leg, time])');
   });
 
+  test('indexes reversible undo lookups by match and undo state', () => {
+    expect(playerThrowModel).toContain('@@index([matchId, undoneAt])');
+  });
+
   test('does not add stats-first indexes to the live scoring table', () => {
     expect(playerThrowModel).not.toContain('@@index([tournamentId, playerId])');
     expect(playerThrowModel).not.toContain('@@index([tournamentId, checkout, score])');
   });
 
   test('defines a live match projection for dashboard polling', () => {
-    expect(matchModel).toContain('liveState      MatchLiveState?');
-    expect(matchLiveStateModel).toContain('matchId           String   @id');
-    expect(matchLiveStateModel).toContain('playerAScoreLeft  Int      @default(501)');
-    expect(matchLiveStateModel).toContain('playerBScoreLeft  Int      @default(501)');
-    expect(matchLiveStateModel).toContain('lastThrows        Json     @default("[]")');
+    expect(matchModel).toMatch(/\bliveState\s+MatchLiveState\?/);
+    expect(matchLiveStateModel).toMatch(/\bmatchId\s+String\s+@id/);
+    expect(matchLiveStateModel).toMatch(/\bplayerAScoreLeft\s+Int\s+@default\(501\)/);
+    expect(matchLiveStateModel).toMatch(/\bplayerBScoreLeft\s+Int\s+@default\(501\)/);
+    expect(matchLiveStateModel).toMatch(/\blastThrows\s+Json\s+@default\("\[\]"\)/);
     expect(matchLiveStateModel).toContain('@@index([tournamentId, table])');
   });
 
   test('defines a singleton app setting store for active tournament state', () => {
-    expect(appSettingModel).toContain('key       String   @id');
-    expect(appSettingModel).toContain('value     String?');
-    expect(appSettingModel).toContain('updatedAt DateTime @updatedAt');
+    expect(appSettingModel).toMatch(/\bkey\s+String\s+@id/);
+    expect(appSettingModel).toMatch(/\bvalue\s+String\?/);
+    expect(appSettingModel).toMatch(/\bupdatedAt\s+DateTime\s+@updatedAt/);
   });
 });

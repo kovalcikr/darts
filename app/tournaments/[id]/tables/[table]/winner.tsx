@@ -28,12 +28,12 @@ export default function Winner({ player, image, match, leg, slow, table }: { pla
       <div className="flex flex-col p-1 m-1">
         <GamepadButton
           name="Finish Match"
-          color="bg-green-600 p-5 border border-2 round flex flex-col"
+          color="bg-sky-500/20 p-5 text-sky-100 ring-sky-400/40 hover:bg-sky-500/30"
           onClick={async () => await finishMatch(match.tournamentId, match.id, match.playerALegs, match.playerBlegs, table)}
         />
         <GamepadButton
           name="Undo"
-          color="bg-orange-600 p-5 border border-2 round flex felx-col"
+          color="bg-gray-800/80 p-5 text-gray-300 ring-white/10 hover:bg-gray-700"
           onClick={async () => await undoThrow(match.id, leg, slow, table)}
         />
       </div>

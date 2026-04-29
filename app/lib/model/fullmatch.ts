@@ -1,5 +1,16 @@
 import type { Match, PlayerThrow, Tournament } from "@/prisma/client"
 
+export type ScoreboardThrowHistoryItem = {
+    id: string
+    playerId: string
+    score: number
+    darts: number
+    checkout: boolean
+    leg: number
+    status: 'active' | 'undone'
+    activityTime: Date
+}
+
 export type FullMatch = {
     match: Match
     tournament: Tournament
@@ -8,6 +19,7 @@ export type FullMatch = {
     playerA: Player
     playerB: Player
     throws: PlayerThrow[]
+    throwHistory: ScoreboardThrowHistoryItem[]
 }
 
 export type Player = {

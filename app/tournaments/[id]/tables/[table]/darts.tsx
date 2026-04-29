@@ -7,6 +7,7 @@ import Winner from "./winner";
 import ChoosePlayer from "./choose-player";
 import PlayerName from "./player-name";
 import Wait from "./wait";
+import { getPlayerCardAccentClassName } from "./scoreboard-display";
 
 
 export default async function Darts({ table, matchId, slow, reset, tournamentId }: { table: string, matchId: string, slow: boolean, reset: boolean, tournamentId?: string }) {
@@ -33,6 +34,7 @@ export default async function Darts({ table, matchId, slow, reset, tournamentId 
     playerB: { matchAvg: 30, score: 501, active: false, id: "2", name: "Jozo Mrkva", dartsCount: 6, imageUrl: "abc", lastThrow: 41, legCount: 1, highestScore: 0, bestCheckout: 0, bestLeg: 0 },
     nextPlayer: "1",
     currentLeg: 1,
+    throwHistory: [],
   };
   const fullMatch = table === "test" ? fakeMatch : await getFullMatch(matchId, slow);
 
@@ -53,13 +55,13 @@ export default async function Darts({ table, matchId, slow, reset, tournamentId 
     <main className="flex h-dvh flex-col overflow-hidden bg-gray-900 font-normal text-gray-300">
       <TournamentHeader tournament={fullMatch.tournament} round={match.round} format={String(match.runTo)} table={table} matchId={matchId} reset={reset} />
       {match.runTo != match.playerALegs && match.runTo != match.playerBlegs &&
-        <div className="flex shrink-0 flex-col px-2 py-2">
+        <div className="flex h-[34dvh] min-h-0 shrink-0 flex-col px-2 py-2">
           {!match.firstPlayer ?
             <ChoosePlayer match={match} table={table} />
             :
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid min-h-0 flex-1 grid-cols-2 gap-2">
               <div
-                className={`rounded-lg bg-gray-800/50 p-2 ring-1 ring-white/10 ${playerLeft.active ? "bg-sky-500/10 ring-2 ring-sky-400/70" : ""}`}
+                className={`flex min-h-0 flex-col overflow-hidden rounded-lg bg-gray-800/50 p-2 ring-1 ring-white/10 ${getPlayerCardAccentClassName('left')} ${playerLeft.active ? "bg-sky-500/10 ring-2 ring-sky-400/70" : ""}`}
                 data-testid={`player-card-${playerLeft.id}`}
                 data-active={playerLeft.active ? "true" : "false"}
               >
@@ -68,7 +70,7 @@ export default async function Darts({ table, matchId, slow, reset, tournamentId 
                 <PlayerLegs player={playerLeft} />
               </div>
               <div
-                className={`rounded-lg bg-gray-800/50 p-2 ring-1 ring-white/10 ${playerRight.active ? "bg-sky-500/10 ring-2 ring-sky-400/70" : ""}`}
+                className={`flex min-h-0 flex-col overflow-hidden rounded-lg bg-gray-800/50 p-2 ring-1 ring-white/10 ${getPlayerCardAccentClassName('right')} ${playerRight.active ? "bg-sky-500/10 ring-2 ring-sky-400/70" : ""}`}
                 data-testid={`player-card-${playerRight.id}`}
                 data-active={playerRight.active ? "true" : "false"}
               >
@@ -89,7 +91,24 @@ export default async function Darts({ table, matchId, slow, reset, tournamentId 
               match.runTo == match.playerBlegs ?
                 <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={fullMatch.currentLeg} slow={slow} table={table} />
                 :
-                <ScoreBoard tournamentId={fullMatch.tournament.id} matchId={match.id} leg={fullMatch.currentLeg} player={fullMatch.nextPlayer} currentPlayerScore={currentPlayerScore} slow={slow} table={table} />
+                <ScoreBoard
+                  tournamentId={fullMatch.tournament.id}
+                  matchId={match.id}
+                  leg={fullMatch.currentLeg}
+                  player={fullMatch.nextPlayer}
+                  currentPlayerScore={currentPlayerScore}
+                  slow={slow}
+                  table={table}
+                  throwHistory={fullMatch.throwHistory}
+                  playerNames={{
+                    [fullMatch.playerA.id]: fullMatch.playerA.name,
+                    [fullMatch.playerB.id]: fullMatch.playerB.name,
+                  }}
+                  playerAccents={{
+                    [playerLeft.id]: 'left',
+                    [playerRight.id]: 'right',
+                  }}
+                />
             )
           }
         </div>

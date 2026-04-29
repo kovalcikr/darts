@@ -56,6 +56,9 @@ describe('fake cuescore gateway', () => {
         expect(tournament.matches).toHaveLength(6);
         expect(tournament.matches[0].table?.name).toBe('11');
         expect(tournament.matches[0].matchstatus).toBe('playing');
+        expect(tournament.matches[5].table?.name).toBe('16');
+        expect(tournament.matches[5].playerA.name).toBe('Peter Kovarik');
+        expect(tournament.matches[5].playerB.name).toBe('Peter Kovakir');
     });
 
     test('persists local score updates for subsequent reads', async () => {

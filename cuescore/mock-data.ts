@@ -19,8 +19,8 @@ const DEFAULT_PLAYER_NAMES = [
   'Martin Samek',
   'Michal Bijalko',
   'Jozef Jalc',
-  'Lubomir Puzder',
-  'Peter Culik',
+  'Peter Kovarik',
+  'Peter Kovakir',
 ]
 
 function createPlayer(tournamentId: string, index: number): CueScorePlayer {

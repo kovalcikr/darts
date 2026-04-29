@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "npx dotenv -e .env.development.local -- next dev --webpack",
-    "dev:playwright": "CUESCORE_PROVIDER=fake POSTGRES_PRISMA_URL=postgresql://127.0.0.1:5432/darts-playwright POSTGRES_URL_NON_POOLING=postgresql://127.0.0.1:5432/darts-playwright next dev --hostname 127.0.0.1 --port 3001 --webpack",
+    "dev:playwright": "CUESCORE_PROVIDER=fake POSTGRES_PRISMA_URL=postgresql://127.0.0.1:5432/darts-playwright POSTGRES_URL_NON_POOLING=postgresql://127.0.0.1:5432/darts-playwright next dev --port 3001 --webpack",
     "dev:playwright:e2e": "CUESCORE_PROVIDER=fake ENABLE_TEST_API=true npx dotenv -e .env.test -- next dev --hostname 127.0.0.1 --port 3002 --webpack",
     "build": "NODE_ENV=production npm run prisma:generate && NODE_ENV=production next build --webpack",
     "start": "next start",

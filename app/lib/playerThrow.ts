@@ -2,9 +2,32 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { setScore } from "./cuescore";
-import { aggregatePlayerThrow, createPlayerThrow, updateMatchLegs, findLastThrow as findLastThrowData, deletePlayerThrow, findPreviousLegLastThrow, aggregateMatchThrows, findManyPlayerThrows, findThrowsByMatchAndLeg, updateMatchFirstPlayer, decrementMatchLegs, refreshMatchLiveState } from "./data";
+import {
+    aggregatePlayerThrow,
+    createPlayerThrow,
+    updateMatchLegs,
+    findLastThrow as findLastThrowData,
+    findPreviousLegLastThrow,
+    aggregateMatchThrows,
+    findManyPlayerThrows,
+    findThrowsByMatchAndLeg,
+    updateMatchFirstPlayer,
+    decrementMatchLegs,
+    refreshMatchLiveState,
+    markPlayerThrowUndone,
+    findRedoableThrow,
+    restorePlayerThrow,
+    invalidateRedoableThrows,
+} from "./data";
 import { findMatch } from "./data";
 import prisma from "./db";
+
+async function revalidateScoreboard(table) {
+    revalidatePath('/tables/[table]', 'page');
+    const cacheTag = `match${table}`
+    console.log('revalidating tag', cacheTag)
+    revalidateTag(cacheTag, 'max')
+}
 
 export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, slow, table) {
     if (slow) {
@@ -20,6 +43,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
         if (currentScore._sum.score + score == 501) {
             closeLeg = true;
         }
+        await invalidateRedoableThrows(matchId, tx);
         await createPlayerThrow(tournamentId, matchId, leg, playerId, score, dartsCount, closeLeg, tx);
         if (closeLeg) {
             match = await findMatch(matchId, tx);
@@ -31,10 +55,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
         await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
 
-    revalidatePath('/tables/[table]', 'page');
-    const cacheTag = `match${table}`
-    console.log('revalidating tag', cacheTag)
-    revalidateTag(cacheTag, 'max')
+    await revalidateScoreboard(table);
 }
 
 export async function undoThrow(matchId, leg, slow, table) {
@@ -50,7 +71,7 @@ export async function undoThrow(matchId, leg, slow, table) {
             undoCloseLeg = true;
             const previousLegLastThrow = await findPreviousLegLastThrow(matchId, leg, tx);
             if (previousLegLastThrow) {
-                await deletePlayerThrow(previousLegLastThrow.id, tx)
+                await markPlayerThrowUndone(previousLegLastThrow.id, tx)
                 match = await findMatch(matchId, tx);
                 match = await decrementMatchLegs(matchId, match.playerAId, previousLegLastThrow.playerId, match.playerALegs, match.playerBlegs, match.runTo, tx);
             } else {
@@ -58,18 +79,42 @@ export async function undoThrow(matchId, leg, slow, table) {
                 await updateMatchFirstPlayer(matchId, null, tx);
             }
         } else {
-            await deletePlayerThrow(lastThrow.id, tx)
+            await markPlayerThrowUndone(lastThrow.id, tx)
         }
         await refreshMatchLiveState(matchId, table, tx);
     });
     if (undoCloseLeg && match) {
         await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
-    revalidatePath('/tables/[table]', 'page');
-    const cacheTag = `match${table}`
-    console.log('revalidating tag', cacheTag)
-    revalidateTag(cacheTag, 'max')
+    await revalidateScoreboard(table);
 
+}
+
+export async function redoThrow(matchId, slow, table) {
+    if (slow) {
+        await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
+    }
+    let redoCloseLeg = false;
+    let match = null;
+    await prisma.$transaction(async (tx) => {
+        const throwToRedo = await findRedoableThrow(matchId, tx);
+        if (!throwToRedo) {
+            return;
+        }
+
+        const restoredThrow = await restorePlayerThrow(throwToRedo.id, tx);
+        if (restoredThrow.checkout) {
+            redoCloseLeg = true;
+            match = await findMatch(matchId, tx);
+            match = await updateMatchLegs(matchId, match.playerAId, restoredThrow.playerId, match.playerALegs, match.playerBlegs, match.runTo, tx);
+        }
+        await refreshMatchLiveState(matchId, table, tx);
+    });
+    if (redoCloseLeg && match) {
+        await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
+    }
+
+    await revalidateScoreboard(table);
 }
 
 export async function findLastThrow(matchId, leg, player) {

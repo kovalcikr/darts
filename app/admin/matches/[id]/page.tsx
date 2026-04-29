@@ -498,7 +498,7 @@ export default async function AdminMatchPage({
   }
 
   const allThrows = (await prisma.playerThrow.findMany({
-    where: { matchId: id },
+    where: { matchId: id, undoneAt: null },
     orderBy: [{ leg: 'asc' }, { time: 'asc' }, { id: 'asc' }],
   })) as AdminThrow[]
   const matchedThrows = query ? allThrows.filter((playerThrow) => matchesThrowQuery(playerThrow, query)) : allThrows

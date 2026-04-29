@@ -15,6 +15,11 @@ import {
     findBestLegInMatch,
     findThrowsByMatch,
     findMatchesByTournament,
+    findRedoableThrow,
+    findScoreboardThrowHistory,
+    invalidateRedoableThrows,
+    markPlayerThrowUndone,
+    restorePlayerThrow,
 } from '@/app/lib/data';
 
 const prismaTest = prisma as unknown as PrismaClient;
@@ -109,6 +114,53 @@ describe('Player Throw Integration Tests', () => {
         await deletePlayerThrow(lastThrow!.id);
         const throws = await prismaTest.playerThrow.findMany({ where: { leg: 1 } });
         expect(throws.length).toBe(2);
+    });
+
+    test('should soft-undo and restore a throw without counting it while undone', async () => {
+        await setupTestData();
+        const lastThrow = await findLastThrow('1', 1);
+
+        await markPlayerThrowUndone(lastThrow!.id);
+
+        const aggregatedWhileUndone = await aggregatePlayerThrow('1', 1, 'pA');
+        expect(aggregatedWhileUndone._sum.score).toBe(100);
+        expect(await findLastThrow('1', 1)).toMatchObject({ score: 50 });
+
+        const redoableThrow = await findRedoableThrow('1');
+        expect(redoableThrow?.id).toBe(lastThrow!.id);
+
+        await restorePlayerThrow(redoableThrow!.id);
+
+        const aggregatedAfterRedo = await aggregatePlayerThrow('1', 1, 'pA');
+        expect(aggregatedAfterRedo._sum.score).toBe(240);
+        expect(await findLastThrow('1', 1)).toMatchObject({ score: 140 });
+    });
+
+    test('should invalidate redoable throws after new scoring continues', async () => {
+        await setupTestData();
+        const lastThrow = await findLastThrow('1', 1);
+        await markPlayerThrowUndone(lastThrow!.id);
+
+        expect(await findRedoableThrow('1')).toMatchObject({ id: lastThrow!.id });
+
+        await invalidateRedoableThrows('1');
+
+        expect(await findRedoableThrow('1')).toBeNull();
+    });
+
+    test('should expose active and undo stack throws for the scoreboard history', async () => {
+        await setupTestData();
+        const lastThrow = await findLastThrow('1', 1);
+        await markPlayerThrowUndone(lastThrow!.id);
+
+        const history = await findScoreboardThrowHistory('1', 6);
+
+        expect(history[0]).toMatchObject({
+            id: lastThrow!.id,
+            status: 'undone',
+            score: 140,
+        });
+        expect(history.some(playerThrow => playerThrow.status === 'active' && playerThrow.score === 60)).toBe(true);
     });
 
     test('should find previous leg last throw', async () => {
