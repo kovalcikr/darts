@@ -53,13 +53,13 @@ export default async function Darts({ table, matchId, slow, reset, tournamentId 
     <main className="flex h-dvh flex-col overflow-hidden bg-gray-900 font-normal text-gray-300">
       <TournamentHeader tournament={fullMatch.tournament} round={match.round} format={String(match.runTo)} table={table} matchId={matchId} reset={reset} />
       {match.runTo != match.playerALegs && match.runTo != match.playerBlegs &&
-        <div className="flex shrink-0 flex-col px-2 py-2">
+        <div className="flex h-[34dvh] min-h-0 shrink-0 flex-col px-2 py-2">
           {!match.firstPlayer ?
             <ChoosePlayer match={match} table={table} />
             :
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid min-h-0 flex-1 grid-cols-2 gap-2">
               <div
-                className={`rounded-lg bg-gray-800/50 p-2 ring-1 ring-white/10 ${playerLeft.active ? "bg-sky-500/10 ring-2 ring-sky-400/70" : ""}`}
+                className={`flex min-h-0 flex-col overflow-hidden rounded-lg bg-gray-800/50 p-2 ring-1 ring-white/10 ${playerLeft.active ? "bg-sky-500/10 ring-2 ring-sky-400/70" : ""}`}
                 data-testid={`player-card-${playerLeft.id}`}
                 data-active={playerLeft.active ? "true" : "false"}
               >
@@ -68,7 +68,7 @@ export default async function Darts({ table, matchId, slow, reset, tournamentId 
                 <PlayerLegs player={playerLeft} />
               </div>
               <div
-                className={`rounded-lg bg-gray-800/50 p-2 ring-1 ring-white/10 ${playerRight.active ? "bg-sky-500/10 ring-2 ring-sky-400/70" : ""}`}
+                className={`flex min-h-0 flex-col overflow-hidden rounded-lg bg-gray-800/50 p-2 ring-1 ring-white/10 ${playerRight.active ? "bg-sky-500/10 ring-2 ring-sky-400/70" : ""}`}
                 data-testid={`player-card-${playerRight.id}`}
                 data-active={playerRight.active ? "true" : "false"}
               >

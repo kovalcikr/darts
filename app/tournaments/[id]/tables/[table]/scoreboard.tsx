@@ -62,27 +62,38 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
 
   function DartsCount() {
     return (
-      <div className="flex flex-col w-screen items-center">
-      <div className="m-3">Darts used:</div>
-      <div className="m-3">
-      <label className="m-6"><input className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={1} /><span className="w-full ml-4 text-gray-800">1</span></label>
-        <label className="m-6"><input className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={2} /><span className="w-full ml-4 text-gray-800">2</span></label>
-        <label className="m-6"><input ref={darts3ref} className="form-radio h-7 w-7 text-gray-600" name="darts" type="radio" value={3} defaultChecked /><span className="w-full ml-4 text-gray-800">3</span></label>
-      </div>
-      <div className="m-3">
-      <GamepadServerButton
-          name="OK"
-          color="bg-green-500 h-20 w-64"
-          disabled={!hydrated || disabledOK}
-          formAction={async (formData: FormData) => {
-            const dartsCount = Number(formData.get('darts'));
-            await addThrowAction(tournamentId, matchId, leg, player, Number(currentScoreRef.current), dartsCount, slow, table);
-            setEnteredScore("0")
-            darts3ref.current.checked = true;
-            setDartsCount(false);
-          }}
-        />
-      </div>
+      <div className="col-span-3 row-span-5 flex h-full min-h-0 items-center justify-center p-2">
+        <div className="max-h-full w-full max-w-lg rounded-lg bg-gray-800/50 p-4 text-center ring-1 ring-white/10">
+          <div className="text-sm font-medium uppercase tracking-wider text-gray-400">Darts used:</div>
+          <div className="mt-4 flex justify-center gap-4">
+            <label className="flex items-center rounded-lg bg-gray-950/60 px-4 py-2 text-lg font-semibold text-white ring-1 ring-white/10">
+              <input className="h-7 w-7 accent-sky-400" name="darts" type="radio" value={1} />
+              <span className="ml-3">1</span>
+            </label>
+            <label className="flex items-center rounded-lg bg-gray-950/60 px-4 py-2 text-lg font-semibold text-white ring-1 ring-white/10">
+              <input className="h-7 w-7 accent-sky-400" name="darts" type="radio" value={2} />
+              <span className="ml-3">2</span>
+            </label>
+            <label className="flex items-center rounded-lg bg-gray-950/60 px-4 py-2 text-lg font-semibold text-white ring-1 ring-white/10">
+              <input ref={darts3ref} className="h-7 w-7 accent-sky-400" name="darts" type="radio" value={3} defaultChecked />
+              <span className="ml-3">3</span>
+            </label>
+          </div>
+          <div className="mt-4 flex h-16 justify-center">
+            <GamepadServerButton
+              name="OK"
+              color="w-full max-w-64 bg-sky-500/20 text-sky-100 ring-sky-400/40 hover:bg-sky-500/30"
+              disabled={!hydrated || disabledOK}
+              formAction={async (formData: FormData) => {
+                const dartsCount = Number(formData.get('darts'));
+                await addThrowAction(tournamentId, matchId, leg, player, Number(currentScoreRef.current), dartsCount, slow, table);
+                setEnteredScore("0")
+                darts3ref.current.checked = true;
+                setDartsCount(false);
+              }}
+            />
+          </div>
+        </div>
       </div>
     )
   }
@@ -92,17 +103,17 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
       <>
         <GamepadServerButton
           name="UNDO"
-          color="bg-purple-400"
+          color="bg-gray-800/80 text-gray-300 ring-white/10 hover:bg-gray-700"
           disabled={!hydrated}
           formAction={handleUndo}
         />
         <input type="text" data-testid="scoreboard-input" disabled required value={Number(currentScore)} onChange={e => {
           const value = Number(e.target.value);
           if (value >= 0 && value <= 180) setCurrentScore(e.target.value)
-        }} className="flex items-center text-center  justify-center border-2 font-bold text-6xl text-white bg-slate-800  " />
+        }} className="flex h-full min-h-0 items-center justify-center rounded-lg bg-gray-950/80 text-center text-[clamp(2.75rem,9dvh,4.5rem)] font-bold text-white ring-1 ring-sky-500/30" />
         <GamepadButton
           name="<"
-          color="bg-blue-500"
+          color="bg-gray-800/80 text-gray-300 ring-white/10 hover:bg-gray-700"
           disabled={!hydrated}
           onClick={() => {
             const previousScore = currentScoreRef.current;
@@ -114,26 +125,26 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
           <GamepadButton
             key={item}
             name={String(item)}
-            color="bg-blue-600"
+            color="bg-gray-800/60 text-white ring-white/10 hover:bg-sky-500/10 hover:text-sky-200 hover:ring-sky-500/30"
             disabled={!hydrated}
             onClick={handleNumber}
           />
         ))}
         <GamepadButton
           name="CLR"
-          color="bg-red-400"
+          color="bg-rose-500/10 text-rose-200 ring-rose-500/30 hover:bg-rose-500/20"
           disabled={!hydrated}
           onClick={handleClr}
         />
         <GamepadButton
           name="0"
-          color="bg-blue-600"
+          color="bg-gray-800/60 text-white ring-white/10 hover:bg-sky-500/10 hover:text-sky-200 hover:ring-sky-500/30"
           disabled={!hydrated}
           onClick={handleNumber}
         />
         <GamepadServerButton
           name="OK"
-          color="bg-green-500"
+          color="bg-sky-500/20 text-sky-100 ring-sky-400/40 hover:bg-sky-500/30"
           disabled={!hydrated || disabledOK}
           formAction={async () => {
             const submittedScore = Number(currentScoreRef.current);
@@ -151,7 +162,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
   }
 
   return (
-    <form className="grid grid-cols-3 w-screen h-full">
+    <form className="grid h-full min-h-0 w-full grid-cols-3 grid-rows-5 gap-2 bg-gray-900 p-2">
       { dartsCount ? <DartsCount /> : <ScoreBoard /> }
     </form>
   );
