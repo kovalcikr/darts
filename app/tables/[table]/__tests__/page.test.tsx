@@ -51,6 +51,7 @@ describe('active tournament table page', () => {
     const html = renderToStaticMarkup(element)
 
     expect(html).toContain('No active tournament for this table')
-    expect(html).toContain('Open Admin')
+    expect(html).not.toContain('Open Admin')
+    expect(html).not.toContain('Set an active tournament')
   })
 })

@@ -11,7 +11,6 @@ export default async function ActiveTournamentDashboardPage() {
     return (
       <NoActiveTournament
         title="No active tournament for dashboard"
-        message="Set an active tournament in admin before opening the fixed dashboard."
       />
     )
   }

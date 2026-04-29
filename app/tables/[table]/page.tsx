@@ -20,7 +20,6 @@ export default async function ActiveTournamentTablePage({
     return (
       <NoActiveTournament
         title="No active tournament for this table"
-        message="Set an active tournament in admin before opening fixed table scoreboards."
       />
     )
   }
