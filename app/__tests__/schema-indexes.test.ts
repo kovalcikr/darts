@@ -17,6 +17,7 @@ describe('Prisma scoreboard and dashboard indexes', () => {
   const playerThrowModel = getModelBlock('PlayerThrow');
   const matchModel = getModelBlock('Match');
   const matchLiveStateModel = getModelBlock('MatchLiveState');
+  const appSettingModel = getModelBlock('AppSetting');
 
   test('keeps the active-leg scoring index for current score aggregation', () => {
     expect(playerThrowModel).toContain('@@index([matchId, leg, playerId])');
@@ -42,5 +43,11 @@ describe('Prisma scoreboard and dashboard indexes', () => {
     expect(matchLiveStateModel).toContain('playerBScoreLeft  Int      @default(501)');
     expect(matchLiveStateModel).toContain('lastThrows        Json     @default("[]")');
     expect(matchLiveStateModel).toContain('@@index([tournamentId, table])');
+  });
+
+  test('defines a singleton app setting store for active tournament state', () => {
+    expect(appSettingModel).toContain('key       String   @id');
+    expect(appSettingModel).toContain('value     String?');
+    expect(appSettingModel).toContain('updatedAt DateTime @updatedAt');
   });
 });

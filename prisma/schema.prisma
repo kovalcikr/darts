@@ -55,6 +55,12 @@ model MatchLiveState {
   @@index([tournamentId, table])
 }
 
+model AppSetting {
+  key       String   @id
+  value     String?
+  updatedAt DateTime @updatedAt
+}
+
 model Match {
   id           String  @id @default(cuid())
   round        String
