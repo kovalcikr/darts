@@ -34,7 +34,7 @@ describe('active tournament dashboard page', () => {
     const element = await ActiveTournamentDashboardPage()
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('No active tournament for dashboard')
+    expect(html).toContain('No active tournaments')
     expect(html).not.toContain('Open Admin')
     expect(html).not.toContain('Set an active tournament')
   })

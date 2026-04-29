@@ -34,7 +34,7 @@ test('empty active tournament views refresh after a tournament is activated', as
   await dashboardPage.goto('/dashboard')
 
   await expect(tablesPage.getByText('No active tournament for tables')).toBeVisible()
-  await expect(dashboardPage.getByText('No active tournament for dashboard')).toBeVisible()
+  await expect(dashboardPage.getByText('No active tournaments')).toBeVisible()
 
   const response = await request.post('/tournaments/open', {
     form: { tournamentId },
@@ -50,4 +50,29 @@ test('empty active tournament views refresh after a tournament is activated', as
   })
 
   await context.close()
+})
+
+test('dashboard polling shows inactive state after the active tournament is cleared', async ({
+  page,
+  request,
+}, testInfo) => {
+  const tournamentId = `local-dashboard-clear-${testInfo.parallelIndex}-${Date.now()}`
+
+  await clearActiveTournamentSetting()
+
+  const response = await request.post('/tournaments/open', {
+    form: { tournamentId },
+  })
+
+  expect(response.status()).toBeLessThan(400)
+
+  await page.goto('/dashboard')
+  await expect(page.getByText('#1')).toBeVisible()
+
+  await clearActiveTournamentSetting()
+
+  await expect(page.getByText('No active tournaments')).toBeVisible({
+    timeout: 10_000,
+  })
+  await expect(page.getByText('Error: Failed to fetch server data')).toHaveCount(0)
 })

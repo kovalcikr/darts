@@ -10,7 +10,7 @@ export default async function ActiveTournamentDashboardPage() {
   if (!activeTournament) {
     return (
       <NoActiveTournament
-        title="No active tournament for dashboard"
+        title="No active tournaments"
       />
     )
   }

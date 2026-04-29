@@ -2,13 +2,22 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import NoActiveTournament from '@/app/components/NoActiveTournament';
+
+const ACTIVE_TOURNAMENT_NOT_SET = 'ACTIVE_TOURNAMENT_NOT_SET';
 
 async function fetchServerData(test) {
     const response = await fetch(`/api/dashboard${test ? `?test=${test}` : ''}`);
-    if (!response.ok) {
-        throw new Error('Failed to fetch server data');
+    if (response.ok) {
+        return { type: 'data', data: await response.json() };
     }
-    return response.json();
+
+    const body = await response.json().catch(() => null);
+    if (response.status === 404 && body?.error?.code === ACTIVE_TOURNAMENT_NOT_SET) {
+        return { type: 'inactive' };
+    }
+
+    throw new Error('Failed to fetch server data');
 }
 
 export default function DashboardView() {
@@ -16,16 +25,27 @@ export default function DashboardView() {
 
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
+    const [inactive, setInactive] = useState(false);
 
     useEffect(() => {
         let intervalId: NodeJS.Timeout;
 
         const fetchData = async () => {
             try {
-                const serverData = await fetchServerData(searchParams.get('test'));
-                setData(serverData);
+                const result = await fetchServerData(searchParams.get('test'));
+                setError(null);
+
+                if (result.type === 'inactive') {
+                    setData(null);
+                    setInactive(true);
+                    return;
+                }
+
+                setData(result.data);
+                setInactive(false);
             } catch (err) {
                 setError(err.message);
+                setInactive(false);
             }
         };
 
@@ -34,6 +54,10 @@ export default function DashboardView() {
 
         return () => clearInterval(intervalId); // Cleanup on unmount
     }, [searchParams]);
+
+    if (inactive) {
+        return <NoActiveTournament title="No active tournaments" />;
+    }
 
     if (error) {
         return <div>Error: {error}</div>;
