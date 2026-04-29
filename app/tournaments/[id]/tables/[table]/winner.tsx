@@ -20,7 +20,7 @@ export default function Winner({ player, image, match, leg, slow, table }: { pla
 
   return (
     <div className="flex h-full flex-col items-center justify-center text-center text-gray-300">
-      <div className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">Winner</div>
+      <div className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">Winner:</div>
       <img src={image} alt={player} width={80} height={80} className="mt-4 w-20 rounded-full ring-1 ring-white/10" />
       <div className={"flex p-2 text-2xl font-bold text-white"}>
         {player}

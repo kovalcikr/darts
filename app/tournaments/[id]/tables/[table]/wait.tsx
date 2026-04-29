@@ -23,9 +23,6 @@ export default function Wait({ id, table }) {
           <a className="text-sm font-semibold text-sky-300 hover:text-sky-200" href={reloadHref}>Reload</a>
         </div>
       </div>
-      <div>
-          <a className="text-sm font-semibold text-gray-400 hover:text-sky-300" href={`/tables`}>Exit Tournament</a>
-        </div>
     </div>
   )
 }
