@@ -27,7 +27,7 @@ export default function TournamentHeader({ tournament, round, format, table, mat
             <input type="hidden" name="matchId" value={matchId} />
             {reset && <button className="p-2 pl-4 pr-4 border border-red-700 bg-red-500" type="submit">Reset</button>}
           </form>
-          <a className=" p-2 pl-4 pr-4 border border-blue-700 bg-blue-400 rounded font-bold  " href={`/tournaments/${tournament.id}/tables/${table}`}>
+          <a className=" p-2 pl-4 pr-4 border border-blue-700 bg-blue-400 rounded font-bold  " href="/tables">
             Exit
           </a>
         </div >

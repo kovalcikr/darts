@@ -9,7 +9,7 @@ jest.mock('@/app/lib/active-tournament', () => ({
 
 jest.mock('../dashboard-view', () => ({
   __esModule: true,
-  default: ({ tournamentId }: { tournamentId: string }) => <div>Dashboard for {tournamentId}</div>,
+  default: () => <div>Active dashboard</div>,
 }))
 
 describe('active tournament dashboard page', () => {
@@ -25,7 +25,7 @@ describe('active tournament dashboard page', () => {
 
     const element = await ActiveTournamentDashboardPage()
 
-    expect(renderToStaticMarkup(element)).toContain('Dashboard for t1')
+    expect(renderToStaticMarkup(element)).toContain('Active dashboard')
   })
 
   test('renders an empty state when no active tournament is selected', async () => {

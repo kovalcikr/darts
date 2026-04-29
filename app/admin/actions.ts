@@ -11,7 +11,7 @@ import {
 } from '@/app/lib/active-tournament'
 import prisma from '@/app/lib/db'
 import { isMatchComplete } from '@/app/lib/data'
-import { openTournament } from '@/app/lib/tournament'
+import { openActiveTournament } from '@/app/lib/tournament'
 import {
   ADMIN_PASSWORD_ENV,
   ADMIN_SESSION_COOKIE,
@@ -160,14 +160,13 @@ function revalidateTournamentPaths(tournamentIds: Array<string | null | undefine
   )
 
   for (const tournamentId of uniqueTournamentIds) {
-    revalidatePath(`/tournaments/${tournamentId}`)
     revalidatePath(`/stats/tournaments/${tournamentId}`)
     revalidatePath(`/stats/tournaments/${tournamentId}/cache`)
-    revalidatePath(`/dashboard/tournament/${tournamentId}`)
   }
 }
 
 function revalidateActiveTournamentPaths() {
+  revalidatePath('/tables')
   revalidatePath('/dashboard')
   revalidatePath('/tables/[table]', 'page')
 }
@@ -310,8 +309,7 @@ export async function createActiveTournamentAction(formData: FormData) {
   try {
     const tournamentId = requireString(formData, 'tournamentId')
 
-    await openTournament(tournamentId)
-    await setActiveTournament(tournamentId)
+    await openActiveTournament(tournamentId)
 
     revalidateSharedPaths()
     revalidateAdminPaths([], [tournamentId])

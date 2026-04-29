@@ -113,7 +113,7 @@ export async function setStartingPlayer(matchId, playerId) {
 
 export async function startMatch(formData) {
   await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
-  revalidatePath('/tournaments/[id]/tables/[table]', 'page');
+  revalidatePath('/tables/[table]', 'page');
   const cacheTag = `match${formData.get('table')}`
   console.log('revalidating tag', cacheTag)
   revalidateTag(cacheTag, 'max')
@@ -121,7 +121,7 @@ export async function startMatch(formData) {
 
 export async function resetMatch(formData) {
   await resetMatchData(formData.get('matchId'));
-  revalidatePath('/tournaments/[id]/tables/[table]', 'layout');
+  revalidatePath('/tables/[table]', 'layout');
 }
 
 export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {

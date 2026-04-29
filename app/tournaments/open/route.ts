@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { openTournament } from '../../lib/tournament'
+import { openActiveTournament } from '../../lib/tournament'
 
 function getBaseUrl(request: Request) {
   return new URL(request.url).origin
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await openTournament(tournamentId)
+    await openActiveTournament(tournamentId)
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Unknown error while opening tournament'
@@ -29,5 +29,5 @@ export async function POST(request: Request) {
     )
   }
 
-  return NextResponse.redirect(new URL(`/tournaments/${tournamentId}`, baseUrl), 303)
+  return NextResponse.redirect(new URL('/tables', baseUrl), 303)
 }

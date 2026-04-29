@@ -22,7 +22,7 @@ import {
   clearActiveTournamentIfMatches,
   setActiveTournament,
 } from '@/app/lib/active-tournament'
-import { openTournament } from '@/app/lib/tournament'
+import { openActiveTournament } from '@/app/lib/tournament'
 import * as auth from '../auth'
 
 const mockRedirect = jest.fn<(url: string) => never>()
@@ -41,7 +41,7 @@ jest.mock('@/app/lib/active-tournament', () => ({
 }))
 
 jest.mock('@/app/lib/tournament', () => ({
-  openTournament: jest.fn(),
+  openActiveTournament: jest.fn(),
 }))
 
 jest.mock('next/cache', () => ({
@@ -165,8 +165,7 @@ describe('admin actions', () => {
   })
 
   test('creates a tournament and sets it active from admin', async () => {
-    jest.mocked(openTournament).mockResolvedValue(undefined)
-    jest.mocked(setActiveTournament).mockResolvedValue(undefined)
+    jest.mocked(openActiveTournament).mockResolvedValue(undefined)
 
     const formData = buildFormData({
       tournamentId: 't1',
@@ -178,9 +177,9 @@ describe('admin actions', () => {
       '/admin?q=t1&notice=Tournament+created+and+set+active.'
     )
 
-    expect(openTournament).toHaveBeenCalledWith('t1')
-    expect(setActiveTournament).toHaveBeenCalledWith('t1')
+    expect(openActiveTournament).toHaveBeenCalledWith('t1')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/dashboard')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/tables')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page')
   })
 
@@ -237,7 +236,7 @@ describe('admin actions', () => {
       },
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin')
-    expect(mockRevalidatePath).toHaveBeenCalledWith('/tournaments/t1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/stats/tournaments/t1')
   })
 
   test('deletes tournament with dependent records in a transaction', async () => {
@@ -328,8 +327,8 @@ describe('admin actions', () => {
         firstPlayer: 'p1',
       }),
     })
-    expect(mockRevalidatePath).toHaveBeenCalledWith('/tournaments/t1')
-    expect(mockRevalidatePath).toHaveBeenCalledWith('/tournaments/t2')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/stats/tournaments/t1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/stats/tournaments/t2')
   })
 
   test('deletes match', async () => {

@@ -1,33 +1,21 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
-import { renderToStaticMarkup } from 'react-dom/server'
-import ExplicitTournamentTablePage from '../page'
-import TableScoreboardPage from '@/app/tournaments/table-scoreboard-page'
+import TournamentTableRedirect from '../page'
+import { redirect } from 'next/navigation'
 
-jest.mock('@/app/tournaments/table-scoreboard-page', () => ({
-  __esModule: true,
-  default: jest.fn(({ encodedTable, tournamentId }: { encodedTable: string; tournamentId: string }) => (
-    <div>Explicit table {encodedTable} for {tournamentId}</div>
-  )),
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn(),
 }))
 
-const tableScoreboardMock = TableScoreboardPage as unknown as jest.Mock
-
-describe('explicit tournament table page', () => {
+describe('deprecated explicit tournament table route', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  test('keeps using the tournament id from the URL', async () => {
-    const element = await ExplicitTournamentTablePage({
+  test('redirects to the fixed table route without preserving the tournament id', async () => {
+    await TournamentTableRedirect({
       params: Promise.resolve({ id: 'explicit-tournament', table: '11' }),
-      searchParams: Promise.resolve({ reset: 'true' }),
     })
 
-    expect(renderToStaticMarkup(element)).toContain('Explicit table 11 for explicit-tournament')
-    expect(tableScoreboardMock).toHaveBeenCalledWith({
-      encodedTable: '11',
-      searchParams: { reset: 'true' },
-      tournamentId: 'explicit-tournament',
-    }, undefined)
+    expect(redirect).toHaveBeenCalledWith('/tables/11')
   })
 })

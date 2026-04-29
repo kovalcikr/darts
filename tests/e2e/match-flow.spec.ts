@@ -129,7 +129,7 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   await page.getByPlaceholder('Tournament ID').fill(tournamentId);
   await page.getByRole('button', { name: 'Otvoriť' }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/tournaments/${tournamentId}$`));
+  await expect(page).toHaveURL(/\/tables$/);
 
   await expect
     .poll(async () => {
@@ -144,6 +144,7 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   const playerBId = String(openedMatch.playerB.playerId);
 
   await page.getByRole('link', { name: 'Table 1' }).click();
+  await expect(page).toHaveURL(/\/tables\/11$/);
   await expect(page.getByText('First to play:')).toBeVisible();
   await page.getByTestId(`start-player-${playerAId}`).click();
 
@@ -222,6 +223,6 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   );
   expect(eventSummary.at(-1)).toBe('finishMatch:3-0');
 
-  await page.goto(`/tournaments/${tournamentId}/tables/11`);
+  await page.goto('/tables/11');
   await expect(page.getByText('Waiting for match to start...')).toBeVisible();
 });

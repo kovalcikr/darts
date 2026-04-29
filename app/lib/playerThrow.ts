@@ -31,7 +31,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
         await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
 
-    revalidatePath('/tournaments/[id]/tables/[table]', 'page');
+    revalidatePath('/tables/[table]', 'page');
     const cacheTag = `match${table}`
     console.log('revalidating tag', cacheTag)
     revalidateTag(cacheTag, 'max')
@@ -65,7 +65,7 @@ export async function undoThrow(matchId, leg, slow, table) {
     if (undoCloseLeg && match) {
         await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
-    revalidatePath('/tournaments/[id]/tables/[table]', 'page');
+    revalidatePath('/tables/[table]', 'page');
     const cacheTag = `match${table}`
     console.log('revalidating tag', cacheTag)
     revalidateTag(cacheTag, 'max')

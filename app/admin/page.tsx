@@ -222,7 +222,7 @@ export default async function AdminPage({
                   Open Dashboard
                 </ActionLink>
                 {activeTournament ? (
-                  <ActionLink href={`/tournaments/${encodeURIComponent(activeTournament.id)}`}>
+                  <ActionLink href="/tables">
                     Open Tables
                   </ActionLink>
                 ) : null}

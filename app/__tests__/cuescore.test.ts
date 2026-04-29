@@ -76,7 +76,7 @@ describe('cuescore', () => {
             }
         });
         expect(revalidatePath).toHaveBeenCalledWith('/stats/tournaments/1');
-        expect(revalidatePath).toHaveBeenCalledWith('/tournaments/[id]/tables/[table]', 'page');
+        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match5', 'max');
     });
 

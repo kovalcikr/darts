@@ -1,20 +1,11 @@
-import TableScoreboardPage from "@/app/tournaments/table-scoreboard-page";
-import type { PageSearchParams, RouteParams } from "@/app/lib/next-types";
+import { redirect } from 'next/navigation'
+import type { RouteParams } from '@/app/lib/next-types'
 
-export default async function Page({
-  params, searchParams
+export default async function TournamentTableRedirect({
+  params,
 }: {
-  params: RouteParams<{ id: string; table: string }>,
-  searchParams: PageSearchParams<{ slow?: string; reset?: string }>
+  params: RouteParams<{ id: string; table: string }>
 }) {
-  const { id, table: encodedTable } = await params;
-  const resolvedSearchParams = await searchParams;
-
-  return (
-    <TableScoreboardPage
-      encodedTable={encodedTable}
-      searchParams={resolvedSearchParams}
-      tournamentId={id}
-    />
-  );
+  const { table } = await params
+  redirect(`/tables/${encodeURIComponent(table)}`)
 }

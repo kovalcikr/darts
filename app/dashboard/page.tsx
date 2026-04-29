@@ -15,5 +15,5 @@ export default async function ActiveTournamentDashboardPage() {
     )
   }
 
-  return <DashboardView tournamentId={activeTournament.id} />
+  return <DashboardView />
 }

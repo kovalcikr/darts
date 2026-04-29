@@ -3,15 +3,15 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-async function fetchServerData(tournamentId, test) {
-    const response = await fetch(`/api/dashboard/tournament/${tournamentId}${test ? `?test=${test}` : ''}`);
+async function fetchServerData(test) {
+    const response = await fetch(`/api/dashboard${test ? `?test=${test}` : ''}`);
     if (!response.ok) {
         throw new Error('Failed to fetch server data');
     }
     return response.json();
 }
 
-export default function DashboardView({ tournamentId }: { tournamentId: string }) {
+export default function DashboardView() {
     const searchParams = useSearchParams();
 
     const [data, setData] = useState(null);
@@ -22,7 +22,7 @@ export default function DashboardView({ tournamentId }: { tournamentId: string }
 
         const fetchData = async () => {
             try {
-                const serverData = await fetchServerData(tournamentId, searchParams.get('test'));
+                const serverData = await fetchServerData(searchParams.get('test'));
                 setData(serverData);
             } catch (err) {
                 setError(err.message);
@@ -33,7 +33,7 @@ export default function DashboardView({ tournamentId }: { tournamentId: string }
         intervalId = setInterval(fetchData, 1000); // Poll every second
 
         return () => clearInterval(intervalId); // Cleanup on unmount
-    }, [tournamentId, searchParams]);
+    }, [searchParams]);
 
     if (error) {
         return <div>Error: {error}</div>;

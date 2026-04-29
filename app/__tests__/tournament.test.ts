@@ -1,7 +1,9 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import { openTournament, createTournament, getTournaments, getCachedTournaments, openTournamentForm } from '../lib/tournament';
+import { openTournament, createTournament, getTournaments, getCachedTournaments, openTournamentForm, openActiveTournament } from '../lib/tournament';
 import getTournamentInfo from '../lib/cuescore';
 import * as data from '../lib/data';
+import { setActiveTournament } from '../lib/active-tournament';
+import { redirect } from 'next/navigation';
 
 jest.mock('../lib/cuescore', () => ({
     __esModule: true,
@@ -9,6 +11,9 @@ jest.mock('../lib/cuescore', () => ({
 }));
 
 jest.mock('../lib/data');
+jest.mock('../lib/active-tournament', () => ({
+    setActiveTournament: jest.fn(),
+}));
 jest.mock('next/cache', () => ({
     revalidatePath: jest.fn(),
 }));
@@ -90,6 +95,18 @@ describe('tournament', () => {
         });
     });
 
+    test('open active tournament opens and activates the requested tournament', async () => {
+        const tournamentId = 'active-123';
+        jest.mocked(getTournamentInfo).mockResolvedValue({ tournamentId, name: 'Active Tournament' } as any);
+        jest.mocked(data.upsertTournament).mockResolvedValue(null);
+        jest.mocked(setActiveTournament).mockResolvedValue(undefined);
+
+        await openActiveTournament(tournamentId);
+
+        expect(getTournamentInfo).toHaveBeenCalledWith(tournamentId);
+        expect(setActiveTournament).toHaveBeenCalledWith(tournamentId);
+    });
+
     test('create tournament derives season and event date from metadata', async () => {
         jest.mocked(data.upsertTournament).mockResolvedValue(null);
         await createTournament({
@@ -148,6 +165,8 @@ describe('tournament', () => {
 
         await openTournamentForm({}, formData);
         expect(getTournamentInfo).toHaveBeenCalledWith('123');
+        expect(setActiveTournament).toHaveBeenCalledWith('123');
+        expect(redirect).toHaveBeenCalledWith('/tables');
     });
 
     test('open tournament form error', async () => {

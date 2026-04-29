@@ -104,6 +104,8 @@ describe('admin page', () => {
     expect(html).toContain('Active Tournament')
     expect(html).toContain('Create and Set Active')
     expect(html).toContain('Clear Active')
+    expect(html).toContain('href="/tables"')
+    expect(html).not.toContain('href="/tournaments/t1"')
     expect(html).toContain('Season: 2026')
     expect(html).toContain('Date:')
     expect(html).toContain('Excluded from global stats')

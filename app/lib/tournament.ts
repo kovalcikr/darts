@@ -6,21 +6,27 @@ import { revalidatePath } from "next/cache";
 import { upsertTournament, findTournamentsBySeason } from "./data";
 import type { CueScoreTournament } from "./integrations/cuescore/types";
 import { inferTournamentSeason, parseTournamentDate } from "./tournament-metadata";
+import { setActiveTournament } from "./active-tournament";
 
 export async function openTournamentForm(prevState: any, data: FormData) {
     const tournamentId = data.get('tournamentId') as string;
     try {
-        await openTournament(tournamentId);
+        await openActiveTournament(tournamentId);
     } catch (e) {
         return { message: `Cannot open tournament: ${e.message}` }
     }
-    redirect(`/tournaments/${tournamentId}`);
+    redirect(`/tables`);
 }
 
 export async function openTournament(tournamentId: string) {
     const tournament = await getTournamentInfo(tournamentId);
     await createTournament(tournament, tournamentId);
     revalidatePath("/stats/tournaments");
+}
+
+export async function openActiveTournament(tournamentId: string) {
+    await openTournament(tournamentId);
+    await setActiveTournament(tournamentId);
 }
 
 type TournamentLike = Partial<CueScoreTournament> & {
