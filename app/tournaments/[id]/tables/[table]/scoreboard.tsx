@@ -10,6 +10,7 @@ import {
   getThrowHistoryAccentClassName,
   type PlayerAccent,
 } from "./scoreboard-display";
+import { CHECKOUT_DART_OPTIONS, getAllowedCheckoutDarts } from "@/app/lib/checkout-darts";
 
 type ScoreBoardProps = {
   tournamentId: string
@@ -24,15 +25,79 @@ type ScoreBoardProps = {
   playerAccents: Record<string, PlayerAccent>
 }
 
+const DEFAULT_CHECKOUT_DARTS = 3;
+
+function getDefaultCheckoutDarts(allowedCheckoutDarts: number[]) {
+  if (allowedCheckoutDarts.length === 1) {
+    return allowedCheckoutDarts[0];
+  }
+
+  return allowedCheckoutDarts.includes(DEFAULT_CHECKOUT_DARTS) ? DEFAULT_CHECKOUT_DARTS : null;
+}
+
+function getValidCheckoutDartsSelection(allowedCheckoutDarts: number[], selectedDarts: number | null) {
+  if (allowedCheckoutDarts.length === 1) {
+    return allowedCheckoutDarts[0];
+  }
+
+  return selectedDarts !== null && allowedCheckoutDarts.includes(selectedDarts) ? selectedDarts : null;
+}
+
+export function CheckoutDartsSelector({
+  remainingScore,
+  selectedDarts,
+  onSelectedDartsChange,
+}: {
+  remainingScore: number
+  selectedDarts: number | null
+  onSelectedDartsChange: (darts: number | null) => void
+}) {
+  const allowedCheckoutDarts = getAllowedCheckoutDarts(remainingScore);
+
+  useEffect(() => {
+    const nextAllowedCheckoutDarts = getAllowedCheckoutDarts(remainingScore);
+    const nextSelectedDarts = getValidCheckoutDartsSelection(nextAllowedCheckoutDarts, selectedDarts);
+
+    if (nextSelectedDarts !== selectedDarts) {
+      onSelectedDartsChange(nextSelectedDarts);
+    }
+  }, [remainingScore, selectedDarts, onSelectedDartsChange]);
+
+  return (
+    <div className="mt-4 flex justify-center gap-4">
+      {CHECKOUT_DART_OPTIONS.map((option) => {
+        const allowed = allowedCheckoutDarts.includes(option);
+
+        return (
+          <label
+            className={`flex items-center rounded-lg bg-gray-950/60 px-4 py-2 text-lg font-semibold ring-1 ring-white/10 ${allowed ? 'text-white' : 'text-gray-500 opacity-40'}`}
+            key={option}
+          >
+            <input
+              checked={selectedDarts === option}
+              className="h-7 w-7 accent-sky-400 disabled:cursor-not-allowed"
+              disabled={!allowed}
+              name="darts"
+              onChange={() => onSelectedDartsChange(option)}
+              type="radio"
+              value={option}
+            />
+            <span className="ml-3">{option}</span>
+          </label>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function ScoreBoard({ tournamentId, matchId, leg, player, currentPlayerScore, slow, table, throwHistory, playerNames, playerAccents }: ScoreBoardProps) {
   const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  const impossibleScore = [163, 166, 169, 172, 173, 175, 176, 178, 179];
   const [currentScore, setCurrentScore] = useState("0");
   const [disabledOK, setDisabledOK] = useState(false);
   const [dartsCount, setDartsCount] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [selectedCheckoutDarts, setSelectedCheckoutDarts] = useState<number | null>(null);
   const currentScoreRef = useRef("0");
-  const darts3ref = useRef(null);
   const playerDisplayNames = buildScoreboardPlayerDisplayNames(playerNames);
 
   useEffect(() => {
@@ -67,7 +132,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
     if (numericScore > 180) {
       return;
     }
-    if (impossibleScore.includes(numericScore)) {
+    if (numericScore === currentPlayerScore && getAllowedCheckoutDarts(currentPlayerScore).length === 0) {
       return;
     }
     if (currentPlayerScore - numericScore == 1) {
@@ -119,34 +184,32 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
   }
 
   function DartsCount() {
+    const allowedCheckoutDarts = getAllowedCheckoutDarts(currentPlayerScore);
+
     return (
       <div className="col-span-3 row-span-5 flex h-full min-h-0 items-center justify-center p-2">
         <div className="max-h-full w-full max-w-lg rounded-lg bg-gray-800/50 p-4 text-center ring-1 ring-white/10">
           <div className="text-sm font-medium uppercase tracking-wider text-gray-400">Darts used:</div>
-          <div className="mt-4 flex justify-center gap-4">
-            <label className="flex items-center rounded-lg bg-gray-950/60 px-4 py-2 text-lg font-semibold text-white ring-1 ring-white/10">
-              <input className="h-7 w-7 accent-sky-400" name="darts" type="radio" value={1} />
-              <span className="ml-3">1</span>
-            </label>
-            <label className="flex items-center rounded-lg bg-gray-950/60 px-4 py-2 text-lg font-semibold text-white ring-1 ring-white/10">
-              <input className="h-7 w-7 accent-sky-400" name="darts" type="radio" value={2} />
-              <span className="ml-3">2</span>
-            </label>
-            <label className="flex items-center rounded-lg bg-gray-950/60 px-4 py-2 text-lg font-semibold text-white ring-1 ring-white/10">
-              <input ref={darts3ref} className="h-7 w-7 accent-sky-400" name="darts" type="radio" value={3} defaultChecked />
-              <span className="ml-3">3</span>
-            </label>
-          </div>
+          <CheckoutDartsSelector
+            remainingScore={currentPlayerScore}
+            selectedDarts={selectedCheckoutDarts}
+            onSelectedDartsChange={setSelectedCheckoutDarts}
+          />
           <div className="mt-4 flex h-16 justify-center">
             <GamepadServerButton
               name="OK"
               color="w-full max-w-64 bg-sky-500/20 text-sky-100 ring-sky-400/40 hover:bg-sky-500/30"
-              disabled={!hydrated || disabledOK}
+              disabled={!hydrated || disabledOK || selectedCheckoutDarts === null}
               formAction={async (formData: FormData) => {
                 const dartsCount = Number(formData.get('darts'));
-                await addThrowAction(tournamentId, matchId, leg, player, Number(currentScoreRef.current), dartsCount, slow, table);
+                const checkoutDarts = CHECKOUT_DART_OPTIONS.find((option) => option === dartsCount);
+
+                if (checkoutDarts === undefined || !allowedCheckoutDarts.includes(checkoutDarts)) {
+                  return;
+                }
+                await addThrowAction(tournamentId, matchId, leg, player, Number(currentScoreRef.current), checkoutDarts, slow, table);
                 setEnteredScore("0")
-                darts3ref.current.checked = true;
+                setSelectedCheckoutDarts(null);
                 setDartsCount(false);
               }}
             />
@@ -219,6 +282,13 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
             const submittedScore = Number(currentScoreRef.current);
 
             if (currentPlayerScore == submittedScore) {
+              const allowedCheckoutDarts = getAllowedCheckoutDarts(currentPlayerScore);
+
+              if (allowedCheckoutDarts.length === 0) {
+                return;
+              }
+
+              setSelectedCheckoutDarts(getDefaultCheckoutDarts(allowedCheckoutDarts));
               setDartsCount(true);
               return;
             }

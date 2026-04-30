@@ -75,6 +75,34 @@ describe('playerThrow', () => {
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
+    test('addThrowAction rejects an impossible checkout dart count without mutating state', async () => {
+        jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 370 } } as any);
+
+        await expect(addThrowAction('t1', 'm1', 2, 'pA', 131, 2, false, '11')).rejects.toThrow('Invalid checkout darts count');
+
+        expect(data.createPlayerThrow).not.toHaveBeenCalled();
+        expect(data.invalidateRedoableThrows).not.toHaveBeenCalled();
+        expect(data.findMatch).not.toHaveBeenCalled();
+        expect(data.refreshMatchLiveState).not.toHaveBeenCalled();
+        expect(setScore).not.toHaveBeenCalled();
+        expect(revalidatePath).not.toHaveBeenCalled();
+        expect(revalidateTag).not.toHaveBeenCalled();
+    });
+
+    test('addThrowAction rejects an impossible checkout score without mutating state', async () => {
+        jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 332 } } as any);
+
+        await expect(addThrowAction('t1', 'm1', 2, 'pA', 169, 3, false, '11')).rejects.toThrow('Invalid checkout darts count');
+
+        expect(data.createPlayerThrow).not.toHaveBeenCalled();
+        expect(data.invalidateRedoableThrows).not.toHaveBeenCalled();
+        expect(data.findMatch).not.toHaveBeenCalled();
+        expect(data.refreshMatchLiveState).not.toHaveBeenCalled();
+        expect(setScore).not.toHaveBeenCalled();
+        expect(revalidatePath).not.toHaveBeenCalled();
+        expect(revalidateTag).not.toHaveBeenCalled();
+    });
+
     test('addThrowAction waits for score sync before revalidating after a checkout', async () => {
         const currentMatch = {
             id: 'm1',
