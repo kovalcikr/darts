@@ -21,6 +21,9 @@ import {
 } from "./data";
 import { findMatch } from "./data";
 import prisma from "./db";
+import { isAllowedCheckoutDarts } from "./checkout-darts";
+
+const STARTING_SCORE = 501;
 
 async function revalidateScoreboard(table) {
     revalidatePath('/tables/[table]', 'page');
@@ -37,10 +40,17 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
     let match = null;
     await prisma.$transaction(async (tx) => {
         const currentScore = await aggregatePlayerThrow(matchId, leg, playerId, tx);
-        if (currentScore._sum.score + score > 501) {
+        const previousScore = currentScore._sum.score ?? 0;
+        const remainingScore = STARTING_SCORE - previousScore;
+        const nextScore = previousScore + score;
+
+        if (nextScore > STARTING_SCORE) {
             throw new Error('Bust')
         }
-        if (currentScore._sum.score + score == 501) {
+        if (nextScore == STARTING_SCORE) {
+            if (!isAllowedCheckoutDarts(remainingScore, dartsCount)) {
+                throw new Error('Invalid checkout darts count')
+            }
             closeLeg = true;
         }
         await invalidateRedoableThrows(matchId, tx);

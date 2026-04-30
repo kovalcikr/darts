@@ -5,6 +5,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
 import { findMatch, upsertMatch, updateMatchFirstPlayer, resetMatchData, findThrowsByMatchAndLeg, findThrowsByMatch, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory } from "./data";
+import { selectCurrentLegStarter } from "./leg-starter";
 
 interface CueScorePlayer {
   playerId: number;
@@ -93,6 +94,12 @@ export async function getFullMatch(matchId, slow) {
     tournament: match.tournament,
     currentLeg: leg,
     nextPlayer: scores.nextPlayer,
+    startingPlayerId: selectCurrentLegStarter({
+      leg,
+      playerAId: match.playerAId,
+      playerBId: match.playerBId,
+      firstPlayer: match.firstPlayer,
+    }),
     playerA: playerA,
     playerB: playerB,
     throws: throws,

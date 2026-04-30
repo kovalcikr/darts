@@ -7,6 +7,7 @@ import 'server-only'
 import prisma from "./db";
 import type { Prisma } from '@/prisma/client'
 import { generateLegacyTournamentNamesForSeason } from "./tournament-metadata";
+import { selectCurrentLegStarter } from "./leg-starter";
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 
@@ -349,6 +350,12 @@ export async function refreshMatchLiveState(matchId: string, table?: string | nu
     const playerALegTotals = findPlayerGroup(legTotals, match.playerAId);
     const playerBLegTotals = findPlayerGroup(legTotals, match.playerBId);
     const throwCount = (playerALegTotals?._count.id ?? 0) + (playerBLegTotals?._count.id ?? 0);
+    const startingPlayerId = selectCurrentLegStarter({
+        leg,
+        playerAId: match.playerAId,
+        playerBId: match.playerBId,
+        firstPlayer: match.firstPlayer,
+    });
     const serializedLastThrows: MatchLiveThrow[] = lastThrows.map(lastThrow => ({
         playerId: lastThrow.playerId,
         score: lastThrow.score,
@@ -370,6 +377,7 @@ export async function refreshMatchLiveState(matchId: string, table?: string | nu
             playerATotalDarts: playerAMatchTotals?._sum.darts ?? 0,
             playerBTotalDarts: playerBMatchTotals?._sum.darts ?? 0,
             activePlayerId: getNextActivePlayer(leg, throwCount, match.playerAId, match.playerBId, match.firstPlayer),
+            startingPlayerId,
             lastThrows: serializedLastThrows,
         },
         update: {
@@ -383,6 +391,7 @@ export async function refreshMatchLiveState(matchId: string, table?: string | nu
             playerATotalDarts: playerAMatchTotals?._sum.darts ?? 0,
             playerBTotalDarts: playerBMatchTotals?._sum.darts ?? 0,
             activePlayerId: getNextActivePlayer(leg, throwCount, match.playerAId, match.playerBId, match.firstPlayer),
+            startingPlayerId,
             lastThrows: serializedLastThrows,
         },
         where: {

@@ -66,6 +66,7 @@ describe('match live state projection', () => {
         playerATotalDarts: 3,
         playerBTotalDarts: 3,
         activePlayerId: 'pA',
+        startingPlayerId: 'pA',
         lastThrows: [
           { playerId: 'pB', score: 60, darts: 3, checkout: false, leg: 1 },
           { playerId: 'pA', score: 100, darts: 3, checkout: false, leg: 1 },
@@ -76,6 +77,7 @@ describe('match live state projection', () => {
         playerAScoreLeft: 401,
         playerBScoreLeft: 441,
         activePlayerId: 'pA',
+        startingPlayerId: 'pA',
       }),
       where: {
         matchId: 'm1',

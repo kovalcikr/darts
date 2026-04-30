@@ -45,6 +45,7 @@ describe('Prisma scoreboard and dashboard indexes', () => {
     expect(matchLiveStateModel).toMatch(/\bmatchId\s+String\s+@id/);
     expect(matchLiveStateModel).toMatch(/\bplayerAScoreLeft\s+Int\s+@default\(501\)/);
     expect(matchLiveStateModel).toMatch(/\bplayerBScoreLeft\s+Int\s+@default\(501\)/);
+    expect(matchLiveStateModel).toMatch(/\bstartingPlayerId\s+String\?/);
     expect(matchLiveStateModel).toMatch(/\blastThrows\s+Json\s+@default\("\[\]"\)/);
     expect(matchLiveStateModel).toContain('@@index([tournamentId, table])');
   });

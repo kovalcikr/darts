@@ -16,6 +16,7 @@ export type FullMatch = {
     tournament: Tournament
     currentLeg: number
     nextPlayer: string
+    startingPlayerId: string | null
     playerA: Player
     playerB: Player
     throws: PlayerThrow[]

@@ -82,6 +82,7 @@ describe('match', () => {
 
         expect(fullMatch.match).toEqual(mockMatch);
         expect(fullMatch.playerA.score).toBe(501);
+        expect(fullMatch.startingPlayerId).toBe('pB');
     });
 
     test('getFullMatch returns null when the match does not exist', async () => {
