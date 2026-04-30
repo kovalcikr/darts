@@ -159,24 +159,26 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
         {throwHistory.length === 0 ? (
           <div className="h-6 flex-1" />
         ) : (
-          orderedThrowHistory.map(playerThrow => {
-            const undone = playerThrow.status === 'undone';
-            const playerName = playerDisplayNames[playerThrow.playerId] ?? playerNames[playerThrow.playerId] ?? playerThrow.playerId;
-            const playerAccent = playerAccents[playerThrow.playerId] ?? 'left';
-            return (
-              <div
-                className={`flex h-6 min-w-0 shrink-0 items-center gap-1 rounded-md px-2 text-[clamp(0.7rem,1.8dvh,0.95rem)] font-semibold ring-1 ${getThrowHistoryAccentClassName(playerAccent, undone)}`}
-                data-player-accent={playerAccent}
-                data-testid={`scoreboard-history-${playerThrow.status}-${playerThrow.id}`}
-                key={`${playerThrow.status}-${playerThrow.id}`}
-                title={`${undone ? 'Undone ' : ''}${playerNames[playerThrow.playerId] ?? playerName} ${playerThrow.score}`}
-              >
-                <span className="truncate">{playerName}</span>
-                <span>{playerThrow.score}</span>
-                {playerThrow.checkout ? <span className="text-sky-200/80">/{playerThrow.darts}</span> : null}
-              </div>
-            );
-          })
+          <div className="grid min-w-0 flex-1 grid-cols-6 gap-1.5" data-testid="scoreboard-throw-history-slots">
+            {orderedThrowHistory.map(playerThrow => {
+              const undone = playerThrow.status === 'undone';
+              const playerName = playerDisplayNames[playerThrow.playerId] ?? playerNames[playerThrow.playerId] ?? playerThrow.playerId;
+              const playerAccent = playerAccents[playerThrow.playerId] ?? 'left';
+              return (
+                <div
+                  className={`flex h-6 min-w-0 items-center gap-1 rounded-md px-1.5 text-[clamp(0.7rem,1.8dvh,0.95rem)] font-semibold ring-1 sm:px-2 ${getThrowHistoryAccentClassName(playerAccent, undone)}`}
+                  data-player-accent={playerAccent}
+                  data-testid={`scoreboard-history-${playerThrow.status}-${playerThrow.id}`}
+                  key={`${playerThrow.status}-${playerThrow.id}`}
+                  title={`${undone ? 'Undone ' : ''}${playerNames[playerThrow.playerId] ?? playerName} ${playerThrow.score}`}
+                >
+                  <span className="min-w-0 truncate" data-testid={`scoreboard-history-player-${playerThrow.id}`}>{playerName}</span>
+                  <span className="shrink-0">{playerThrow.score}</span>
+                  {playerThrow.checkout ? <span className="shrink-0 text-sky-200/80">/{playerThrow.darts}</span> : null}
+                </div>
+              );
+            })}
+          </div>
         )}
         <div className={`ml-auto h-2 w-2 shrink-0 rounded-full ${hasRedo ? 'bg-rose-300' : 'bg-gray-700'}`} aria-hidden="true" />
       </div>
