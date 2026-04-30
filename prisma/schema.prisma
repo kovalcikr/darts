@@ -50,6 +50,7 @@ model MatchLiveState {
   playerATotalDarts Int      @default(0)
   playerBTotalDarts Int      @default(0)
   activePlayerId    String?
+  startingPlayerId  String?
   lastThrows        Json     @default("[]")
   updatedAt         DateTime @updatedAt
 

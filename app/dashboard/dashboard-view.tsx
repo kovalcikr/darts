@@ -3,6 +3,8 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import NoActiveTournament from '@/app/components/NoActiveTournament';
+import DartIcon from '@/app/components/DartIcon';
+import { selectCurrentLegStarter } from '@/app/lib/leg-starter';
 
 const ACTIVE_TOURNAMENT_NOT_SET = 'ACTIVE_TOURNAMENT_NOT_SET';
 
@@ -105,6 +107,12 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firs
     const playerBScore = liveState ? liveState.playerBScoreLeft : 501 - (playerBInfo?._sum?.score || 0);
     const playerAAvgDisplay = liveState ? formatAverage(liveState.playerATotalScore, liveState.playerATotalDarts) : formatAverageValue(avgPlayerA);
     const playerBAvgDisplay = liveState ? formatAverage(liveState.playerBTotalScore, liveState.playerBTotalDarts) : formatAverageValue(avgPlayerB);
+    const startingPlayerId = liveState?.startingPlayerId ?? (match && firstPlayer ? selectCurrentLegStarter({
+        leg,
+        playerAId,
+        playerBId,
+        firstPlayer,
+    }) : null);
     return (
         <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4">
             <h1 className="absolute top-2 left-2 text-xs md:text-sm font-bold text-gray-500">#{tableId}</h1>
@@ -112,13 +120,13 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firs
                 <div className="w-full flex flex-col sm:flex-row justify-around items-center sm:space-y-4 sm:space-x-2 md:space-x-4">
                     {match && (<>
                         {match.raceTo != match.scoreA && match.raceTo != match.scoreB && (<>
-                            <Player playerId="1" photo={match.playerA.image} playerName={match.playerA.name} legsWon={match.scoreA} score={playerAScore} lastThrows={currentLastThrows?.filter(t => t.playerId == playerAId)?.map(t => t.score)} average={playerAAvgDisplay} active={nextP == playerAId} />
+                            <Player playerId="1" photo={match.playerA.image} playerName={match.playerA.name} legsWon={match.scoreA} score={playerAScore} lastThrows={currentLastThrows?.filter(t => t.playerId == playerAId)?.map(t => t.score)} average={playerAAvgDisplay} active={nextP == playerAId} startedLeg={startingPlayerId == playerAId} />
 
                             <div className="text-center flex-none my-2 sm:my-0">
                                 <h2 className="text-lg md:text-2xl font-bold text-sky-400">VS</h2>
                             </div>
 
-                            <Player playerId="2" photo={match.playerB.image} playerName={match.playerB.name} legsWon={match.scoreB} score={playerBScore} lastThrows={currentLastThrows?.filter(t => t.playerId == playerBId)?.map(t => t.score)} average={playerBAvgDisplay} active={nextP == playerBId} />
+                            <Player playerId="2" photo={match.playerB.image} playerName={match.playerB.name} legsWon={match.scoreB} score={playerBScore} lastThrows={currentLastThrows?.filter(t => t.playerId == playerBId)?.map(t => t.score)} average={playerBAvgDisplay} active={nextP == playerBId} startedLeg={startingPlayerId == playerBId} />
                         </>)
                         }
                         {match.raceTo == match.scoreA && (
@@ -158,8 +166,8 @@ function Winner({ player, image }: { player: string, image: string }) {
     );
 }
 
-function Player({ playerId, playerName, photo, active, legsWon, score, lastThrows, average }: {
-    photo: string, playerId: string, playerName: string, active?: boolean, score: any, legsWon?: number, lastThrows?: any[], average?: string
+function Player({ playerId, playerName, photo, active, legsWon, score, lastThrows, average, startedLeg }: {
+    photo: string, playerId: string, playerName: string, active?: boolean, score: any, legsWon?: number, lastThrows?: any[], average?: string, startedLeg?: boolean
 
 }) {
     return (
@@ -171,9 +179,22 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
                 height={80}
                 className="w-10 h-10 md:w-12 md:h-12 rounded-full hidden md:block"
             />
-            <h2 className="text-sm md:text-xl text-center px-1 font-bold text-white">{playerName}</h2>
+            <h2
+                aria-label={startedLeg ? `${playerName} started this leg` : playerName}
+                className="px-1 text-center text-sm font-bold text-white md:text-xl"
+                title={startedLeg ? `${playerName} started this leg` : playerName}
+            >
+                <span className="truncate">{playerName}</span>
+            </h2>
             <div className="text-center">
-                <p className="text-sm md:text-xl text-gray-400">Legs: <span className="font-semibold text-white text-md md:text-2xl">{legsWon}</span></p>
+                <p
+                    aria-label={startedLeg ? `${playerName} started this leg. Legs: ${legsWon}` : undefined}
+                    className="flex items-center justify-center gap-1 text-sm md:text-xl text-gray-400"
+                    title={startedLeg ? `${playerName} started this leg` : undefined}
+                >
+                    {startedLeg ? <DartIcon className="h-5 w-5 shrink-0 md:h-6 md:w-6" testId="dashboard-leg-starter-icon" /> : null}
+                    <span>Legs: <span className="font-semibold text-white text-md md:text-2xl">{legsWon}</span></span>
+                </p>
                 <p className="text-sm md:text-xl text-gray-400">Score: <span className="font-semibold text-white text-md md:text-2xl">{score}</span></p>
             </div>
             <div className="text-center">

@@ -33,6 +33,7 @@ export default async function Darts({ table, matchId, slow, reset, tournamentId 
     playerA: { matchAvg: 10, score: 501, active: true, id: "1", name: "Fero Hruska", dartsCount: 3, imageUrl: "abc", lastThrow: 41, legCount: 0, highestScore: 0, bestCheckout: 0, bestLeg: 0 },
     playerB: { matchAvg: 30, score: 501, active: false, id: "2", name: "Jozo Mrkva", dartsCount: 6, imageUrl: "abc", lastThrow: 41, legCount: 1, highestScore: 0, bestCheckout: 0, bestLeg: 0 },
     nextPlayer: "1",
+    startingPlayerId: "1",
     currentLeg: 1,
     throwHistory: [],
   };
@@ -66,7 +67,7 @@ export default async function Darts({ table, matchId, slow, reset, tournamentId 
                 data-active={playerLeft.active ? "true" : "false"}
               >
                 <PlayerName player={playerLeft} />
-                <PlayerScore player={playerLeft} />
+                <PlayerScore player={playerLeft} startedLeg={fullMatch.startingPlayerId === playerLeft.id} />
                 <PlayerLegs player={playerLeft} />
               </div>
               <div
@@ -75,7 +76,7 @@ export default async function Darts({ table, matchId, slow, reset, tournamentId 
                 data-active={playerRight.active ? "true" : "false"}
               >
                 <PlayerName player={playerRight} />
-                <PlayerScore player={playerRight} />
+                <PlayerScore player={playerRight} startedLeg={fullMatch.startingPlayerId === playerRight.id} />
                 <PlayerLegs player={playerRight} />
               </div>
             </div>
