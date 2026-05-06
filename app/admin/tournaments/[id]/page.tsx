@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import prisma from '@/app/lib/db'
 import { formatTournamentEventDate } from '@/app/lib/tournament-metadata'
 import type { PageSearchParams, RouteParams } from '@/app/lib/next-types'
-import { deleteMatchAction, deleteTournamentAction, toggleTournamentGlobalStatsAction, updateMatchAction, updateTournamentAction } from '../../actions'
+import { deleteMatchAction, deleteTournamentAction, restoreMatchAction, toggleTournamentGlobalStatsAction, updateMatchAction, updateTournamentAction } from '../../actions'
 import { isAdminAuthenticated } from '../../auth'
 import ConfirmSubmitButton from '../../ConfirmSubmitButton'
 import {
@@ -62,22 +62,7 @@ export default async function AdminTournamentPage({
   const numericQuery = query ? Number(query) : null
   const parsedNumericQuery = query && Number.isInteger(numericQuery) ? numericQuery : null
 
-  const tournament = await prisma.tournament.findUnique({
-    where: { id },
-    include: {
-      _count: {
-        select: { matches: true },
-      },
-    },
-  })
-
-  if (!tournament) {
-    notFound()
-  }
-
-  const matchFilters: Prisma.MatchWhereInput[] = [
-    { tournamentId: id },
-  ]
+  const matchFilters: Prisma.MatchWhereInput[] = [{ tournamentId: id }]
 
   if (query) {
     const scopedFilters: Prisma.MatchWhereInput[] = [
@@ -101,15 +86,37 @@ export default async function AdminTournamentPage({
     matchFilters.push({ OR: scopedFilters })
   }
 
-  const matches = await prisma.match.findMany({
-    where: { AND: matchFilters },
-    include: {
-      _count: {
-        select: { throwsList: true },
+  const [tournament, matches, matchAudits] = await Promise.all([
+    prisma.tournament.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { matches: true },
+        },
       },
-    },
-    orderBy: [{ round: 'asc' }, { id: 'asc' }],
-  })
+    }),
+    prisma.match.findMany({
+      where: { AND: matchFilters },
+      include: {
+        _count: {
+          select: { throwsList: true },
+        },
+      },
+      orderBy: [{ round: 'asc' }, { id: 'asc' }],
+    }),
+    prisma.matchAudit.findMany({
+      where: query
+        ? { matchId: { contains: query, mode: stringMode } }
+        : undefined,
+      select: { matchId: true },
+    }),
+  ])
+
+  if (!tournament) {
+    notFound()
+  }
+
+  const deletedMatchIds = new Set(matchAudits.map((audit) => audit.matchId))
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
@@ -225,18 +232,26 @@ export default async function AdminTournamentPage({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <ActionLink href={`/admin/matches/${encodeURIComponent(match.id)}`} tone="primary">
-                    View Throws
-                  </ActionLink>
-                  <form action={deleteMatchAction}>
-                    <input name="returnTo" type="hidden" value={returnTo} />
-                    <input name="id" type="hidden" value={match.id} />
-                    <ConfirmSubmitButton confirmationMessage={`Delete match "${match.id}" and its throws?`}>
-                      Delete Match
-                    </ConfirmSubmitButton>
-                  </form>
-                </div>
+<div className="flex flex-wrap gap-3">
+                   <ActionLink href={`/admin/matches/${encodeURIComponent(match.id)}`} tone="primary">
+                     View Throws
+                   </ActionLink>
+                   {deletedMatchIds.has(match.id) ? (
+                     <form action={restoreMatchAction}>
+                       <input name="returnTo" type="hidden" value={returnTo} />
+                       <input name="matchId" type="hidden" value={match.id} />
+                       <ActionButton tone="success">Restore Match</ActionButton>
+                     </form>
+                   ) : (
+                     <form action={deleteMatchAction}>
+                       <input name="returnTo" type="hidden" value={returnTo} />
+                       <input name="id" type="hidden" value={match.id} />
+                       <ConfirmSubmitButton confirmationMessage={`Delete match "${match.id}" and its throws?`}>
+                         Delete Match
+                       </ConfirmSubmitButton>
+                     </form>
+                   )}
+                 </div>
               </div>
 
               <div className="mt-5">

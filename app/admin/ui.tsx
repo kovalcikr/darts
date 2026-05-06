@@ -65,7 +65,7 @@ export function ActionButton({
   type = 'submit',
 }: {
   children: React.ReactNode
-  tone?: 'primary' | 'danger' | 'muted'
+  tone?: 'primary' | 'danger' | 'muted' | 'success'
   type?: 'submit' | 'button'
 }) {
   const toneClassName =
@@ -73,7 +73,9 @@ export function ActionButton({
       ? 'border-cyan-400/50 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/20'
       : tone === 'danger'
         ? 'border-rose-500/50 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20'
-        : 'border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800'
+        : tone === 'success'
+          ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20'
+          : 'border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800'
 
   return (
     <button

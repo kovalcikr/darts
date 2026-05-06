@@ -31,6 +31,7 @@ jest.mock('../actions', () => ({
   deleteTournamentAction: jest.fn(),
   loginAdminAction: jest.fn(),
   logoutAdminAction: jest.fn(),
+  restoreTournamentAction: jest.fn(),
   setActiveTournamentAction: jest.fn(),
   toggleTournamentGlobalStatsAction: jest.fn(),
   updateMatchAction: jest.fn(),
@@ -83,6 +84,7 @@ describe('admin page', () => {
         _count: { id: 8 },
       },
     ] as never)
+    prismaMock.tournamentAudit.findMany.mockResolvedValue([] as never)
     jest.mocked(getActiveTournament).mockResolvedValue({
       id: 't1',
       name: 'Relax Darts CUP 01 2026',

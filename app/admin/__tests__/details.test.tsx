@@ -21,6 +21,8 @@ jest.mock('../actions', () => ({
   deleteMatchAction: jest.fn(),
   deleteThrowAction: jest.fn(),
   deleteTournamentAction: jest.fn(),
+  restoreMatchAction: jest.fn(),
+  restoreThrowAction: jest.fn(),
   toggleTournamentGlobalStatsAction: jest.fn(),
   updateMatchAction: jest.fn(),
   updateThrowAction: jest.fn(),
@@ -63,6 +65,7 @@ describe('admin detail pages', () => {
         _count: { throwsList: 9 },
       },
     ] as never)
+    prismaMock.matchAudit.findMany.mockResolvedValue([] as never)
 
     const element = await AdminTournamentPage({
       params: Promise.resolve({ id: 't1' }),
@@ -124,6 +127,7 @@ describe('admin detail pages', () => {
         checkout: false,
       },
     ] as never)
+    prismaMock.throwAudit.findMany.mockResolvedValue([] as never)
 
     const element = await AdminMatchPage({
       params: Promise.resolve({ id: 'm1' }),
