@@ -210,4 +210,54 @@ describe('fake cuescore gateway', () => {
             events: [],
         });
     });
+
+    test('delays getTournament when setDelayMs is called', async () => {
+        const gateway = new FakeCueScoreGateway();
+        gateway.setDelayMs('getTournament', 100);
+
+        const start = Date.now();
+        await gateway.getTournament('local-delay');
+        const elapsed = Date.now() - start;
+
+        expect(elapsed).toBeGreaterThanOrEqual(95);
+        expect(elapsed).toBeLessThan(200);
+    });
+
+    test('delays updateMatchScore when setDelayMs is called', async () => {
+        const gateway = new FakeCueScoreGateway();
+        gateway.setDelayMs('updateMatchScore', 100);
+        const tournament = await gateway.getTournament('local-delay2');
+        const matchId = String(tournament.matches[0].matchId);
+
+        const start = Date.now();
+        await gateway.updateMatchScore({
+            tournamentId: 'local-delay2',
+            matchId,
+            scoreA: 1,
+            scoreB: 0,
+        });
+        const elapsed = Date.now() - start;
+
+        expect(elapsed).toBeGreaterThanOrEqual(95);
+        expect(elapsed).toBeLessThan(200);
+    });
+
+    test('delays finishMatch when setDelayMs is called', async () => {
+        const gateway = new FakeCueScoreGateway();
+        gateway.setDelayMs('finishMatch', 100);
+        const tournament = await gateway.getTournament('local-delay3');
+        const matchId = String(tournament.matches[0].matchId);
+
+        const start = Date.now();
+        await gateway.finishMatch({
+            tournamentId: 'local-delay3',
+            matchId,
+            scoreA: 3,
+            scoreB: 1,
+        });
+        const elapsed = Date.now() - start;
+
+        expect(elapsed).toBeGreaterThanOrEqual(95);
+        expect(elapsed).toBeLessThan(200);
+    });
 });

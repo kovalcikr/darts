@@ -26,9 +26,9 @@ type MockSnapshot = {
   events: MockEvent[];
 };
 
-async function resetFakeCueScore(request: APIRequestContext, tournamentId: string) {
+async function resetFakeCueScore(request: APIRequestContext, tournamentId: string, delays?: Record<string, number>) {
   const response = await request.post('/api/test/cuescore', {
-    data: { tournamentId },
+    data: { tournamentId, delays },
   });
   expect(response.ok()).toBeTruthy();
 }
@@ -243,4 +243,67 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
 
   await page.goto('/tables/1');
   await expect(page.getByText('Waiting for match to start...')).toBeVisible();
+});
+
+test('shows loading spinner when CueScore calls are slow', async ({
+  page,
+  request,
+}, testInfo) => {
+  const tournamentId = `local-slow-${testInfo.parallelIndex}-${Date.now()}`;
+
+  await resetFakeCueScore(request, tournamentId, {
+    updateMatchScore: 2000,
+  });
+
+  await page.goto('/tournaments');
+  await page.getByPlaceholder('Tournament ID').fill(tournamentId);
+  await page.getByRole('button', { name: 'Otvoriť' }).click();
+
+  await expect(page).toHaveURL(/\/tables$/);
+
+  const openedSnapshot = await getFakeCueScoreSnapshot(request, tournamentId);
+  const openedMatch = getTableMatch(openedSnapshot, '11');
+  const playerAId = String(openedMatch.playerA.playerId);
+
+  await page.getByRole('link', { name: 'Table 1' }).click();
+  await page.getByTestId(`start-player-${playerAId}`).click();
+
+  // Enter a score and click OK
+  await page.getByRole('button', { name: '1' }).click();
+  await page.getByRole('button', { name: '0' }).click();
+  await page.getByRole('button', { name: '0' }).click();
+
+  // Verify UNDO and REDO are enabled before clicking OK
+  await expect(page.getByRole('button', { name: 'UNDO', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'REDO', exact: true })).toBeDisabled();
+
+// Click OK and verify all action buttons are disabled during submission
+  const okButton = page.locator('button[value="OK"]').first();
+  
+  // Verify button is enabled before click
+  await expect(okButton).toBeEnabled();
+  
+  await okButton.click();
+
+  // Wait for spinner to appear (this means loading state kicked in)
+  await expect(page.locator('svg.animate-spin')).toBeVisible({ timeout: 1000 });
+
+  // All buttons should be disabled while submitting
+  await expect(page.getByRole('button', { name: 'UNDO', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'REDO', exact: true })).toBeDisabled();
+  
+  // OK button should be disabled (spinner visible means isLoading=true, which should disable)
+  await expect(okButton).toBeDisabled();
+  
+  // All buttons should be disabled while submitting
+  await expect(page.getByRole('button', { name: 'UNDO', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'REDO', exact: true })).toBeDisabled();
+  await expect(okButton).toBeDisabled();
+
+  // The spinner should appear immediately
+  await expect(page.locator('svg.animate-spin')).toBeVisible({ timeout: 500 });
+
+  // After the 2s delay, buttons should be re-enabled
+  await expect(page.getByRole('button', { name: 'UNDO', exact: true })).toBeEnabled({ timeout: 3000 });
+  await expect(okButton).toBeEnabled({ timeout: 3000 });
 });

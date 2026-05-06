@@ -19,6 +19,7 @@ type FakeCueScoreStore = {
   rankings: Map<string, CueScoreRanking>
   results: Map<string, CueScoreResults>
   events: FakeCueScoreEvent[]
+  delays: Map<string, number>
 }
 
 declare const globalThis: {
@@ -31,6 +32,7 @@ function createStore(): FakeCueScoreStore {
     rankings: new Map(),
     results: new Map(),
     events: [],
+    delays: new Map(),
   }
 }
 
@@ -52,6 +54,13 @@ function recordEvent(type: FakeCueScoreEvent['type'], input: MatchScoreUpdate) {
     scoreA: input.scoreA,
     scoreB: input.scoreB,
   })
+}
+
+async function applyDelay(method: string): Promise<void> {
+  const ms = store.delays.get(method)
+  if (ms) {
+    await new Promise(resolve => setTimeout(resolve, ms))
+  }
 }
 
 function getOrCreateTournament(tournamentId: string): CueScoreTournament {
@@ -82,6 +91,7 @@ export function resetFakeCueScoreStore(tournamentId?: string) {
     store.rankings.clear()
     store.results.clear()
     store.events = []
+    store.delays.clear()
     return
   }
 
@@ -98,12 +108,18 @@ export function getFakeCueScoreSnapshot(tournamentId: string): FakeCueScoreSnaps
   }
 }
 
+export function setFakeCueScoreDelay(method: string, ms: number): void {
+  store.delays.set(method, ms)
+}
+
 export class FakeCueScoreGateway implements CueScoreGateway {
   async getTournament(tournamentId: string): Promise<CueScoreTournament> {
+    await applyDelay('getTournament')
     return clone(getOrCreateTournament(tournamentId))
   }
 
   async updateMatchScore({ tournamentId, matchId, scoreA, scoreB }: MatchScoreUpdate): Promise<void> {
+    await applyDelay('updateMatchScore')
     updateStoredMatch(tournamentId, matchId, (match) => {
       match.scoreA = scoreA
       match.scoreB = scoreB
@@ -115,6 +131,7 @@ export class FakeCueScoreGateway implements CueScoreGateway {
   }
 
   async finishMatch({ tournamentId, matchId, scoreA, scoreB }: MatchScoreUpdate): Promise<void> {
+    await applyDelay('finishMatch')
     updateStoredMatch(tournamentId, matchId, (match) => {
       match.scoreA = scoreA
       match.scoreB = scoreB
@@ -139,5 +156,9 @@ export class FakeCueScoreGateway implements CueScoreGateway {
     }
 
     return createLocalResults(tournamentId)
+  }
+
+  setDelayMs(method: string, ms: number): void {
+    store.delays.set(method, ms)
   }
 }

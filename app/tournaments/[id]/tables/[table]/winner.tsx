@@ -5,18 +5,27 @@ import GamepadButton from "./gamepad-button";
 import { finishMatch } from "@/app/lib/cuescore";
 import type { Match } from "@/prisma/client";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 export default function Winner({ player, image, match, leg, table }: { player: string, image: string, match: Match, leg: number, table: string }) {
-
   const router = useRouter();
+  const [isFinishing, setIsFinishing] = useState(false);
 
   useEffect(() => {
     const comInterval = setInterval(() => {
       finishMatch(match.tournamentId, match.id, match.playerALegs, match.playerBlegs, table)
-    }, 20000); //This will refresh the data at regularIntervals of refreshTime
-    return () => clearInterval(comInterval) //Clear interval on component unmount to avoid memory leak
+    }, 20000);
+    return () => clearInterval(comInterval)
   }, [match.tournamentId, match.id, match.playerALegs, match.playerBlegs, table])
+
+  async function handleFinishMatch() {
+    setIsFinishing(true);
+    try {
+      await finishMatch(match.tournamentId, match.id, match.playerALegs, match.playerBlegs, table);
+    } finally {
+      setIsFinishing(false);
+    }
+  }
 
   return (
     <div className="flex h-full flex-col items-center justify-center text-center text-gray-300">
@@ -29,13 +38,15 @@ export default function Winner({ player, image, match, leg, table }: { player: s
         <GamepadButton
           name="Finish Match"
           color="bg-sky-500/20 p-5 text-sky-100 ring-sky-400/40 hover:bg-sky-500/30"
-          onClick={async () => await finishMatch(match.tournamentId, match.id, match.playerALegs, match.playerBlegs, table)}
+          onClick={handleFinishMatch}
+          isLoading={isFinishing}
         />
-        <GamepadButton
-          name="Undo"
-          color="bg-gray-800/80 p-5 text-gray-300 ring-white/10 hover:bg-gray-700"
-          onClick={async () => await undoThrow(match.id, leg, table)}
-        />
+<GamepadButton
+           name="Undo"
+           color="bg-gray-800/80 p-5 text-gray-300 ring-white/10 hover:bg-gray-700"
+           onClick={async () => await undoThrow(match.id, leg, table)}
+           disabled={isFinishing}
+         />
       </div>
     </div>
   );
