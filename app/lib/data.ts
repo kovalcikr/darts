@@ -269,7 +269,7 @@ export async function refreshMatchLiveState(matchId: string, table?: string | nu
     return refreshState(matchId, table, tx)
 }
 
-export async function upsertMatch(match, tx?: PrismaTransactionClient) {
+export async function upsertMatch(match, slot?: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     const syncedMatchLegState = getSyncedMatchLegState(match);
 
@@ -303,7 +303,7 @@ export async function upsertMatch(match, tx?: PrismaTransactionClient) {
         }
     });
 
-    await refreshMatchLiveState(String(match.matchId), match.table?.name ? String(match.table.name) : undefined, tx);
+    await refreshMatchLiveState(String(match.matchId), slot, tx);
     return persistedMatch;
 }
 

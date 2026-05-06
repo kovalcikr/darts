@@ -11,33 +11,7 @@ import { getPlayerCardAccentClassName } from "./scoreboard-display";
 
 
 export default async function Darts({ table, matchId, slow, reset, tournamentId }: { table: string, matchId: string, slow: boolean, reset: boolean, tournamentId?: string }) {
-
-  const fakeMatch = {
-    tournament: { id: "10", name: "ABC" },
-    match: {
-      id: "1",
-      round: "Round 1",
-      playerAId: "1",
-      playerAName: "Fero Hruska",
-      playerAImage: "abc",
-      playerBId: "2",
-      playerBName: "Jozo Mrkva",
-      playerBImage: "cde",
-      runTo: 3,
-      playerALegs: 1,
-      playerBlegs: 2,
-      isComplete: false,
-      firstPlayer: "1",
-      tournamentId: "test",
-    },
-    playerA: { matchAvg: 10, score: 501, active: true, id: "1", name: "Fero Hruska", dartsCount: 3, imageUrl: "abc", lastThrow: 41, legCount: 0, highestScore: 0, bestCheckout: 0, bestLeg: 0 },
-    playerB: { matchAvg: 30, score: 501, active: false, id: "2", name: "Jozo Mrkva", dartsCount: 6, imageUrl: "abc", lastThrow: 41, legCount: 1, highestScore: 0, bestCheckout: 0, bestLeg: 0 },
-    nextPlayer: "1",
-    startingPlayerId: "1",
-    currentLeg: 1,
-    throwHistory: [],
-  };
-  const fullMatch = table === "test" ? fakeMatch : await getFullMatch(matchId, slow);
+  const fullMatch = await getFullMatch(matchId, slow);
 
   if (!fullMatch) {
     return <Wait id={tournamentId ?? ""} table={table} />;

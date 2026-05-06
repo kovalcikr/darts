@@ -110,8 +110,8 @@ describe('match', () => {
             raceTo: 5,
         };
         jest.mocked(data.upsertMatch).mockResolvedValue(null);
-        await match.createMatch(matchData);
-        expect(data.upsertMatch).toHaveBeenCalledWith(matchData);
+        await match.createMatch(matchData, '1');
+        expect(data.upsertMatch).toHaveBeenCalledWith(matchData, '1');
     });
 
     test('setStartingPlayer', async () => {

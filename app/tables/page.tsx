@@ -7,12 +7,12 @@ export const dynamic = 'force-dynamic'
 export default async function ActiveTournamentTablesPage() {
   const activeTournament = await getActiveTournament()
   const tables = [
-    { label: 'Table 1', table: '11' },
-    { label: 'Table 2', table: '12' },
-    { label: 'Table 3', table: '13' },
-    { label: 'Table 4', table: '14' },
-    { label: 'Table 5', table: '15' },
-    { label: 'Table 6', table: '16' },
+    { label: 'Table 1', slot: '1' },
+    { label: 'Table 2', slot: '2' },
+    { label: 'Table 3', slot: '3' },
+    { label: 'Table 4', slot: '4' },
+    { label: 'Table 5', slot: '5' },
+    { label: 'Table 6', slot: '6' },
   ]
 
   if (!activeTournament) {
@@ -49,9 +49,9 @@ export default async function ActiveTournamentTablesPage() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {tables.map((item) => (
             <Link
-              key={item.table}
+              key={item.slot}
               className="group rounded-lg bg-gray-800/50 p-6 text-center ring-1 ring-white/10 transition-colors hover:bg-gray-800 hover:ring-sky-500/40"
-              href={`/tables/${item.table}`}
+              href={`/tables/${item.slot}`}
             >
               <div className="text-sm font-medium uppercase tracking-wider text-gray-400">
                 Scoreboard

@@ -1,6 +1,5 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import NoActiveTournament from '@/app/components/NoActiveTournament';
 import DartIcon from '@/app/components/DartIcon';
@@ -8,8 +7,8 @@ import { selectCurrentLegStarter } from '@/app/lib/leg-starter';
 
 const ACTIVE_TOURNAMENT_NOT_SET = 'ACTIVE_TOURNAMENT_NOT_SET';
 
-async function fetchServerData(test) {
-    const response = await fetch(`/api/dashboard${test ? `?test=${test}` : ''}`);
+async function fetchServerData() {
+    const response = await fetch('/api/dashboard');
     if (response.ok) {
         return { type: 'data', data: await response.json() };
     }
@@ -23,8 +22,6 @@ async function fetchServerData(test) {
 }
 
 export default function DashboardView() {
-    const searchParams = useSearchParams();
-
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
     const [inactive, setInactive] = useState(false);
@@ -34,7 +31,7 @@ export default function DashboardView() {
 
         const fetchData = async () => {
             try {
-                const result = await fetchServerData(searchParams.get('test'));
+                const result = await fetchServerData();
                 setError(null);
 
                 if (result.type === 'inactive') {
@@ -55,7 +52,7 @@ export default function DashboardView() {
         intervalId = setInterval(fetchData, 1000); // Poll every second
 
         return () => clearInterval(intervalId); // Cleanup on unmount
-    }, [searchParams]);
+    }, []);
 
     if (inactive) {
         return <NoActiveTournament title="No active tournaments" />;

@@ -112,8 +112,8 @@ export async function getMatch(matchId) {
   return findMatch(matchId);
 }
 
-export async function createMatch(match) {
-  return await upsertMatch(match);
+export async function createMatch(match, slot?: string) {
+   return await upsertMatch(match, slot);
 }
 
 export async function setStartingPlayer(matchId, playerId) {

@@ -22,8 +22,8 @@ describe('active tournament tables page', () => {
     const html = renderToStaticMarkup(element)
 
     expect(html).toContain('Active Cup')
-    expect(html).toContain('href="/tables/11"')
-    expect(html).toContain('href="/tables/16"')
+    expect(html).toContain('href="/tables/1"')
+    expect(html).toContain('href="/tables/6"')
     expect(html).not.toContain('/tournaments/t1/tables')
   })
 
