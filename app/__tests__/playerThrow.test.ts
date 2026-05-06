@@ -33,7 +33,7 @@ describe('playerThrow', () => {
     test('addThrowAction stores a normal throw and revalidates the table', async () => {
         jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 180 } } as any);
 
-        await addThrowAction('t1', 'm1', 1, 'pA', 100, 3, false, '11');
+        await addThrowAction('t1', 'm1', 1, 'pA', 100, 3, '11');
 
         expect(data.aggregatePlayerThrow).toHaveBeenCalledWith('m1', 1, 'pA', tx);
         expect(data.invalidateRedoableThrows).toHaveBeenCalledWith('m1', tx);
@@ -64,7 +64,7 @@ describe('playerThrow', () => {
         jest.mocked(data.findMatch).mockResolvedValue(currentMatch as any);
         jest.mocked(data.updateMatchLegs).mockResolvedValue(updatedMatch as any);
 
-        await addThrowAction('t1', 'm1', 2, 'pA', 60, 2, false, '11');
+        await addThrowAction('t1', 'm1', 2, 'pA', 60, 2, '11');
 
         expect(data.invalidateRedoableThrows).toHaveBeenCalledWith('m1', tx);
         expect(data.createPlayerThrow).toHaveBeenCalledWith('t1', 'm1', 2, 'pA', 60, 2, true, tx);
@@ -78,7 +78,7 @@ describe('playerThrow', () => {
     test('addThrowAction rejects an impossible checkout dart count without mutating state', async () => {
         jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 370 } } as any);
 
-        await expect(addThrowAction('t1', 'm1', 2, 'pA', 131, 2, false, '11')).rejects.toThrow('Invalid checkout darts count');
+        await expect(addThrowAction('t1', 'm1', 2, 'pA', 131, 2, '11')).rejects.toThrow('Invalid checkout darts count');
 
         expect(data.createPlayerThrow).not.toHaveBeenCalled();
         expect(data.invalidateRedoableThrows).not.toHaveBeenCalled();
@@ -92,7 +92,7 @@ describe('playerThrow', () => {
     test('addThrowAction rejects an impossible checkout score without mutating state', async () => {
         jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 332 } } as any);
 
-        await expect(addThrowAction('t1', 'm1', 2, 'pA', 169, 3, false, '11')).rejects.toThrow('Invalid checkout darts count');
+        await expect(addThrowAction('t1', 'm1', 2, 'pA', 169, 3, '11')).rejects.toThrow('Invalid checkout darts count');
 
         expect(data.createPlayerThrow).not.toHaveBeenCalled();
         expect(data.invalidateRedoableThrows).not.toHaveBeenCalled();
@@ -126,7 +126,7 @@ describe('playerThrow', () => {
         jest.mocked(data.updateMatchLegs).mockResolvedValue(updatedMatch as any);
         jest.mocked(setScore).mockReturnValue(setScorePromise as any);
 
-        const actionPromise = addThrowAction('t1', 'm1', 2, 'pA', 60, 2, false, '11');
+        const actionPromise = addThrowAction('t1', 'm1', 2, 'pA', 60, 2, '11');
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
@@ -157,7 +157,7 @@ describe('playerThrow', () => {
     test('undoThrow marks the latest throw in the current leg as undone', async () => {
         jest.mocked(data.findLastThrow).mockResolvedValue({ id: 'throw-1' } as any);
 
-        await undoThrow('m1', 2, false, '11');
+        await undoThrow('m1', 2, '11');
 
         expect(data.findLastThrow).toHaveBeenCalledWith('m1', 2, undefined, tx);
         expect(data.markPlayerThrowUndone).toHaveBeenCalledWith('throw-1', tx);
@@ -187,7 +187,7 @@ describe('playerThrow', () => {
         jest.mocked(data.findMatch).mockResolvedValue(currentMatch as any);
         jest.mocked(data.decrementMatchLegs).mockResolvedValue(updatedMatch as any);
 
-        await undoThrow('m1', 3, false, '11');
+        await undoThrow('m1', 3, '11');
 
         expect(data.markPlayerThrowUndone).toHaveBeenCalledWith('throw-prev', tx);
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
@@ -221,7 +221,7 @@ describe('playerThrow', () => {
         jest.mocked(data.decrementMatchLegs).mockResolvedValue(updatedMatch as any);
         jest.mocked(setScore).mockReturnValue(setScorePromise as any);
 
-        const actionPromise = undoThrow('m1', 3, false, '11');
+        const actionPromise = undoThrow('m1', 3, '11');
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
@@ -239,7 +239,7 @@ describe('playerThrow', () => {
         jest.mocked(data.findLastThrow).mockResolvedValue(null);
         jest.mocked(data.findPreviousLegLastThrow).mockResolvedValue(null);
 
-        await undoThrow('m1', 1, false, '11');
+        await undoThrow('m1', 1, '11');
 
         expect(data.updateMatchFirstPlayer).toHaveBeenCalledWith('m1', null, tx);
         expect(data.markPlayerThrowUndone).not.toHaveBeenCalled();
@@ -253,7 +253,7 @@ describe('playerThrow', () => {
         jest.mocked(data.findRedoableThrow).mockResolvedValue({ id: 'throw-1', checkout: false } as any);
         jest.mocked(data.restorePlayerThrow).mockResolvedValue({ id: 'throw-1', checkout: false } as any);
 
-        await redoThrow('m1', false, '11');
+        await redoThrow('m1', '11');
 
         expect(data.findRedoableThrow).toHaveBeenCalledWith('m1', tx);
         expect(data.restorePlayerThrow).toHaveBeenCalledWith('throw-1', tx);
@@ -284,7 +284,7 @@ describe('playerThrow', () => {
         jest.mocked(data.findMatch).mockResolvedValue(currentMatch as any);
         jest.mocked(data.updateMatchLegs).mockResolvedValue(updatedMatch as any);
 
-        await redoThrow('m1', false, '11');
+        await redoThrow('m1', '11');
 
         expect(data.restorePlayerThrow).toHaveBeenCalledWith('throw-prev', tx);
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);

@@ -13,17 +13,16 @@ import {
 import { CHECKOUT_DART_OPTIONS, getAllowedCheckoutDarts } from "@/app/lib/checkout-darts";
 
 type ScoreBoardProps = {
-  tournamentId: string
-  matchId: string
-  leg: number
-  player: string
-  currentPlayerScore: number
-  slow: boolean
-  table: string
-  throwHistory: ScoreboardThrowHistoryItem[]
-  playerNames: Record<string, string>
-  playerAccents: Record<string, PlayerAccent>
-}
+   tournamentId: string
+   matchId: string
+   leg: number
+   player: string
+   currentPlayerScore: number
+   table: string
+   throwHistory: ScoreboardThrowHistoryItem[]
+   playerNames: Record<string, string>
+   playerAccents: Record<string, PlayerAccent>
+ }
 
 const DEFAULT_CHECKOUT_DARTS = 3;
 
@@ -90,7 +89,7 @@ export function CheckoutDartsSelector({
   )
 }
 
-export default function ScoreBoard({ tournamentId, matchId, leg, player, currentPlayerScore, slow, table, throwHistory, playerNames, playerAccents }: ScoreBoardProps) {
+export default function ScoreBoard({ tournamentId, matchId, leg, player, currentPlayerScore, table, throwHistory, playerNames, playerAccents }: ScoreBoardProps) {
   const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [currentScore, setCurrentScore] = useState("0");
   const [disabledOK, setDisabledOK] = useState(false);
@@ -109,15 +108,15 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
     setCurrentScore(score);
   }
 
-  async function handleUndo() {
-    await undoThrow(matchId, leg, slow, table);
-    setEnteredScore("0");
-  }
+async function handleUndo() {
+     await undoThrow(matchId, leg, table);
+     setEnteredScore("0");
+   }
 
-  async function handleRedo() {
-    await redoThrow(matchId, slow, table);
-    setEnteredScore("0");
-  }
+   async function handleRedo() {
+     await redoThrow(matchId, table);
+     setEnteredScore("0");
+   }
 
   function handleClr() {
     setEnteredScore("0");
@@ -209,7 +208,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
                 if (checkoutDarts === undefined || !allowedCheckoutDarts.includes(checkoutDarts)) {
                   return;
                 }
-                await addThrowAction(tournamentId, matchId, leg, player, Number(currentScoreRef.current), checkoutDarts, slow, table);
+                await addThrowAction(tournamentId, matchId, leg, player, Number(currentScoreRef.current), checkoutDarts, table);
                 setEnteredScore("0")
                 setSelectedCheckoutDarts(null);
                 setDartsCount(false);
@@ -294,7 +293,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
               setDartsCount(true);
               return;
             }
-            await addThrowAction(tournamentId, matchId, leg, player, submittedScore, 3, slow, table);
+            await addThrowAction(tournamentId, matchId, leg, player, submittedScore, 3, table);
             setEnteredScore("0")
           }}
         />

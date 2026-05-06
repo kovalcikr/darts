@@ -82,16 +82,15 @@ describe('ScoreBoard throw history layout', () => {
     ]);
 
     const { container } = render(
-      <ScoreBoard
-        tournamentId="tournament-1"
-        matchId="match-1"
-        leg={1}
-        player="long-single-word"
-        currentPlayerScore={501}
-        slow={false}
-        table="1"
-        throwHistory={throwHistory}
-        playerNames={{
+<ScoreBoard
+         tournamentId="tournament-1"
+         matchId="match-1"
+         leg={1}
+         player="long-single-word"
+         currentPlayerScore={501}
+         table="1"
+         throwHistory={throwHistory}
+         playerNames={{
           'long-single-word': 'AlexandertheGreatestDartsPlayerWithAnExtremelyLongUnbrokenName',
           'long-multi-word': 'Bernard The Very Persistent Tactical Checkout Specialist',
           'unicode-name': 'Žofia Šampiónová Extra Long Display Name',

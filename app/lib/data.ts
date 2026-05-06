@@ -321,28 +321,6 @@ export async function updateMatchFirstPlayer(matchId: string, playerId: string, 
     return match;
 }
 
-export async function resetMatchData(matchId: string, tx?: PrismaTransactionClient) {
-    const client = getPrismaClient(tx);
-    const match = await client.match.update({
-        data: {
-            firstPlayer: null,
-            playerALegs: 0,
-            playerBlegs: 0,
-            isComplete: false,
-            throwsList: {
-                deleteMany: {
-                }
-            }
-        },
-        where: {
-            id: matchId
-        }
-    });
-
-    await refreshMatchLiveState(matchId, undefined, tx);
-    return match;
-}
-
 export async function findThrowsByMatchAndLeg(matchId: string, leg: number, playerA: string, playerB: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     return client.playerThrow.groupBy({

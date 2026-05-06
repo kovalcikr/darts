@@ -1,10 +1,9 @@
-import { resetMatch } from "@/app/lib/match";
 import type { Tournament } from "@/prisma/client";
 import Image from "next/image";
 
 type TournamentHeaderTournament = Pick<Tournament, "id" | "name">
 
-export default function TournamentHeader({ tournament, round, format, table, matchId, reset }: { tournament: TournamentHeaderTournament, round: string, format: string, table: string, matchId: string, reset: boolean }) {
+export default function TournamentHeader({ tournament, round, format, table }: { tournament: TournamentHeaderTournament, round: string, format: string, table: string }) {
   return (
     <header className="shrink-0 border-b border-gray-700 bg-gray-900/70 px-3 py-2 text-gray-300">
       <div className="flex items-center justify-between gap-3">
@@ -27,12 +26,6 @@ export default function TournamentHeader({ tournament, round, format, table, mat
               <span>First to {format} legs</span>
             </div>
           </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <form action={resetMatch}>
-            <input type="hidden" name="matchId" value={matchId} />
-            {reset && <button className="rounded-md border border-red-500/40 bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-100 transition hover:bg-red-500/30" type="submit">Reset</button>}
-          </form>
         </div>
       </div>
     </header>

@@ -78,7 +78,7 @@ describe('match', () => {
         jest.mocked(findLastThrow).mockResolvedValue({ score: 60 } as any);
         jest.mocked(findMatchAvg).mockResolvedValue(80);
 
-        const fullMatch = await match.getFullMatch(matchId, false);
+        const fullMatch = await match.getFullMatch(matchId);
 
         expect(fullMatch.match).toEqual(mockMatch);
         expect(fullMatch.playerA.score).toBe(501);
@@ -88,7 +88,7 @@ describe('match', () => {
     test('getFullMatch returns null when the match does not exist', async () => {
         jest.mocked(data.findMatch).mockResolvedValue(null);
 
-        const fullMatch = await match.getFullMatch('missing-match', false);
+        const fullMatch = await match.getFullMatch('missing-match');
 
         expect(fullMatch).toBeNull();
         expect(data.findThrowsByMatchAndLeg).not.toHaveBeenCalled();
@@ -128,14 +128,6 @@ describe('match', () => {
         jest.mocked(data.updateMatchFirstPlayer).mockResolvedValue(null);
         await match.startMatch(formData);
         expect(data.updateMatchFirstPlayer).toHaveBeenCalledWith('m1', 'pA');
-    });
-
-    test('resetMatch', async () => {
-        const formData = new FormData();
-        formData.append('matchId', 'm1');
-        jest.mocked(data.resetMatchData).mockResolvedValue(null);
-        await match.resetMatch(formData);
-        expect(data.resetMatchData).toHaveBeenCalledWith('m1');
     });
 
     test('getThrows', async () => {

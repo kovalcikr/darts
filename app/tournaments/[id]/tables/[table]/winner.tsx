@@ -7,7 +7,7 @@ import type { Match } from "@/prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react"
 
-export default function Winner({ player, image, match, leg, slow, table }: { player: string, image: string, match: Match, leg: number, slow: boolean, table: string }) {
+export default function Winner({ player, image, match, leg, table }: { player: string, image: string, match: Match, leg: number, table: string }) {
 
   const router = useRouter();
 
@@ -34,7 +34,7 @@ export default function Winner({ player, image, match, leg, slow, table }: { pla
         <GamepadButton
           name="Undo"
           color="bg-gray-800/80 p-5 text-gray-300 ring-white/10 hover:bg-gray-700"
-          onClick={async () => await undoThrow(match.id, leg, slow, table)}
+          onClick={async () => await undoThrow(match.id, leg, table)}
         />
       </div>
     </div>

@@ -32,10 +32,7 @@ async function revalidateScoreboard(table) {
     revalidateTag(cacheTag, 'max')
 }
 
-export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, slow, table) {
-    if (slow) {
-        await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
-    }
+export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, table) {
     let closeLeg = false;
     let match = null;
     await prisma.$transaction(async (tx) => {
@@ -68,10 +65,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
     await revalidateScoreboard(table);
 }
 
-export async function undoThrow(matchId, leg, slow, table) {
-    if (slow) {
-        await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
-    }
+export async function undoThrow(matchId, leg, table) {
     let undoCloseLeg = false;
     let match = null;
     await prisma.$transaction(async (tx) => {
@@ -100,10 +94,7 @@ export async function undoThrow(matchId, leg, slow, table) {
 
 }
 
-export async function redoThrow(matchId, slow, table) {
-    if (slow) {
-        await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
-    }
+export async function redoThrow(matchId, table) {
     let redoCloseLeg = false;
     let match = null;
     await prisma.$transaction(async (tx) => {
