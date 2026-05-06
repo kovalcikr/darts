@@ -189,10 +189,15 @@ const throwCountMap = new Map<string, number>(
               </p>
             </div>
 
-            <form action={logoutAdminAction} className="self-start lg:self-auto">
-              <input name="returnTo" type="hidden" value={returnTo} />
-              <ActionButton tone="muted">Log out</ActionButton>
-            </form>
+            <div className="flex flex-wrap gap-3 self-start lg:self-auto">
+              <ActionLink href="/admin/deleted" tone="muted">
+                View Deleted Tournaments
+              </ActionLink>
+              <form action={logoutAdminAction}>
+                <input name="returnTo" type="hidden" value={returnTo} />
+                <ActionButton tone="muted">Log out</ActionButton>
+              </form>
+            </div>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -379,8 +384,8 @@ const throwCountMap = new Map<string, number>(
               </div>
             </article>
           )})}
-        </SectionShell>
-      </div>
-    </main>
-  )
+</SectionShell>
+        </div>
+     </main>
+   )
 }

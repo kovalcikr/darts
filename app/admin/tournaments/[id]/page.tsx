@@ -86,7 +86,7 @@ export default async function AdminTournamentPage({
     matchFilters.push({ OR: scopedFilters })
   }
 
-  const [tournament, matches, matchAudits] = await Promise.all([
+  const [tournament, matches, matchAuditsWithCount] = await Promise.all([
     prisma.tournament.findUnique({
       where: { id },
       include: {
@@ -105,18 +105,41 @@ export default async function AdminTournamentPage({
       orderBy: [{ round: 'asc' }, { id: 'asc' }],
     }),
     prisma.matchAudit.findMany({
-      where: query
-        ? { matchId: { contains: query, mode: stringMode } }
-        : undefined,
-      select: { matchId: true },
+      where: { tournamentId: id },
+      select: {
+        matchId: true,
+        playerAName: true,
+        playerBName: true,
+        round: true,
+        runTo: true,
+        playerALegs: true,
+        playerBlegs: true,
+      },
+      orderBy: [{ round: 'asc' }],
     }),
   ])
+
+  const matchAuditIds = matchAuditsWithCount.map((a) => a.matchId)
+  const throwCounts =
+    matchAuditIds.length > 0
+      ? await prisma.throwAudit.groupBy({
+          by: ['matchId'],
+          where: {
+            matchId: { in: matchAuditIds },
+          },
+          _count: {
+            throwId: true,
+          },
+        })
+      : []
+
+  const throwCountMapForAudits = new Map<string, number>(
+    throwCounts.map((item) => [item.matchId, item._count.throwId])
+  )
 
   if (!tournament) {
     notFound()
   }
-
-  const deletedMatchIds = new Set(matchAudits.map((audit) => audit.matchId))
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
@@ -206,7 +229,7 @@ export default async function AdminTournamentPage({
           </form>
         </section>
 
-        <SectionShell
+<SectionShell
           count={matches.length}
           description="Edit is hidden until you open it. Throws are managed from the match detail screen."
           title="Matches"
@@ -232,26 +255,18 @@ export default async function AdminTournamentPage({
                   </div>
                 </div>
 
-<div className="flex flex-wrap gap-3">
-                   <ActionLink href={`/admin/matches/${encodeURIComponent(match.id)}`} tone="primary">
-                     View Throws
-                   </ActionLink>
-                   {deletedMatchIds.has(match.id) ? (
-                     <form action={restoreMatchAction}>
-                       <input name="returnTo" type="hidden" value={returnTo} />
-                       <input name="matchId" type="hidden" value={match.id} />
-                       <ActionButton tone="success">Restore Match</ActionButton>
-                     </form>
-                   ) : (
-                     <form action={deleteMatchAction}>
-                       <input name="returnTo" type="hidden" value={returnTo} />
-                       <input name="id" type="hidden" value={match.id} />
-                       <ConfirmSubmitButton confirmationMessage={`Delete match "${match.id}" and its throws?`}>
-                         Delete Match
-                       </ConfirmSubmitButton>
-                     </form>
-                   )}
-                 </div>
+                <div className="flex flex-wrap gap-3">
+                  <ActionLink href={`/admin/matches/${encodeURIComponent(match.id)}`} tone="primary">
+                    View Throws
+                  </ActionLink>
+                  <form action={deleteMatchAction}>
+                    <input name="returnTo" type="hidden" value={returnTo} />
+                    <input name="id" type="hidden" value={match.id} />
+                    <ConfirmSubmitButton confirmationMessage={`Delete match "${match.id}" and its throws?`}>
+                      Delete Match
+                    </ConfirmSubmitButton>
+                  </form>
+                </div>
               </div>
 
               <div className="mt-5">
@@ -292,6 +307,47 @@ export default async function AdminTournamentPage({
             </article>
           ))}
         </SectionShell>
+
+        {matchAuditsWithCount.length > 0 ? (
+          <SectionShell
+            count={matchAuditsWithCount.length}
+            description="These matches have been soft-deleted. Restore them to recover all throws."
+            title="Deleted Matches"
+          >
+            {matchAuditsWithCount.map((audit) => (
+              <article
+                className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5"
+                key={audit.matchId}
+              >
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">
+                      {audit.playerAName} vs {audit.playerBName}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-400">
+                      {audit.round} · match {audit.matchId}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-slate-500">
+                      <span>Run to {audit.runTo}</span>
+                      <span>
+                        Legs {audit.playerALegs}:{audit.playerBlegs}
+                      </span>
+                      <span>{throwCountMapForAudits.get(audit.matchId) ?? 0} throws</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <form action={restoreMatchAction}>
+                      <input name="returnTo" type="hidden" value={returnTo} />
+                      <input name="matchId" type="hidden" value={audit.matchId} />
+                      <ActionButton tone="success">Restore Match</ActionButton>
+                    </form>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </SectionShell>
+        ) : null}
       </div>
     </main>
   )

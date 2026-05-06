@@ -120,4 +120,87 @@ describe('admin page', () => {
     expect(html).not.toContain('Alice vs Bob')
     expect(html).not.toContain('140 points')
   })
+
+  test('View Deleted Tournaments link appears before Log out button', async () => {
+    jest.mocked(auth.isAdminAuthenticated).mockResolvedValue(true)
+    jest.mocked(auth.isAdminConfigured).mockReturnValue(true)
+
+    prismaMock.tournament.findMany.mockResolvedValue([])
+    prismaMock.playerThrow.groupBy.mockResolvedValue([])
+    prismaMock.tournamentAudit.findMany.mockResolvedValue([])
+    jest.mocked(getActiveTournament).mockResolvedValue(null)
+
+    const element = await AdminPage({
+      searchParams: Promise.resolve({}),
+    })
+
+    const html = renderToStaticMarkup(element)
+
+    const viewDeletedIndex = html.indexOf('View Deleted Tournaments')
+    const logOutIndex = html.indexOf('Log out')
+
+    expect(viewDeletedIndex).toBeGreaterThan(-1)
+    expect(logOutIndex).toBeGreaterThan(-1)
+    expect(viewDeletedIndex).toBeLessThan(logOutIndex)
+  })
+
+  test('shows Delete Tournament button for restored tournaments without audit records', async () => {
+    jest.mocked(auth.isAdminAuthenticated).mockResolvedValue(true)
+    jest.mocked(auth.isAdminConfigured).mockReturnValue(true)
+
+    prismaMock.tournament.findMany.mockResolvedValue([
+      {
+        id: 't1',
+        name: 'Restored Tournament',
+        season: 2026,
+        eventDate: new Date('2026-04-23T00:00:00.000Z'),
+        includeInGlobalStats: false,
+        _count: { matches: 1 },
+      },
+    ] as never)
+    prismaMock.playerThrow.groupBy.mockResolvedValue([])
+    prismaMock.tournamentAudit.findMany.mockResolvedValue([] as never)
+    jest.mocked(getActiveTournament).mockResolvedValue(null)
+
+    const element = await AdminPage({
+      searchParams: Promise.resolve({}),
+    })
+
+    const html = renderToStaticMarkup(element)
+
+    expect(html).toContain('Restored Tournament')
+    expect(html).toContain('Delete Tournament')
+    expect(html).not.toContain('Restore Tournament')
+  })
+
+  test('shows Restore Tournament button for tournaments with audit records', async () => {
+    jest.mocked(auth.isAdminAuthenticated).mockResolvedValue(true)
+    jest.mocked(auth.isAdminConfigured).mockReturnValue(true)
+
+    prismaMock.tournament.findMany.mockResolvedValue([
+      {
+        id: 't1',
+        name: 'Deleted Tournament',
+        season: 2026,
+        eventDate: new Date('2026-04-23T00:00:00.000Z'),
+        includeInGlobalStats: false,
+        _count: { matches: 1 },
+      },
+    ] as never)
+    prismaMock.playerThrow.groupBy.mockResolvedValue([])
+    prismaMock.tournamentAudit.findMany.mockResolvedValue([
+      { tournamentId: 't1' },
+    ] as never)
+    jest.mocked(getActiveTournament).mockResolvedValue(null)
+
+    const element = await AdminPage({
+      searchParams: Promise.resolve({}),
+    })
+
+    const html = renderToStaticMarkup(element)
+
+    expect(html).toContain('Deleted Tournament')
+    expect(html).toContain('Restore Tournament')
+    expect(html).not.toContain('Delete Tournament')
+  })
 })
