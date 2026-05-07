@@ -8,6 +8,10 @@ import prisma from "./db";
 import type { Prisma } from '@/prisma/client'
 import { generateLegacyTournamentNamesForSeason } from "./tournament-metadata";
 import { selectCurrentLegStarter } from "./leg-starter";
+import { refreshMatchLiveState, findMatchLiveStates } from './match-live-state'
+
+export { findMatchLiveStates }
+export { refreshMatchLiveState }
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 
@@ -246,27 +250,6 @@ export async function findMatch(matchId: string, tx?: PrismaTransactionClient) {
         where: { id: matchId },
         include: { tournament: true }
     });
-}
-
-export async function findMatchLiveStates(matchIds: string[], tx?: PrismaTransactionClient) {
-    if (matchIds.length === 0) {
-        return [];
-    }
-
-    const client = getPrismaClient(tx);
-    return client.matchLiveState.findMany({
-        where: {
-            matchId: {
-                in: matchIds,
-            },
-        },
-    });
-}
-
-export async function refreshMatchLiveState(matchId: string, table?: string | null, tx?: PrismaTransactionClient) {
-    // Delegate to the match-live-state module which encapsulates the complex logic
-    const { refreshMatchLiveState: refreshState } = await import('../lib/match-live-state/refresh')
-    return refreshState(matchId, table, tx)
 }
 
 export async function upsertMatch(match, slot?: string, tx?: PrismaTransactionClient) {

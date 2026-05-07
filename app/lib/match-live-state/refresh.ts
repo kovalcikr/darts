@@ -2,30 +2,10 @@
 
 import prisma from '@/app/lib/db'
 import type { Prisma } from '@/prisma/client'
+import { STARTING_SCORE } from '@/app/lib/scoring'
+import type { MatchLiveState } from './model'
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
-
-export type MatchLiveState = {
-    matchId: string
-    tournamentId: string | null
-    table: string | null
-    leg: number
-    playerAScoreLeft: number
-    playerBScoreLeft: number
-    playerATotalScore: number
-    playerBTotalScore: number
-    playerATotalDarts: number
-    playerBTotalDarts: number
-    activePlayerId: string | null
-    startingPlayerId: string | null
-    lastThrows: Array<{
-        playerId: string
-        score: number
-        darts: number
-        checkout: boolean
-        leg: number
-    }>
-}
 
 export async function refreshMatchLiveState(
     matchId: string,
@@ -99,8 +79,8 @@ export async function refreshMatchLiveState(
         tournamentId: match.tournamentId,
         table: table ?? null,
         leg,
-        playerAScoreLeft: 501 - (playerALegTotals?._sum.score ?? 0),
-        playerBScoreLeft: 501 - (playerBLegTotals?._sum.score ?? 0),
+        playerAScoreLeft: STARTING_SCORE - (playerALegTotals?._sum.score ?? 0),
+        playerBScoreLeft: STARTING_SCORE - (playerBLegTotals?._sum.score ?? 0),
         playerATotalScore: playerAMatchTotals?._sum.score ?? 0,
         playerBTotalScore: playerBMatchTotals?._sum.score ?? 0,
         playerATotalDarts: playerAMatchTotals?._sum.darts ?? 0,

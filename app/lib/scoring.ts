@@ -28,7 +28,7 @@ export type MatchState = {
   startingPlayerId: string | null
 }
 
-const STARTING_SCORE = 501
+export const STARTING_SCORE = 501
 
 function range(start: number, end: number): number[] {
   return Array.from({ length: end - start + 1 }, (_, i) => start + i)
