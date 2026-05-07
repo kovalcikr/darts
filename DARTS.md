@@ -4,8 +4,6 @@
 
 Darts is a comprehensive **darts tournament management and scoring platform** designed for the "Relax Darts Cup" league. The application provides real-time score tracking, player statistics, tournament administration, and integration with external darts platforms.
 
----
-
 ## User-Facing Features
 
 ### 1. Public Statistics & Overview
