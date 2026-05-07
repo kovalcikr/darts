@@ -11,7 +11,6 @@ import {
   setActiveTournament,
 } from '@/app/lib/active-tournament'
 import prisma from '@/app/lib/db'
-import { isMatchComplete } from '@/app/lib/utils/match'
 import { openActiveTournament } from '@/app/lib/tournament'
 import {
   ADMIN_PASSWORD_ENV,
@@ -49,6 +48,10 @@ async function requireAdminSession(returnTo: string) {
   if (!(await isAdminAuthenticated())) {
     redirectWithError(returnTo, 'Please log in again.')
   }
+}
+
+function isMatchComplete(runTo: number, playerALegs: number, playerBlegs: number) {
+  return playerALegs >= runTo || playerBlegs >= runTo
 }
 
 function requireString(formData: FormData, key: string) {

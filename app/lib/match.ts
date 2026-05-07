@@ -7,7 +7,6 @@ import { findLastThrow, findMatchAvg } from "./playerThrow";
 import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrowsByMatchAndLeg, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
 import { selectCurrentLegStarter } from "./leg-starter";
 import { calculateLegState } from "./scoring";
-import { isMatchComplete } from "./utils/match";
 
 interface CueScorePlayer {
     playerId: number;
