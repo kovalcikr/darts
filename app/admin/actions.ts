@@ -10,7 +10,7 @@ import {
   setActiveTournament,
 } from '@/app/lib/active-tournament'
 import prisma from '@/app/lib/db'
-import { isMatchComplete } from '@/app/lib/data'
+import { isMatchComplete } from '@/app/lib/utils/match'
 import { openActiveTournament } from '@/app/lib/tournament'
 import {
   ADMIN_PASSWORD_ENV,

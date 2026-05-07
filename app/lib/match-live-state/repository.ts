@@ -18,9 +18,10 @@ export async function findMatchLiveStates(matchIds: string[], tx?: PrismaTransac
         return []
     }
     const client = tx || prisma
-    return client.matchLiveState.findMany({
+    const results = await client.matchLiveState.findMany({
         where: { matchId: { in: matchIds } },
     })
+    return results as unknown as MatchLiveState[]
 }
 
 export async function upsertMatchLiveState(matchId: string, tournamentId: string, table: string | null, state: Omit<MatchLiveState, 'matchId' | 'tournamentId' | 'table'>, tx?: PrismaTransactionClient): Promise<MatchLiveState> {

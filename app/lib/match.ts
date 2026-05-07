@@ -4,24 +4,25 @@ import getTournamentInfo from "./cuescore"
 import { revalidatePath, revalidateTag } from "next/cache";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
-import { findMatch, upsertMatch, updateMatchFirstPlayer, findThrowsByMatchAndLeg, findThrowsByMatch, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory } from "./data";
+import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
 import { selectCurrentLegStarter } from "./leg-starter";
 import { calculateLegState } from "./scoring";
+import { isMatchComplete } from "./utils/match";
 
 interface CueScorePlayer {
-  playerId: number;
-  name: string;
-  image: string;
+    playerId: number;
+    name: string;
+    image: string;
 }
 
 interface CueScoreMatch {
-  matchId: number;
-  roundName: string;
-  round: number;
-  playerA: CueScorePlayer;
-  playerB: CueScorePlayer;
-  raceTo: number;
-  tournamentId: number
+    matchId: number;
+    roundName: string;
+    round: number;
+    playerA: CueScorePlayer;
+    playerB: CueScorePlayer;
+    raceTo: number;
+    tournamentId: number
 }
 
 export async function getCuescoreMatchCached(tournamentId: string, tableName: string) {
