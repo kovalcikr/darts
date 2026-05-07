@@ -23,7 +23,7 @@ export {
 export { runInTransaction } from './tx'
 
 // Match operations
-export { getSyncedMatchLegState, refreshMatchLiveState } from './match-operations'
+export { getSyncedMatchLegState } from './match-operations'
 
-// Re-export from match-live-state
-export { findMatchLiveStates, refreshMatchLiveState as refreshMatchLiveStateFromRepo } from '../match-live-state'
+// Live state - re-exported from match-live-state for consistency
+export { refreshMatchLiveState, findMatchLiveStates } from '../match-live-state'

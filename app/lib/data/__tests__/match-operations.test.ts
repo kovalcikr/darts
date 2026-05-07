@@ -6,11 +6,6 @@ describe('data/match-operations', () => {
         jest.resetModules();
     });
 
-    test('exports refreshMatchLiveState function', async () => {
-        const ops = await import('../match-operations');
-        expect(typeof ops.refreshMatchLiveState).toBe('function');
-    });
-
     test('exports getSyncedMatchLegState function', async () => {
         const ops = await import('../match-operations');
         expect(typeof ops.getSyncedMatchLegState).toBe('function');

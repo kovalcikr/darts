@@ -3,6 +3,7 @@ import {
   calculateLegState,
   calculateThreeDartAverage,
   getAllowedCheckoutDarts,
+  getNextPlayer,
 } from '../scoring'
 
 describe('scoring', () => {
@@ -145,5 +146,63 @@ describe('calculateLegState next player edge cases', () => {
     })
 
     expect(result.nextPlayer).toBe('pA')
+  })
+})
+
+describe('getNextPlayer', () => {
+  test('returns null when firstPlayer is null', () => {
+    expect(getNextPlayer({
+      leg: 1,
+      throwCount: 0,
+      firstPlayer: null,
+      playerAId: 'pA',
+      playerBId: 'pB',
+    })).toBeNull()
+  })
+
+  test('returns null when firstPlayer is not a valid player', () => {
+    expect(getNextPlayer({
+      leg: 1,
+      throwCount: 0,
+      firstPlayer: 'invalid',
+      playerAId: 'pA',
+      playerBId: 'pB',
+    })).toBeNull()
+  })
+
+  test('returns firstPlayer when (leg + throwCount) % 2 === 1', () => {
+    expect(getNextPlayer({
+      leg: 1,
+      throwCount: 0,
+      firstPlayer: 'pA',
+      playerAId: 'pA',
+      playerBId: 'pB',
+    })).toBe('pA')
+
+    expect(getNextPlayer({
+      leg: 1,
+      throwCount: 1,
+      firstPlayer: 'pB',
+      playerAId: 'pA',
+      playerBId: 'pB',
+    })).toBe('pA')
+  })
+
+  test('returns other player when (leg + throwCount) % 2 === 0', () => {
+    expect(getNextPlayer({
+      leg: 1,
+      throwCount: 1,
+      firstPlayer: 'pA',
+      playerAId: 'pA',
+      playerBId: 'pB',
+    })).toBe('pB')
+
+    expect(getNextPlayer({
+      leg: 2,
+      throwCount: 0,
+      firstPlayer: 'pA',
+      playerAId: 'pA',
+      playerBId: 'pB',
+    })).toBe('pB')
   })
 })

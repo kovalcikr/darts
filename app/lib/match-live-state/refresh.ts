@@ -2,7 +2,7 @@
 
 import prisma from '@/app/lib/db'
 import type { Prisma } from '@/prisma/client'
-import { STARTING_SCORE } from '@/app/lib/scoring'
+import { STARTING_SCORE, getNextPlayer } from '@/app/lib/scoring'
 import type { MatchLiveState } from './model'
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
@@ -58,13 +58,13 @@ export async function refreshMatchLiveState(
     const throwCount = (playerALegTotals?._count?.id ?? 0) + (playerBLegTotals?._count?.id ?? 0)
     const startingPlayerId = match.firstPlayer
 
-    const getNextActivePlayer = () => {
-        if (!match.firstPlayer) return null
-        if ((leg + throwCount) % 2 === 1) return match.firstPlayer
-        return match.firstPlayer === match.playerAId ? match.playerBId : match.playerAId
-    }
-
-    const activePlayerId = getNextActivePlayer()
+    const activePlayerId = getNextPlayer({
+      leg,
+      throwCount,
+      firstPlayer: match.firstPlayer,
+      playerAId: match.playerAId,
+      playerBId: match.playerBId,
+    })
 
     const lastThrowsData = lastThrows.map(t => ({
         playerId: t.playerId,

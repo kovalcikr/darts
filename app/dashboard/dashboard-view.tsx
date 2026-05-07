@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import NoActiveTournament from '@/app/components/NoActiveTournament';
 import DartIcon from '@/app/components/DartIcon';
 import { selectCurrentLegStarter } from '@/app/lib/leg-starter';
+import { getNextPlayer } from '@/app/lib/scoring';
 
 const ACTIVE_TOURNAMENT_NOT_SET = 'ACTIVE_TOURNAMENT_NOT_SET';
 
@@ -83,20 +84,18 @@ function formatAverageValue(average?: number) {
 }
 
 function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firstPlayer, avgPlayerA, avgPlayerB }: { tableId: string, match: any, matchInfo: any, lastThrows?: any[], liveState?: any, firstPlayer?: string, avgPlayerA?: number, avgPlayerB?: number }) {
-    function nextPlayer(leg: number, throwsA: number, throwsB: number, playerA: string, playerB: string, firstPlayer: string) {
-        if ((leg + (throwsA ? throwsA : 0) + (throwsB ? throwsB : 0)) % 2 == 1) {
-            return firstPlayer;
-        } else {
-            return firstPlayer == playerA ? playerB : playerA;
-        }
-    }
-
     const leg = (match?.scoreA || 0) + (match?.scoreB || 0) + 1;
     const playerAId = match?.playerA?.playerId?.toString();
     const playerBId = match?.playerB?.playerId?.toString();
     const playerAInfo = matchInfo?.find(e => e.playerId == playerAId)
     const playerBInfo = matchInfo?.find(e => e.playerId == playerBId)
-    const fallbackNextPlayer = match && firstPlayer ? nextPlayer(leg, playerAInfo?._count?.score, playerBInfo?._count?.score, playerAId, playerBId, firstPlayer) : null;
+    const fallbackNextPlayer = match && firstPlayer ? getNextPlayer({
+        leg,
+        throwCount: (playerAInfo?._count?.score ?? 0) + (playerBInfo?._count?.score ?? 0),
+        firstPlayer,
+        playerAId: playerAId ?? '',
+        playerBId: playerBId ?? '',
+    }) : null;
     const nextP = liveState?.activePlayerId ?? fallbackNextPlayer;
     const projectedLastThrows = Array.isArray(liveState?.lastThrows) ? liveState.lastThrows : null;
     const currentLastThrows = projectedLastThrows ?? lastThrows;

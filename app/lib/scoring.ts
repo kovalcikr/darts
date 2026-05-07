@@ -77,6 +77,26 @@ export function getAllowedCheckoutDarts(
   return ([1, 2, 3] as const).filter((d) => canCheckoutExactly(remainingScore, d))
 }
 
+export function getNextPlayer(params: {
+  leg: number
+  throwCount: number
+  firstPlayer: string | null
+  playerAId: string
+  playerBId: string
+}): string | null {
+  const { leg, throwCount, firstPlayer, playerAId, playerBId } = params
+
+  if (!Number.isInteger(leg) || !firstPlayer || (firstPlayer !== playerAId && firstPlayer !== playerBId)) {
+    return null
+  }
+
+  return (leg + throwCount) % 2 === 1
+    ? firstPlayer
+    : firstPlayer === playerAId
+      ? playerBId
+      : playerAId
+}
+
 export function calculateLegState(params: {
   throws: Array<{ playerId: string; score: number; darts: number }>
   leg: number
@@ -108,15 +128,7 @@ export function calculateLegState(params: {
     )
 
   const throwCount = throws.length
-  let nextPlayer: string | null = null
-
-  if (firstPlayer) {
-    if ((leg + throwCount) % 2 === 1) {
-      nextPlayer = firstPlayer
-    } else {
-      nextPlayer = firstPlayer === playerAId ? playerBId : playerAId
-    }
-  }
+  const nextPlayer = getNextPlayer({ leg, throwCount, firstPlayer, playerAId, playerBId })
 
   return {
     playerAScoreLeft: startingScore - playerAStats.sum,
