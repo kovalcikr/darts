@@ -9,7 +9,7 @@ export type { TournamentUpsertInput, FindTournamentsBySeasonOptions } from './to
 export { activeThrowWhere } from './queries'
 export type { ScoreboardThrowHistoryItem } from './queries'
 export { 
-    findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, 
+    findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrowsByMatchAndLeg,
     findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch,
     findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer,
     aggregatePlayerThrow, createPlayerThrow, invalidateRedoableThrows,

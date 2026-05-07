@@ -4,7 +4,7 @@ import getTournamentInfo from "./cuescore"
 import { revalidatePath, revalidateTag } from "next/cache";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
-import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
+import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrowsByMatchAndLeg, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
 import { selectCurrentLegStarter } from "./leg-starter";
 import { calculateLegState } from "./scoring";
 import { isMatchComplete } from "./utils/match";
@@ -132,13 +132,11 @@ export async function startMatch(formData) {
 }
 
 export async function getScores(matchId: string, leg: number, playerA: string, playerB: string, firstPlayer: string) {
-  const playerThrows = await getThrows(matchId, leg, playerA, playerB);
-
-  // Transform database format to scoring format
+  const playerThrows = await findActiveThrowsByMatchAndLeg(matchId, leg, playerA, playerB);
   const throws = playerThrows.map((t: any) => ({
     playerId: t.playerId,
-    score: t._sum?.score ?? 0,
-    darts: t._sum?.darts ?? 0,
+    score: t.score,
+    darts: t.darts,
   }));
 
   const state = calculateLegState({

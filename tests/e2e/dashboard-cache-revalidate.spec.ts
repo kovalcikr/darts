@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext } from '@playwright/test'
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 import { Client } from 'pg'
 
 const ACTIVE_TOURNAMENT_SETTING_KEY = 'activeTournamentId'
@@ -29,6 +29,10 @@ async function getFakeCueScoreSnapshot(request: APIRequestContext, tournamentId:
   return response.json()
 }
 
+function dashboardTable(page: Page, tableId: string) {
+  return page.getByTestId(`dashboard-table-${tableId}`)
+}
+
 test('dashboard cache revalidation shows new match after startMatch', async ({
   browser,
   page,
@@ -55,21 +59,24 @@ test('dashboard cache revalidation shows new match after startMatch', async ({
   // Open dashboard in first tab
   await dashboardPage.goto('/dashboard')
 
-  // Initially should show no active tournament
-  await expect(dashboardPage.getByText('No active tournaments')).toBeVisible({ timeout: 5000 })
-
   // Open table in second tab and start match
   await tablePage.goto('/tables/1')
   const snapshot = await getFakeCueScoreSnapshot(request, tournamentId)
   const match = snapshot.tournament?.matches.find((m: any) => m.table?.name === '11')
+  expect(match).toBeTruthy()
   const playerAId = String(match?.playerA?.playerId)
+  const table1 = dashboardTable(dashboardPage, '1')
+
+  await expect(table1).toBeVisible()
+  await expect(table1).toContainText(match?.playerA?.name, { timeout: 10_000 })
+  await expect(table1.getByTestId('dashboard-leg-starter-icon')).toHaveCount(0)
 
   // Start match
   await tablePage.getByTestId(`start-player-${playerAId}`).click()
   await expect(tablePage.getByRole('button', { name: 'UNDO' })).toBeVisible()
 
-  // Dashboard should now show the match (cache revalidated via revalidateTag in startMatch)
-  await expect(dashboardPage.getByText('#1')).toBeVisible({ timeout: 5000 })
+  // Dashboard should now show the leg starter (cache revalidated via revalidateTag in startMatch)
+  await expect(table1.getByTestId('dashboard-leg-starter-icon')).toBeVisible({ timeout: 10_000 })
 
   await context.close()
 })
@@ -99,18 +106,20 @@ test('dashboard cache revalidation shows updated throw after addThrowAction', as
 
   // Open dashboard
   await dashboardPage.goto('/dashboard')
+  const table1 = dashboardTable(dashboardPage, '1')
 
   // Open table and start match
   await tablePage.goto('/tables/1')
   const snapshot = await getFakeCueScoreSnapshot(request, tournamentId)
   const match = snapshot.tournament?.matches.find((m: any) => m.table?.name === '11')
+  expect(match).toBeTruthy()
   const playerAId = String(match?.playerA?.playerId)
 
   await tablePage.getByTestId(`start-player-${playerAId}`).click()
   await expect(tablePage.getByRole('button', { name: 'UNDO' })).toBeVisible()
 
   // Dashboard should show match
-  await expect(dashboardPage.getByText('#1')).toBeVisible({ timeout: 5000 })
+  await expect(table1).toContainText(match?.playerA?.name, { timeout: 10_000 })
 
   // Enter a throw (this triggers cache revalidation via revalidateTag in addThrowAction)
   await tablePage.getByRole('button', { name: '1' }).click()
@@ -119,7 +128,7 @@ test('dashboard cache revalidation shows updated throw after addThrowAction', as
   await tablePage.getByRole('button', { name: 'OK' }).click()
 
   // Dashboard polls every second and should show updated state after cache invalidation
-  await expect(dashboardPage.getByText('Score:')).toBeVisible({ timeout: 10_000 })
+  await expect(table1).toContainText('Score: 321', { timeout: 10_000 })
 
   await context.close()
 })
@@ -149,18 +158,20 @@ test('dashboard cache revalidation shows restored state after undo', async ({
 
   // Open dashboard
   await dashboardPage.goto('/dashboard')
+  const table1 = dashboardTable(dashboardPage, '1')
 
   // Open table and start match
   await tablePage.goto('/tables/1')
   const snapshot = await getFakeCueScoreSnapshot(request, tournamentId)
   const match = snapshot.tournament?.matches.find((m: any) => m.table?.name === '11')
+  expect(match).toBeTruthy()
   const playerAId = String(match?.playerA?.playerId)
 
   await tablePage.getByTestId(`start-player-${playerAId}`).click()
   await expect(tablePage.getByRole('button', { name: 'UNDO' })).toBeVisible()
 
   // Dashboard should show match
-  await expect(dashboardPage.getByText('#1')).toBeVisible({ timeout: 5000 })
+  await expect(table1).toContainText(match?.playerA?.name, { timeout: 10_000 })
 
   // Enter a throw
   await tablePage.getByRole('button', { name: '1' }).click()
@@ -169,13 +180,13 @@ test('dashboard cache revalidation shows restored state after undo', async ({
   await tablePage.getByRole('button', { name: 'OK' }).click()
 
   // Wait for dashboard to update
-  await expect(dashboardPage.getByText('Score:')).toBeVisible({ timeout: 10_000 })
+  await expect(table1).toContainText('Score: 321', { timeout: 10_000 })
 
   // Undo the throw (triggers cache revalidation via revalidateTag in undoThrow)
   await tablePage.getByRole('button', { name: 'UNDO' }).click()
 
   // Dashboard should reflect the undo after cache revalidation
-  await expect(dashboardPage.getByText('Score:')).toBeVisible({ timeout: 10_000 })
+  await expect(table1).not.toContainText('Score: 321', { timeout: 10_000 })
 
   await context.close()
 })
@@ -206,6 +217,8 @@ test('dashboard cache invalidation is isolated between tables', async ({
 
   // Open dashboard
   await dashboardPage.goto('/dashboard')
+  const table1 = dashboardTable(dashboardPage, '1')
+  const table2 = dashboardTable(dashboardPage, '2')
 
   // Open both tables and start matches
   await table1Page.goto('/tables/1')
@@ -214,6 +227,8 @@ test('dashboard cache invalidation is isolated between tables', async ({
   const snapshot = await getFakeCueScoreSnapshot(request, tournamentId)
   const match1 = snapshot.tournament?.matches.find((m: any) => m.table?.name === '11')
   const match2 = snapshot.tournament?.matches.find((m: any) => m.table?.name === '12')
+  expect(match1).toBeTruthy()
+  expect(match2).toBeTruthy()
   const player1Id = String(match1?.playerA?.playerId)
   const player2Id = String(match2?.playerA?.playerId)
 
@@ -226,8 +241,8 @@ test('dashboard cache invalidation is isolated between tables', async ({
   await expect(table2Page.getByRole('button', { name: 'UNDO' })).toBeVisible()
 
   // Dashboard should show both matches
-  await expect(dashboardPage.getByText('#1')).toBeVisible({ timeout: 5000 })
-  await expect(dashboardPage.getByText('#2')).toBeVisible({ timeout: 5000 })
+  await expect(table1).toContainText(match1?.playerA?.name, { timeout: 10_000 })
+  await expect(table2).toContainText(match2?.playerA?.name, { timeout: 10_000 })
 
   // Enter throw on table 1 only
   await table1Page.getByRole('button', { name: '1' }).click()
@@ -236,7 +251,8 @@ test('dashboard cache invalidation is isolated between tables', async ({
   await table1Page.getByRole('button', { name: 'OK' }).click()
 
   // Dashboard should update for table 1 (cache tag match1 invalidated)
-  await expect(dashboardPage.getByText('Score:')).toBeVisible({ timeout: 10_000 })
+  await expect(table1).toContainText('Score: 321', { timeout: 10_000 })
+  await expect(table2).not.toContainText('Score: 321')
 
   // Table 2 should still be functional (cache tag match2 not invalidated)
   await expect(table2Page.getByRole('button', { name: 'UNDO' })).toBeEnabled()
@@ -247,7 +263,7 @@ test('dashboard cache invalidation is isolated between tables', async ({
   await table2Page.getByRole('button', { name: 'OK' }).click()
 
   // Dashboard should update for table 2 (cache tag match2 invalidated)
-  await expect(dashboardPage.getByText('Score:')).toBeVisible({ timeout: 10_000 })
+  await expect(table2).toContainText('Score: 441', { timeout: 10_000 })
 
   // Table 1 should still be functional (different cache tag)
   await expect(table1Page.getByRole('button', { name: 'UNDO' })).toBeEnabled()

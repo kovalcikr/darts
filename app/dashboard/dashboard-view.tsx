@@ -111,7 +111,7 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firs
         firstPlayer,
     }) : null);
     return (
-        <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4">
+        <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4" data-testid={`dashboard-table-${tableId}`}>
             <h1 className="absolute top-2 left-2 text-xs md:text-sm font-bold text-gray-500">#{tableId}</h1>
             <div className="w-full flex flex-col items-center space-y-2">
                 <div className="w-full flex flex-col sm:flex-row justify-around items-center sm:space-y-4 sm:space-x-2 md:space-x-4">

@@ -68,6 +68,23 @@ export async function findThrowsByMatchAndLeg(matchId: string, leg: number, play
     });
 }
 
+export async function findActiveThrowsByMatchAndLeg(matchId: string, leg: number, playerA: string, playerB: string, tx?: PrismaTransactionClient) {
+    const client = getPrismaClient(tx);
+    return client.playerThrow.findMany({
+        where: {
+            ...activeThrowWhere(),
+            matchId,
+            leg,
+            playerId: {
+                in: [playerA, playerB],
+            },
+        },
+        orderBy: {
+            time: 'asc',
+        },
+    });
+}
+
 export async function findHighestScoreInMatch(matchId: string, playerId: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     const result = await client.playerThrow.aggregate({

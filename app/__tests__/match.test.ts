@@ -75,6 +75,7 @@ describe('match', () => {
         const matchId = 'm1';
         jest.mocked(data.findMatch).mockResolvedValue(mockMatch);
         jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue([]);
+        jest.mocked(data.findActiveThrowsByMatchAndLeg).mockResolvedValue([]);
         jest.mocked(findLastThrow).mockResolvedValue({ score: 60 } as any);
         jest.mocked(findMatchAvg).mockResolvedValue(80);
 
@@ -137,17 +138,31 @@ describe('match', () => {
     });
 
     test('getScores uses scoring module', async () => {
-      jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue([
-        { playerId: 'pA', _sum: { score: 100, darts: 5 }, _count: { score: 2 } },
-        { playerId: 'pB', _sum: { score: 50, darts: 2 }, _count: { score: 1 } },
+      jest.mocked(data.findActiveThrowsByMatchAndLeg).mockResolvedValue([
+        { playerId: 'pA', score: 60, darts: 2 },
+        { playerId: 'pA', score: 40, darts: 3 },
+        { playerId: 'pB', score: 50, darts: 2 },
       ] as any);
       const scores = await match.getScores('m1', 1, 'pA', 'pB', 'pA');
       expect(scores.playerA).toBe(401);
       expect(scores.playerB).toBe(451);
       expect(scores.playerADarts).toBe(5);
       expect(scores.playerBDarts).toBe(2);
-      // After refactoring: nextPlayer should come from scoring module
-      expect(scores.nextPlayer).toBeDefined();
+      expect(scores.nextPlayer).toBe('pB');
+    });
+
+    test('getScores keeps turn order from individual throws, not grouped players', async () => {
+      jest.mocked(data.findActiveThrowsByMatchAndLeg).mockResolvedValue([
+        { playerId: 'pA', score: 180, darts: 3 },
+        { playerId: 'pB', score: 0, darts: 3 },
+        { playerId: 'pA', score: 180, darts: 3 },
+      ] as any);
+
+      const scores = await match.getScores('m1', 1, 'pA', 'pB', 'pA');
+
+      expect(scores.playerA).toBe(141);
+      expect(scores.playerB).toBe(501);
+      expect(scores.nextPlayer).toBe('pB');
     });
 
     test('nextPlayer via scoring module', async () => {
