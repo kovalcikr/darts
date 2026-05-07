@@ -21,7 +21,7 @@ import {
 } from "./data";
 import { findMatch } from "./data";
 import prisma from "./db";
-import { isAllowedCheckoutDarts } from "./checkout-darts";
+import { calculateThreeDartAverage, getAllowedCheckoutDarts } from "./scoring";
 
 const STARTING_SCORE = 501;
 
@@ -45,7 +45,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
             throw new Error('Bust')
         }
         if (nextScore == STARTING_SCORE) {
-            if (!isAllowedCheckoutDarts(remainingScore, dartsCount)) {
+            if (!getAllowedCheckoutDarts(remainingScore).includes(dartsCount)) {
                 throw new Error('Invalid checkout darts count')
             }
             closeLeg = true;
@@ -124,10 +124,7 @@ export async function findLastThrow(matchId, leg, player) {
 
 export async function findMatchAvg(matchId, player) {
     const data = await aggregateMatchThrows(matchId, player);
-    if (!data._sum.darts) {
-        return 0;
-    }
-    return data._sum.score / data._sum.darts * 3;
+    return calculateThreeDartAverage(data._sum.score ?? 0, data._sum.darts ?? 0);
 }
 
 export async function getPlayerThrowInfo(tournamentId, matchId, leg, playerA, playerB) {

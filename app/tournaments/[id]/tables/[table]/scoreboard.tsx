@@ -9,7 +9,7 @@ import {
   getThrowHistoryAccentClassName,
   type PlayerAccent,
 } from "./scoreboard-display";
-import { CHECKOUT_DART_OPTIONS, getAllowedCheckoutDarts } from "@/app/lib/checkout-darts";
+import { CHECKOUT_DART_OPTIONS, getAllowedCheckoutDarts } from "@/app/lib/scoring";
 
 type ScoreBoardProps = {
    tournamentId: string

@@ -136,23 +136,29 @@ describe('match', () => {
         expect(data.findThrowsByMatchAndLeg).toHaveBeenCalledWith('m1', 1, 'pA', 'pB');
     });
 
-    test('getScores', async () => {
-        jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue([
-            { playerId: 'pA', _sum: { score: 100, darts: 5 }, _count: { score: 2 } },
-            { playerId: 'pB', _sum: { score: 50, darts: 2 }, _count: { score: 1 } },
-        ] as any);
-        const scores = await match.getScores('m1', 1, 'pA', 'pB', 'pA');
-        expect(scores.playerA).toBe(401);
-        expect(scores.playerB).toBe(451);
-        expect(scores.playerADarts).toBe(5);
-        expect(scores.playerBDarts).toBe(2);
+    test('getScores uses scoring module', async () => {
+      jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue([
+        { playerId: 'pA', _sum: { score: 100, darts: 5 }, _count: { score: 2 } },
+        { playerId: 'pB', _sum: { score: 50, darts: 2 }, _count: { score: 1 } },
+      ] as any);
+      const scores = await match.getScores('m1', 1, 'pA', 'pB', 'pA');
+      expect(scores.playerA).toBe(401);
+      expect(scores.playerB).toBe(451);
+      expect(scores.playerADarts).toBe(5);
+      expect(scores.playerBDarts).toBe(2);
+      // After refactoring: nextPlayer should come from scoring module
+      expect(scores.nextPlayer).toBeDefined();
     });
 
-    test('nextPlayer', async () => {
-        let player = await match.nextPlayer(1, 0, 0, 'pA', 'pB', 'pA');
-        expect(player).toBe('pA');
-        player = await match.nextPlayer(1, 1, 0, 'pA', 'pB', 'pA');
-        expect(player).toBe('pB');
+    test('nextPlayer via scoring module', async () => {
+        const { calculateLegState } = await import('../lib/scoring');
+        
+        // Test the next player logic through the scoring module
+        let state = calculateLegState({ leg: 1, throws: [], playerAId: 'pA', playerBId: 'pB', firstPlayer: 'pA' });
+        expect(state.nextPlayer).toBe('pA');
+        
+        state = calculateLegState({ leg: 1, throws: [{ playerId: 'pA', score: 60, darts: 3 }], playerAId: 'pA', playerBId: 'pB', firstPlayer: 'pA' });
+        expect(state.nextPlayer).toBe('pB');
     });
 
     test('getMatch', async () => {

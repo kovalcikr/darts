@@ -6,6 +6,7 @@ import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
 import { findMatch, upsertMatch, updateMatchFirstPlayer, findThrowsByMatchAndLeg, findThrowsByMatch, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory } from "./data";
 import { selectCurrentLegStarter } from "./leg-starter";
+import { calculateLegState } from "./scoring";
 
 interface CueScorePlayer {
   playerId: number;
@@ -123,53 +124,35 @@ export async function startMatch(formData) {
    const cacheTag = `match${formData.get('table')}`
    console.log('revalidating tag', cacheTag)
    revalidateTag(cacheTag, 'max')
- }
+  }
 
- export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
+  export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
   return await findThrowsByMatchAndLeg(matchId, leg, playerA, playerB);
 }
 
 export async function getScores(matchId: string, leg: number, playerA: string, playerB: string, firstPlayer: string) {
   const playerThrows = await getThrows(matchId, leg, playerA, playerB);
-  if (playerThrows.length == 0) {
-    return ({
-      playerA: 501,
-      playerB: 501,
-      playerADarts: 0,
-      playerBDarts: 0,
-      nextPlayer: await nextPlayer(leg, 0, 0, playerA, playerB, firstPlayer)
-    })
-  }
-  console.log(playerThrows)
-  const playerAScore = await findScore(playerThrows, playerA);
-  const playerBScore = await findScore(playerThrows, playerB);
+
+  // Transform database format to scoring format
+  const throws = playerThrows.map((t: any) => ({
+    playerId: t.playerId,
+    score: t._sum?.score ?? 0,
+    darts: t._sum?.darts ?? 0,
+  }));
+
+  const state = calculateLegState({
+    throws,
+    leg,
+    playerAId: playerA,
+    playerBId: playerB,
+    firstPlayer,
+  });
+
   return {
-    playerA: 501 - (playerAScore?._sum.score ? playerAScore?._sum.score : 0),
-    playerB: 501 - (playerBScore?._sum.score ? playerBScore?._sum.score : 0),
-    playerADarts: playerAScore?._sum.darts ? playerAScore._sum.darts : 0,
-    playerBDarts: playerBScore?._sum.darts ? playerBScore._sum.darts : 0,
-    nextPlayer: await nextPlayer(leg, playerAScore?._count.score, playerBScore?._count.score, playerA, playerB, firstPlayer)
-  }
-}
-
-export async function findScore(playerThrows, player) {
-  for (var playerThrow of playerThrows) {
-    if (playerThrow.playerId == player)
-      return playerThrow;
-  }
-}
-
-/**
- * Calculate next player
- * @param leg 
- * @param throwsA 
- * @param throwsB 
- * @returns 0 if next is playerA, 1 if next is playerB
- */
-export async function nextPlayer(leg: number, throwsA: number, throwsB: number, playerA: string, playerB: string, firstPlayer: string) {
-  if ((leg + (throwsA ? throwsA : 0) + (throwsB ? throwsB : 0)) % 2 == 1) {
-    return firstPlayer;
-  } else {
-    return firstPlayer == playerA ? playerB : playerA;
-  }
+    playerA: state.playerAScoreLeft,
+    playerB: state.playerBScoreLeft,
+    playerADarts: state.playerADarts,
+    playerBDarts: state.playerBDarts,
+    nextPlayer: state.nextPlayer,
+  };
 }
