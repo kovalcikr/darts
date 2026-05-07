@@ -107,10 +107,12 @@ model TournamentAudit {
   season               Int?
   eventDate            DateTime?
   includeInGlobalStats Boolean   @default(true)
+  deleteBatchId        String?
   deletedAt            DateTime  @default(now())
   deletedBy            String?
 
   @@index([tournamentId])
+  @@index([deleteBatchId])
   @@index([deletedAt])
 }
 
@@ -130,11 +132,13 @@ model MatchAudit {
   playerBlegs   Int      @default(0)
   isComplete    Boolean  @default(false)
   firstPlayer   String?
+  deleteBatchId String?
   deletedAt     DateTime @default(now())
   deletedBy     String?
 
   @@index([matchId])
   @@index([tournamentId])
+  @@index([deleteBatchId])
   @@index([deletedAt])
 }
 
@@ -150,11 +154,15 @@ model ThrowAudit {
   darts        Int      @default(3)
   doubles      Int?
   checkout     Boolean  @default(false)
+  undoneAt     DateTime?
+  redoInvalidatedAt DateTime?
+  deleteBatchId String?
   deletedAt    DateTime @default(now())
   deletedBy    String?
 
   @@index([throwId])
   @@index([tournamentId])
   @@index([matchId])
+  @@index([deleteBatchId])
   @@index([deletedAt])
 }
