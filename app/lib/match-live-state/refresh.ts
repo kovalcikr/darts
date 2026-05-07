@@ -4,6 +4,7 @@ import prisma from '@/app/lib/db'
 import type { Prisma } from '@/prisma/client'
 import { STARTING_SCORE, getNextPlayer } from '@/app/lib/scoring'
 import type { MatchLiveState } from './model'
+import { storeMatchLiveState } from './repository'
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 
@@ -42,7 +43,11 @@ export async function refreshMatchLiveState(
             take: 6,
             select: { playerId: true, score: true, darts: true, checkout: true, leg: true },
         }),
-    ])
+    ]) as [
+        { playerId: string; _sum: { score: number | null; darts: number | null } }[],
+        { playerId: string; _sum: { score: number | null }; _count: { id: number } }[],
+        { playerId: string; score: number; darts: number; checkout: boolean; leg: number }[]
+    ]
 
     const findMatchGroup = (groups: { playerId: string; _sum: { score: number | null; darts: number | null } }[], playerId: string) =>
         groups.find(g => g.playerId === playerId)
@@ -90,11 +95,5 @@ export async function refreshMatchLiveState(
         lastThrows: lastThrowsData,
     }
 
-    await client.matchLiveState.upsert({
-        create: state,
-        update: state,
-        where: { matchId: match.id },
-    })
-
-    return state
+    return storeMatchLiveState(state, tx)
 }
