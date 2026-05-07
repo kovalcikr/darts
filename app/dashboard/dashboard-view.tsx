@@ -5,6 +5,9 @@ import NoActiveTournament from '@/app/components/NoActiveTournament';
 import DartIcon from '@/app/components/DartIcon';
 import { selectCurrentLegStarter } from '@/app/lib/leg-starter';
 import { getNextPlayer } from '@/app/lib/scoring';
+import type { DashboardSnapshot } from '@/app/lib/dashboard/snapshot';
+import type { MatchLiveState } from '@/app/lib/match-live-state/model';
+import type { CueScoreMatch } from '@/app/lib/integrations/cuescore/types';
 
 const ACTIVE_TOURNAMENT_NOT_SET = 'ACTIVE_TOURNAMENT_NOT_SET';
 
@@ -23,8 +26,8 @@ async function fetchServerData() {
 }
 
 export default function DashboardView() {
-    const [data, setData] = useState(null);
-    const [error, setError] = useState(null);
+    const [data, setData] = useState<DashboardSnapshot | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [inactive, setInactive] = useState(false);
 
     useEffect(() => {
@@ -65,12 +68,19 @@ export default function DashboardView() {
 
     return (
         <div className="grid grid-cols-3 grid-rows-2 h-screen w-full bg-gray-900 text-gray-300">
-            <TableDashboard tableId="1" match={data?.match1} matchInfo={data?.matchInfo1?.score} lastThrows={data?.matchInfo1?.lastThrows} liveState={data?.liveState1} firstPlayer={data?.firstPlayer1} avgPlayerA={data?.matchAvgA1} avgPlayerB={data?.matchAvgB1} />
-            <TableDashboard tableId="2" match={data?.match2} matchInfo={data?.matchInfo2?.score} lastThrows={data?.matchInfo2?.lastThrows} liveState={data?.liveState2} firstPlayer={data?.firstPlayer2} avgPlayerA={data?.matchAvgA2} avgPlayerB={data?.matchAvgB2} />
-            <TableDashboard tableId="3" match={data?.match3} matchInfo={data?.matchInfo3?.score} lastThrows={data?.matchInfo3?.lastThrows} liveState={data?.liveState3} firstPlayer={data?.firstPlayer3} avgPlayerA={data?.matchAvgA3} avgPlayerB={data?.matchAvgB3} />
-            <TableDashboard tableId="4" match={data?.match4} matchInfo={data?.matchInfo4?.score} lastThrows={data?.matchInfo4?.lastThrows} liveState={data?.liveState4} firstPlayer={data?.firstPlayer4} avgPlayerA={data?.matchAvgA4} avgPlayerB={data?.matchAvgB4} />
-            <TableDashboard tableId="5" match={data?.match5} matchInfo={data?.matchInfo5?.score} lastThrows={data?.matchInfo5?.lastThrows} liveState={data?.liveState5} firstPlayer={data?.firstPlayer5} avgPlayerA={data?.matchAvgA5} avgPlayerB={data?.matchAvgB5} />
-            <TableDashboard tableId="6" match={data?.match6} matchInfo={data?.matchInfo6?.score} lastThrows={data?.matchInfo6?.lastThrows} liveState={data?.liveState6} firstPlayer={data?.firstPlayer6} avgPlayerA={data?.matchAvgA6} avgPlayerB={data?.matchAvgB6} />
+            {data && data.matches.map((match, i) => (
+                <TableDashboard
+                    key={i}
+                    tableId={String(i + 1)}
+                    match={match}
+                    matchInfo={data.matchInfos[i]?.score}
+                    lastThrows={data.matchInfos[i]?.lastThrows}
+                    liveState={data.liveStates[i]}
+                    firstPlayer={data.firstPlayers[i]}
+                    avgPlayerA={data.matchAvgA[i]}
+                    avgPlayerB={data.matchAvgB[i]}
+                />
+            ))}
         </div>
     );
 }
@@ -83,7 +93,16 @@ function formatAverageValue(average?: number) {
     return average && average > 0 ? average.toFixed(1) : null;
 }
 
-function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firstPlayer, avgPlayerA, avgPlayerB }: { tableId: string, match: any, matchInfo: any, lastThrows?: any[], liveState?: any, firstPlayer?: string, avgPlayerA?: number, avgPlayerB?: number }) {
+function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firstPlayer, avgPlayerA, avgPlayerB }: {
+    tableId: string
+    match: CueScoreMatch | null
+    matchInfo: { playerId: string; _sum: { score: number }; _count: { score: number } }[] | undefined
+    lastThrows?: MatchLiveState['lastThrows']
+    liveState: MatchLiveState | null
+    firstPlayer: string | null
+    avgPlayerA: number | null
+    avgPlayerB: number | null
+}) {
     const leg = (match?.scoreA || 0) + (match?.scoreB || 0) + 1;
     const playerAId = match?.playerA?.playerId?.toString();
     const playerBId = match?.playerB?.playerId?.toString();

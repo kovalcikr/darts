@@ -30,13 +30,21 @@ describe('/api/dashboard active tournament route', () => {
 
   test('loads the active tournament dashboard snapshot', async () => {
     jest.mocked(getActiveTournament).mockResolvedValue({ id: 'active-t1', name: 'Active Cup' } as never)
-    jest.mocked(getDashboardTournamentSnapshot).mockResolvedValue({ match1: { matchId: 'm1' } } as never)
+    jest.mocked(getDashboardTournamentSnapshot).mockResolvedValue({
+      matches: [{ matchId: 'm1' }, null, null, null, null, null],
+      matchInfos: [null, null, null, null, null, null],
+      liveStates: [null, null, null, null, null, null],
+      tableIds: ['1', null, null, null, null, null],
+      firstPlayers: [null, null, null, null, null, null],
+      matchAvgA: [null, null, null, null, null, null],
+      matchAvgB: [null, null, null, null, null, null],
+    } as never)
 
     const response = await GET(new NextRequest('http://localhost:3000/api/dashboard'))
     const body = await response.json()
 
     expect(response.status).toBe(200)
-    expect(body).toEqual({ match1: { matchId: 'm1' } })
+    expect(body.matches).toHaveLength(6)
     expect(getDashboardTournamentSnapshot).toHaveBeenCalledWith('active-t1')
   })
 })

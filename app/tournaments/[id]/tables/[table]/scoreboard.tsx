@@ -89,18 +89,19 @@ export function CheckoutDartsSelector({
  }
 
 export default function ScoreBoard({ tournamentId, matchId, leg, player, currentPlayerScore, table, throwHistory, playerNames, playerAccents }: ScoreBoardProps) {
-    const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    const [currentScore, setCurrentScore] = useState("0");
-    const [dartsCount, setDartsCount] = useState(false);
-    const [hydrated, setHydrated] = useState(false);
-    const [selectedCheckoutDarts, setSelectedCheckoutDarts] = useState<1 | 2 | 3 | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-   const currentScoreRef = useRef("0");
-   const playerDisplayNames = buildScoreboardPlayerDisplayNames(playerNames);
+     const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+     const [currentScore, setCurrentScore] = useState("0");
+     const [dartsCount, setDartsCount] = useState(false);
+     const [hydrated, setHydrated] = useState(false);
+     const [selectedCheckoutDarts, setSelectedCheckoutDarts] = useState<1 | 2 | 3 | null>(null);
+     const [isSubmitting, setIsSubmitting] = useState(false);
+    const currentScoreRef = useRef("0");
+    const playerDisplayNames = buildScoreboardPlayerDisplayNames(playerNames);
 
-   useEffect(() => {
-     setHydrated(true);
-   }, []);
+    useEffect(() => {
+      setHydrated(true);
+      document.documentElement.setAttribute('data-hydrated', 'true');
+    }, []);
 
    function setEnteredScore(score: string) {
      currentScoreRef.current = score;

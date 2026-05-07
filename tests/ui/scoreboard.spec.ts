@@ -1,5 +1,9 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
+test.beforeEach(async ({ request }) => {
+  await request.post('/api/test/cuescore/reset');
+});
+
 async function openStartedTableOne(page: Page, testInfo: TestInfo) {
   const tournamentId = `ui-scoreboard-${testInfo.project.name}-${testInfo.parallelIndex}-${Date.now()}`;
 
@@ -12,6 +16,9 @@ async function openStartedTableOne(page: Page, testInfo: TestInfo) {
   await expect(page).toHaveURL(/\/tables\/1$/);
   await expect(page.getByText('First to play:')).toBeVisible();
   await page.locator('[data-testid^="start-player-"]').first().click();
+
+  // Wait for React hydration before interacting with buttons
+  await page.waitForFunction(() => document.documentElement?.getAttribute('data-hydrated') === 'true', { timeout: 10000 });
   await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
 }
 

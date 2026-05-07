@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+test.beforeEach(async ({ request }) => {
+  await request.post('/api/test/cuescore/reset');
+});
+
 test.describe('tournaments entry UI', () => {
   test('shows the tournament opening form', async ({ page }) => {
     await page.goto('/tournaments');

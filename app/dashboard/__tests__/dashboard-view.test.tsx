@@ -45,15 +45,15 @@ describe('DashboardView', () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
       json: async () => ({
-        match1: {
+        matches: [{
           raceTo: 3,
           scoreA: 1,
           scoreB: 0,
           playerA: { playerId: 'pA', name: 'Player A', image: '/a.png' },
           playerB: { playerId: 'pB', name: 'Player B', image: '/b.png' },
-        },
-        matchInfo1: { score: [] },
-        liveState1: {
+        }],
+        matchInfos: [{ score: [], lastThrows: [] }],
+        liveStates: [{
           leg: 2,
           playerAScoreLeft: 501,
           playerBScoreLeft: 501,
@@ -64,7 +64,11 @@ describe('DashboardView', () => {
           activePlayerId: 'pA',
           startingPlayerId: 'pB',
           lastThrows: [],
-        },
+        }],
+        tableIds: ['1'],
+        firstPlayers: [null],
+        matchAvgA: [0],
+        matchAvgB: [0],
       }),
     } as Response)
     global.fetch = fetchMock
@@ -83,21 +87,25 @@ describe('DashboardView', () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
       json: async () => ({
-        match1: {
+        matches: [{
           raceTo: 3,
           scoreA: 1,
           scoreB: 0,
           playerA: { playerId: 'pA', name: 'Player A', image: '/a.png' },
           playerB: { playerId: 'pB', name: 'Player B', image: '/b.png' },
-        },
-        matchInfo1: {
+        }],
+        matchInfos: [{
           score: [
             { playerId: 'pA', _sum: { score: 60 }, _count: { score: 1 } },
             { playerId: 'pB', _sum: { score: 0 }, _count: { score: 0 } },
           ],
           lastThrows: [],
-        },
-        firstPlayer1: 'pA',
+        }],
+        liveStates: [null],
+        tableIds: ['1'],
+        firstPlayers: ['pA'],
+        matchAvgA: [null],
+        matchAvgB: [null],
       }),
     } as Response)
     global.fetch = fetchMock
@@ -114,14 +122,19 @@ describe('DashboardView', () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
       json: async () => ({
-        match1: {
+        matches: [{
           raceTo: 3,
           scoreA: 0,
           scoreB: 0,
           playerA: { playerId: 'pA', name: 'Player A', image: '/a.png' },
           playerB: { playerId: 'pB', name: 'Player B', image: '/b.png' },
-        },
-        matchInfo1: { score: [], lastThrows: [] },
+        }],
+        matchInfos: [{ score: [], lastThrows: [] }],
+        liveStates: [null],
+        tableIds: ['1'],
+        firstPlayers: [null],
+        matchAvgA: [null],
+        matchAvgB: [null],
       }),
     } as Response)
     global.fetch = fetchMock
