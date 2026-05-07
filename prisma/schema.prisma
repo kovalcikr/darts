@@ -99,3 +99,70 @@ model Tournament {
 
   @@index([season, eventDate])
 }
+
+model TournamentAudit {
+  id                   String    @id @default(cuid())
+  tournamentId         String
+  name                 String
+  season               Int?
+  eventDate            DateTime?
+  includeInGlobalStats Boolean   @default(true)
+  deleteBatchId        String?
+  deletedAt            DateTime  @default(now())
+  deletedBy            String?
+
+  @@index([tournamentId])
+  @@index([deleteBatchId])
+  @@index([deletedAt])
+}
+
+model MatchAudit {
+  id            String   @id @default(cuid())
+  matchId       String
+  tournamentId  String?
+  round         String
+  playerAId     String
+  playerAName   String
+  playerAImage  String
+  playerBId     String
+  playerBName   String
+  playerBImage  String
+  runTo         Int
+  playerALegs   Int      @default(0)
+  playerBlegs   Int      @default(0)
+  isComplete    Boolean  @default(false)
+  firstPlayer   String?
+  deleteBatchId String?
+  deletedAt     DateTime @default(now())
+  deletedBy     String?
+
+  @@index([matchId])
+  @@index([tournamentId])
+  @@index([deleteBatchId])
+  @@index([deletedAt])
+}
+
+model ThrowAudit {
+  id           String   @id @default(cuid())
+  throwId      String
+  tournamentId String
+  matchId      String
+  leg          Int
+  playerId     String
+  time         DateTime @default(now())
+  score        Int
+  darts        Int      @default(3)
+  doubles      Int?
+  checkout     Boolean  @default(false)
+  undoneAt     DateTime?
+  redoInvalidatedAt DateTime?
+  deleteBatchId String?
+  deletedAt    DateTime @default(now())
+  deletedBy    String?
+
+  @@index([throwId])
+  @@index([tournamentId])
+  @@index([matchId])
+  @@index([deleteBatchId])
+  @@index([deletedAt])
+}

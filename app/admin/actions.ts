@@ -1,6 +1,7 @@
 'use server'
 
 import type { Prisma } from '@/prisma/client'
+import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -10,7 +11,7 @@ import {
   setActiveTournament,
 } from '@/app/lib/active-tournament'
 import prisma from '@/app/lib/db'
-import { isMatchComplete } from '@/app/lib/data'
+import { isMatchComplete } from '@/app/lib/utils/match'
 import { openActiveTournament } from '@/app/lib/tournament'
 import {
   ADMIN_PASSWORD_ENV,
@@ -55,6 +56,14 @@ function requireString(formData: FormData, key: string) {
 
   if (!value) {
     throw new Error(`${key} is required.`)
+  }
+
+  return value
+}
+
+function requireDeleteBatchId(value: string | null | undefined, entity: string, id: string) {
+  if (!value) {
+    throw new Error(`${entity} audit ${id} cannot be safely restored because it has no delete batch.`)
   }
 
   return value
@@ -425,26 +434,90 @@ export async function deleteTournamentAction(formData: FormData) {
 
   try {
     const id = requireString(formData, 'id')
-    const tournament = await prisma.tournament.findUnique({
-      where: { id },
-      select: { id: true },
-    })
+    const deleteBatchId = randomUUID()
 
-    if (!tournament) {
-      throw new Error(`Tournament ${id} was not found.`)
-    }
-
-    await prisma.$transaction([
-      prisma.playerThrow.deleteMany({
-        where: { tournamentId: id },
-      }),
-      prisma.match.deleteMany({
-        where: { tournamentId: id },
-      }),
-      prisma.tournament.delete({
+    await prisma.$transaction(async (tx) => {
+      const tournament = await tx.tournament.findUnique({
         where: { id },
-      }),
-    ])
+        include: {
+          matches: {
+            include: {
+              throwsList: true,
+            },
+          },
+        },
+      })
+
+      if (!tournament) {
+        throw new Error(`Tournament ${id} was not found.`)
+      }
+
+      await tx.tournamentAudit.create({
+        data: {
+          tournamentId: tournament.id,
+          name: tournament.name,
+          season: tournament.season,
+          eventDate: tournament.eventDate,
+          includeInGlobalStats: tournament.includeInGlobalStats,
+          deleteBatchId,
+          deletedBy: 'admin',
+        },
+      })
+
+      for (const match of tournament.matches) {
+        await tx.matchAudit.create({
+          data: {
+            matchId: match.id,
+            tournamentId: match.tournamentId,
+            round: match.round,
+            playerAId: match.playerAId,
+            playerAName: match.playerAName,
+            playerAImage: match.playerAImage,
+            playerBId: match.playerBId,
+            playerBName: match.playerBName,
+            playerBImage: match.playerBImage,
+            runTo: match.runTo,
+            playerALegs: match.playerALegs,
+            playerBlegs: match.playerBlegs,
+            isComplete: match.isComplete,
+            firstPlayer: match.firstPlayer,
+            deleteBatchId,
+            deletedBy: 'admin',
+          },
+        })
+
+        for (const playerThrow of match.throwsList) {
+          await tx.throwAudit.create({
+            data: {
+              throwId: playerThrow.id,
+              tournamentId: playerThrow.tournamentId,
+              matchId: playerThrow.matchId,
+              leg: playerThrow.leg,
+              playerId: playerThrow.playerId,
+              time: playerThrow.time,
+              score: playerThrow.score,
+              darts: playerThrow.darts,
+              doubles: playerThrow.doubles,
+              checkout: playerThrow.checkout,
+              undoneAt: playerThrow.undoneAt,
+              redoInvalidatedAt: playerThrow.redoInvalidatedAt,
+              deleteBatchId,
+              deletedBy: 'admin',
+            },
+          })
+        }
+      }
+
+      await tx.playerThrow.deleteMany({
+        where: { tournamentId: id },
+      })
+      await tx.match.deleteMany({
+        where: { tournamentId: id },
+      })
+      await tx.tournament.delete({
+        where: { id },
+      })
+    })
     await clearActiveTournamentIfMatches(id)
 
     revalidateSharedPaths()
@@ -509,25 +582,76 @@ export async function updateMatchAction(formData: FormData) {
 export async function deleteMatchAction(formData: FormData) {
   const returnTo = getReturnTo(formData)
   await requireAdminSession(returnTo)
+  let tournamentId: string | null | undefined
 
   try {
     const id = requireString(formData, 'id')
-    const existingMatch = await prisma.match.findUnique({
-      where: { id },
-      select: { tournamentId: true },
-    })
+    const deleteBatchId = randomUUID()
 
-    if (!existingMatch) {
-      throw new Error(`Match ${id} was not found.`)
-    }
+    await prisma.$transaction(async (tx) => {
+      const existingMatch = await tx.match.findUnique({
+        where: { id },
+        include: {
+          throwsList: true,
+        },
+      })
 
-    await prisma.match.delete({
-      where: { id },
+      if (!existingMatch) {
+        throw new Error(`Match ${id} was not found.`)
+      }
+
+      tournamentId = existingMatch.tournamentId
+
+      await tx.matchAudit.create({
+        data: {
+          matchId: existingMatch.id,
+          tournamentId: existingMatch.tournamentId,
+          round: existingMatch.round,
+          playerAId: existingMatch.playerAId,
+          playerAName: existingMatch.playerAName,
+          playerAImage: existingMatch.playerAImage,
+          playerBId: existingMatch.playerBId,
+          playerBName: existingMatch.playerBName,
+          playerBImage: existingMatch.playerBImage,
+          runTo: existingMatch.runTo,
+          playerALegs: existingMatch.playerALegs,
+          playerBlegs: existingMatch.playerBlegs,
+          isComplete: existingMatch.isComplete,
+          firstPlayer: existingMatch.firstPlayer,
+          deleteBatchId,
+          deletedBy: 'admin',
+        },
+      })
+
+      for (const playerThrow of existingMatch.throwsList) {
+        await tx.throwAudit.create({
+          data: {
+            throwId: playerThrow.id,
+            tournamentId: playerThrow.tournamentId,
+            matchId: playerThrow.matchId,
+            leg: playerThrow.leg,
+            playerId: playerThrow.playerId,
+            time: playerThrow.time,
+            score: playerThrow.score,
+            darts: playerThrow.darts,
+            doubles: playerThrow.doubles,
+            checkout: playerThrow.checkout,
+            undoneAt: playerThrow.undoneAt,
+            redoInvalidatedAt: playerThrow.redoInvalidatedAt,
+            deleteBatchId,
+            deletedBy: 'admin',
+          },
+        })
+      }
+
+      await tx.match.delete({
+        where: { id },
+      })
     })
 
     revalidateSharedPaths()
-    revalidateAdminPaths([id], [existingMatch.tournamentId])
-    revalidateTournamentPaths([existingMatch.tournamentId])
+    revalidateAdminPaths([id], [tournamentId])
+    revalidateTournamentPaths([tournamentId])
   } catch (error) {
     redirectWithError(returnTo, getErrorMessage(error))
   }
@@ -645,28 +769,282 @@ export async function updateThrowAction(formData: FormData) {
 export async function deleteThrowAction(formData: FormData) {
   const returnTo = getReturnTo(formData)
   await requireAdminSession(returnTo)
+  let existingThrow: {
+    tournamentId: string
+    matchId: string
+  } | null = null
 
   try {
     const id = requireString(formData, 'id')
-    const existingThrow = await prisma.playerThrow.findUnique({
-      where: { id },
-      select: { tournamentId: true, matchId: true },
-    })
+    const deleteBatchId = randomUUID()
 
-    if (!existingThrow) {
-      throw new Error(`Throw ${id} was not found.`)
-    }
+    await prisma.$transaction(async (tx) => {
+      const playerThrow = await tx.playerThrow.findUnique({
+        where: { id },
+      })
 
-    await prisma.playerThrow.delete({
-      where: { id },
+      if (!playerThrow) {
+        throw new Error(`Throw ${id} was not found.`)
+      }
+
+      existingThrow = {
+        tournamentId: playerThrow.tournamentId,
+        matchId: playerThrow.matchId,
+      }
+
+      await tx.throwAudit.create({
+        data: {
+          throwId: playerThrow.id,
+          tournamentId: playerThrow.tournamentId,
+          matchId: playerThrow.matchId,
+          leg: playerThrow.leg,
+          playerId: playerThrow.playerId,
+          time: playerThrow.time,
+          score: playerThrow.score,
+          darts: playerThrow.darts,
+          doubles: playerThrow.doubles,
+          checkout: playerThrow.checkout,
+          undoneAt: playerThrow.undoneAt,
+          redoInvalidatedAt: playerThrow.redoInvalidatedAt,
+          deleteBatchId,
+          deletedBy: 'admin',
+        },
+      })
+
+      await tx.playerThrow.delete({
+        where: { id },
+      })
     })
 
     revalidateSharedPaths()
-    revalidateAdminPaths([existingThrow.matchId], [existingThrow.tournamentId])
-    revalidateTournamentPaths([existingThrow.tournamentId])
+    revalidateAdminPaths([existingThrow?.matchId], [existingThrow?.tournamentId])
+    revalidateTournamentPaths([existingThrow?.tournamentId])
   } catch (error) {
     redirectWithError(returnTo, getErrorMessage(error))
   }
 
   redirectWithNotice(returnTo, 'Throw deleted.')
+}
+
+export async function restoreTournamentAction(formData: FormData) {
+  const returnTo = getReturnTo(formData)
+  await requireAdminSession(returnTo)
+
+  try {
+    const tournamentId = requireString(formData, 'tournamentId')
+    const tournament = await prisma.$transaction(async (tx) => {
+      const tournamentAudit = await tx.tournamentAudit.findFirst({
+        where: { tournamentId },
+        orderBy: { deletedAt: 'desc' },
+      })
+
+      if (!tournamentAudit) {
+        throw new Error(`Tournament audit ${tournamentId} was not found.`)
+      }
+
+      const deleteBatchId = requireDeleteBatchId(tournamentAudit.deleteBatchId, 'Tournament', tournamentId)
+
+      const restoredTournament = await tx.tournament.create({
+        data: {
+          id: tournamentAudit.tournamentId,
+          name: tournamentAudit.name,
+          season: tournamentAudit.season,
+          eventDate: tournamentAudit.eventDate,
+          includeInGlobalStats: tournamentAudit.includeInGlobalStats,
+        },
+      })
+
+      const matchAudits = await tx.matchAudit.findMany({
+        where: { deleteBatchId, tournamentId },
+      })
+
+      for (const matchAudit of matchAudits) {
+        await tx.match.create({
+          data: {
+            id: matchAudit.matchId,
+            tournamentId: matchAudit.tournamentId,
+            round: matchAudit.round,
+            playerAId: matchAudit.playerAId,
+            playerAName: matchAudit.playerAName,
+            playerAImage: matchAudit.playerAImage,
+            playerBId: matchAudit.playerBId,
+            playerBName: matchAudit.playerBName,
+            playerBImage: matchAudit.playerBImage,
+            runTo: matchAudit.runTo,
+            playerALegs: matchAudit.playerALegs,
+            playerBlegs: matchAudit.playerBlegs,
+            isComplete: matchAudit.isComplete,
+            firstPlayer: matchAudit.firstPlayer,
+          },
+        })
+
+        const throwAudits = await tx.throwAudit.findMany({
+          where: { deleteBatchId, matchId: matchAudit.matchId },
+        })
+
+        for (const throwAudit of throwAudits) {
+          await tx.playerThrow.create({
+            data: {
+              id: throwAudit.throwId,
+              tournamentId: throwAudit.tournamentId,
+              matchId: throwAudit.matchId,
+              leg: throwAudit.leg,
+              playerId: throwAudit.playerId,
+              time: throwAudit.time,
+              score: throwAudit.score,
+              darts: throwAudit.darts,
+              doubles: throwAudit.doubles,
+              checkout: throwAudit.checkout,
+              undoneAt: throwAudit.undoneAt,
+              redoInvalidatedAt: throwAudit.redoInvalidatedAt,
+            },
+          })
+        }
+      }
+
+      await tx.throwAudit.deleteMany({ where: { deleteBatchId } })
+      await tx.matchAudit.deleteMany({ where: { deleteBatchId } })
+      await tx.tournamentAudit.deleteMany({ where: { deleteBatchId } })
+
+      return restoredTournament
+    })
+
+    revalidateSharedPaths()
+    revalidateAdminPaths([], [tournament.id])
+    revalidateTournamentPaths([tournament.id])
+  } catch (error) {
+    redirectWithError(returnTo, getErrorMessage(error))
+  }
+
+  redirectWithNotice(returnTo, 'Tournament restored.')
+}
+
+export async function restoreMatchAction(formData: FormData) {
+  const returnTo = getReturnTo(formData)
+  await requireAdminSession(returnTo)
+  let restoredTournamentId: string | null | undefined
+
+  try {
+    const matchId = requireString(formData, 'matchId')
+    const match = await prisma.$transaction(async (tx) => {
+      const matchAudit = await tx.matchAudit.findFirst({
+        where: { matchId },
+        orderBy: { deletedAt: 'desc' },
+      })
+
+      if (!matchAudit) {
+        throw new Error(`Match audit ${matchId} was not found.`)
+      }
+
+      const deleteBatchId = requireDeleteBatchId(matchAudit.deleteBatchId, 'Match', matchId)
+      restoredTournamentId = matchAudit.tournamentId
+
+      const restoredMatch = await tx.match.create({
+        data: {
+          id: matchAudit.matchId,
+          tournamentId: matchAudit.tournamentId,
+          round: matchAudit.round,
+          playerAId: matchAudit.playerAId,
+          playerAName: matchAudit.playerAName,
+          playerAImage: matchAudit.playerAImage,
+          playerBId: matchAudit.playerBId,
+          playerBName: matchAudit.playerBName,
+          playerBImage: matchAudit.playerBImage,
+          runTo: matchAudit.runTo,
+          playerALegs: matchAudit.playerALegs,
+          playerBlegs: matchAudit.playerBlegs,
+          isComplete: matchAudit.isComplete,
+          firstPlayer: matchAudit.firstPlayer,
+        },
+      })
+
+      const throwAudits = await tx.throwAudit.findMany({
+        where: { deleteBatchId, matchId },
+      })
+
+      for (const throwAudit of throwAudits) {
+        await tx.playerThrow.create({
+          data: {
+            id: throwAudit.throwId,
+            tournamentId: throwAudit.tournamentId,
+            matchId: throwAudit.matchId,
+            leg: throwAudit.leg,
+            playerId: throwAudit.playerId,
+            time: throwAudit.time,
+            score: throwAudit.score,
+            darts: throwAudit.darts,
+            doubles: throwAudit.doubles,
+            checkout: throwAudit.checkout,
+            undoneAt: throwAudit.undoneAt,
+            redoInvalidatedAt: throwAudit.redoInvalidatedAt,
+          },
+        })
+      }
+
+      await tx.throwAudit.deleteMany({ where: { deleteBatchId, matchId } })
+      await tx.matchAudit.delete({ where: { id: matchAudit.id } })
+
+      return restoredMatch
+    })
+
+    revalidateSharedPaths()
+    revalidateAdminPaths([match.id], [restoredTournamentId].filter(Boolean) as string[])
+    revalidateTournamentPaths([restoredTournamentId].filter(Boolean) as string[])
+  } catch (error) {
+    redirectWithError(returnTo, getErrorMessage(error))
+  }
+
+  redirectWithNotice(returnTo, 'Match restored.')
+}
+
+export async function restoreThrowAction(formData: FormData) {
+  const returnTo = getReturnTo(formData)
+  await requireAdminSession(returnTo)
+
+  try {
+    const throwId = requireString(formData, 'throwId')
+    const playerThrow = await prisma.$transaction(async (tx) => {
+      const throwAudit = await tx.throwAudit.findFirst({
+        where: { throwId },
+        orderBy: { deletedAt: 'desc' },
+      })
+
+      if (!throwAudit) {
+        throw new Error(`Throw audit ${throwId} was not found.`)
+      }
+
+      requireDeleteBatchId(throwAudit.deleteBatchId, 'Throw', throwId)
+
+      const restoredThrow = await tx.playerThrow.create({
+        data: {
+          id: throwAudit.throwId,
+          tournamentId: throwAudit.tournamentId,
+          matchId: throwAudit.matchId,
+          leg: throwAudit.leg,
+          playerId: throwAudit.playerId,
+          time: throwAudit.time,
+          score: throwAudit.score,
+          darts: throwAudit.darts,
+          doubles: throwAudit.doubles,
+          checkout: throwAudit.checkout,
+          undoneAt: throwAudit.undoneAt,
+          redoInvalidatedAt: throwAudit.redoInvalidatedAt,
+        },
+      })
+
+      await tx.throwAudit.delete({
+        where: { id: throwAudit.id },
+      })
+
+      return restoredThrow
+    })
+
+    revalidateSharedPaths()
+    revalidateAdminPaths([playerThrow.matchId], [playerThrow.tournamentId])
+    revalidateTournamentPaths([playerThrow.tournamentId])
+  } catch (error) {
+    redirectWithError(returnTo, getErrorMessage(error))
+  }
+
+  redirectWithNotice(returnTo, 'Throw restored.')
 }

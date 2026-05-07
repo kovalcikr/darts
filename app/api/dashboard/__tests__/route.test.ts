@@ -32,11 +32,11 @@ describe('/api/dashboard active tournament route', () => {
     jest.mocked(getActiveTournament).mockResolvedValue({ id: 'active-t1', name: 'Active Cup' } as never)
     jest.mocked(getDashboardTournamentSnapshot).mockResolvedValue({ match1: { matchId: 'm1' } } as never)
 
-    const response = await GET(new NextRequest('http://localhost:3000/api/dashboard?test=true'))
+    const response = await GET(new NextRequest('http://localhost:3000/api/dashboard'))
     const body = await response.json()
 
     expect(response.status).toBe(200)
     expect(body).toEqual({ match1: { matchId: 'm1' } })
-    expect(getDashboardTournamentSnapshot).toHaveBeenCalledWith('active-t1', true)
+    expect(getDashboardTournamentSnapshot).toHaveBeenCalledWith('active-t1')
   })
 })

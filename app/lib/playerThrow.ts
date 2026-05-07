@@ -21,7 +21,7 @@ import {
 } from "./data";
 import { findMatch } from "./data";
 import prisma from "./db";
-import { isAllowedCheckoutDarts } from "./checkout-darts";
+import { calculateThreeDartAverage, getAllowedCheckoutDarts } from "./scoring";
 
 const STARTING_SCORE = 501;
 
@@ -32,10 +32,7 @@ async function revalidateScoreboard(table) {
     revalidateTag(cacheTag, 'max')
 }
 
-export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, slow, table) {
-    if (slow) {
-        await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
-    }
+export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, table) {
     let closeLeg = false;
     let match = null;
     await prisma.$transaction(async (tx) => {
@@ -48,7 +45,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
             throw new Error('Bust')
         }
         if (nextScore == STARTING_SCORE) {
-            if (!isAllowedCheckoutDarts(remainingScore, dartsCount)) {
+            if (!getAllowedCheckoutDarts(remainingScore).includes(dartsCount)) {
                 throw new Error('Invalid checkout darts count')
             }
             closeLeg = true;
@@ -68,10 +65,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
     await revalidateScoreboard(table);
 }
 
-export async function undoThrow(matchId, leg, slow, table) {
-    if (slow) {
-        await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
-    }
+export async function undoThrow(matchId, leg, table) {
     let undoCloseLeg = false;
     let match = null;
     await prisma.$transaction(async (tx) => {
@@ -100,10 +94,7 @@ export async function undoThrow(matchId, leg, slow, table) {
 
 }
 
-export async function redoThrow(matchId, slow, table) {
-    if (slow) {
-        await new Promise(resolve => setTimeout(resolve, 3000));  // TODO: remove
-    }
+export async function redoThrow(matchId, table) {
     let redoCloseLeg = false;
     let match = null;
     await prisma.$transaction(async (tx) => {
@@ -133,10 +124,7 @@ export async function findLastThrow(matchId, leg, player) {
 
 export async function findMatchAvg(matchId, player) {
     const data = await aggregateMatchThrows(matchId, player);
-    if (!data._sum.darts) {
-        return 0;
-    }
-    return data._sum.score / data._sum.darts * 3;
+    return calculateThreeDartAverage(data._sum.score ?? 0, data._sum.darts ?? 0);
 }
 
 export async function getPlayerThrowInfo(tournamentId, matchId, leg, playerA, playerB) {

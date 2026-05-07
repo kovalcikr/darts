@@ -30,13 +30,11 @@ describe('active tournament table page', () => {
 
     const element = await ActiveTournamentTablePage({
       params: Promise.resolve({ table: '11' }),
-      searchParams: Promise.resolve({ slow: 'true' }),
     })
 
     expect(renderToStaticMarkup(element)).toContain('Table 11 for t1')
     expect(tableScoreboardMock).toHaveBeenCalledWith({
       encodedTable: '11',
-      searchParams: { slow: 'true' },
       tournamentId: 't1',
     }, undefined)
   })
@@ -46,7 +44,6 @@ describe('active tournament table page', () => {
 
     const element = await ActiveTournamentTablePage({
       params: Promise.resolve({ table: '11' }),
-      searchParams: Promise.resolve({}),
     })
     const html = renderToStaticMarkup(element)
 

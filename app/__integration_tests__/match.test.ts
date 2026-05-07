@@ -5,7 +5,6 @@ import {
     findMatch,
     upsertMatch,
     updateMatchFirstPlayer,
-    resetMatchData,
     updateMatchLegs,
     decrementMatchLegs,
 } from '@/app/lib/data';
@@ -80,22 +79,6 @@ describe('Match Integration Tests', () => {
         await updateMatchFirstPlayer(matchData.matchId, 'pA');
         const match = await findMatch(matchData.matchId);
         expect(match?.firstPlayer).toBe('pA');
-    });
-
-    test('should reset match data', async () => {
-        await setupTestData();
-        await updateMatchFirstPlayer(matchData.matchId, 'pA');
-        await prismaTest.match.update({
-            where: { id: matchData.matchId },
-            data: { playerALegs: 2, playerBlegs: 1, isComplete: true }
-        });
-
-        await resetMatchData(matchData.matchId);
-        const match = await findMatch(matchData.matchId);
-        expect(match?.firstPlayer).toBeNull();
-        expect(match?.playerALegs).toBe(0);
-        expect(match?.playerBlegs).toBe(0);
-        expect(match?.isComplete).toBe(false);
     });
 
     test('should update match legs', async () => {

@@ -75,10 +75,11 @@ describe('match', () => {
         const matchId = 'm1';
         jest.mocked(data.findMatch).mockResolvedValue(mockMatch);
         jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue([]);
+        jest.mocked(data.findActiveThrowsByMatchAndLeg).mockResolvedValue([]);
         jest.mocked(findLastThrow).mockResolvedValue({ score: 60 } as any);
         jest.mocked(findMatchAvg).mockResolvedValue(80);
 
-        const fullMatch = await match.getFullMatch(matchId, false);
+        const fullMatch = await match.getFullMatch(matchId);
 
         expect(fullMatch.match).toEqual(mockMatch);
         expect(fullMatch.playerA.score).toBe(501);
@@ -88,7 +89,7 @@ describe('match', () => {
     test('getFullMatch returns null when the match does not exist', async () => {
         jest.mocked(data.findMatch).mockResolvedValue(null);
 
-        const fullMatch = await match.getFullMatch('missing-match', false);
+        const fullMatch = await match.getFullMatch('missing-match');
 
         expect(fullMatch).toBeNull();
         expect(data.findThrowsByMatchAndLeg).not.toHaveBeenCalled();
@@ -110,8 +111,8 @@ describe('match', () => {
             raceTo: 5,
         };
         jest.mocked(data.upsertMatch).mockResolvedValue(null);
-        await match.createMatch(matchData);
-        expect(data.upsertMatch).toHaveBeenCalledWith(matchData);
+        await match.createMatch(matchData, '1');
+        expect(data.upsertMatch).toHaveBeenCalledWith(matchData, '1');
     });
 
     test('setStartingPlayer', async () => {
@@ -130,37 +131,49 @@ describe('match', () => {
         expect(data.updateMatchFirstPlayer).toHaveBeenCalledWith('m1', 'pA');
     });
 
-    test('resetMatch', async () => {
-        const formData = new FormData();
-        formData.append('matchId', 'm1');
-        jest.mocked(data.resetMatchData).mockResolvedValue(null);
-        await match.resetMatch(formData);
-        expect(data.resetMatchData).toHaveBeenCalledWith('m1');
-    });
-
     test('getThrows', async () => {
         jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue([]);
         await match.getThrows('m1', 1, 'pA', 'pB');
         expect(data.findThrowsByMatchAndLeg).toHaveBeenCalledWith('m1', 1, 'pA', 'pB');
     });
 
-    test('getScores', async () => {
-        jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue([
-            { playerId: 'pA', _sum: { score: 100, darts: 5 }, _count: { score: 2 } },
-            { playerId: 'pB', _sum: { score: 50, darts: 2 }, _count: { score: 1 } },
-        ] as any);
-        const scores = await match.getScores('m1', 1, 'pA', 'pB', 'pA');
-        expect(scores.playerA).toBe(401);
-        expect(scores.playerB).toBe(451);
-        expect(scores.playerADarts).toBe(5);
-        expect(scores.playerBDarts).toBe(2);
+    test('getScores uses scoring module', async () => {
+      jest.mocked(data.findActiveThrowsByMatchAndLeg).mockResolvedValue([
+        { playerId: 'pA', score: 60, darts: 2 },
+        { playerId: 'pA', score: 40, darts: 3 },
+        { playerId: 'pB', score: 50, darts: 2 },
+      ] as any);
+      const scores = await match.getScores('m1', 1, 'pA', 'pB', 'pA');
+      expect(scores.playerA).toBe(401);
+      expect(scores.playerB).toBe(451);
+      expect(scores.playerADarts).toBe(5);
+      expect(scores.playerBDarts).toBe(2);
+      expect(scores.nextPlayer).toBe('pB');
     });
 
-    test('nextPlayer', async () => {
-        let player = await match.nextPlayer(1, 0, 0, 'pA', 'pB', 'pA');
-        expect(player).toBe('pA');
-        player = await match.nextPlayer(1, 1, 0, 'pA', 'pB', 'pA');
-        expect(player).toBe('pB');
+    test('getScores keeps turn order from individual throws, not grouped players', async () => {
+      jest.mocked(data.findActiveThrowsByMatchAndLeg).mockResolvedValue([
+        { playerId: 'pA', score: 180, darts: 3 },
+        { playerId: 'pB', score: 0, darts: 3 },
+        { playerId: 'pA', score: 180, darts: 3 },
+      ] as any);
+
+      const scores = await match.getScores('m1', 1, 'pA', 'pB', 'pA');
+
+      expect(scores.playerA).toBe(141);
+      expect(scores.playerB).toBe(501);
+      expect(scores.nextPlayer).toBe('pB');
+    });
+
+    test('nextPlayer via scoring module', async () => {
+        const { calculateLegState } = await import('../lib/scoring');
+        
+        // Test the next player logic through the scoring module
+        let state = calculateLegState({ leg: 1, throws: [], playerAId: 'pA', playerBId: 'pB', firstPlayer: 'pA' });
+        expect(state.nextPlayer).toBe('pA');
+        
+        state = calculateLegState({ leg: 1, throws: [{ playerId: 'pA', score: 60, darts: 3 }], playerAId: 'pA', playerBId: 'pB', firstPlayer: 'pA' });
+        expect(state.nextPlayer).toBe('pB');
     });
 
     test('getMatch', async () => {

@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
       return apiError('ACTIVE_TOURNAMENT_NOT_SET', 'No active tournament is selected.', { status: 404 })
     }
 
-    const test = request.nextUrl.searchParams.get('test') === 'true'
-    return Response.json(await getDashboardTournamentSnapshot(activeTournament.id, test))
+    return Response.json(await getDashboardTournamentSnapshot(activeTournament.id))
   } catch (error) {
     console.error('Failed to load active dashboard snapshot', { error })
     return apiError('DASHBOARD_ACTIVE_FETCH_FAILED', 'Unable to load active dashboard snapshot', { status: 500 })

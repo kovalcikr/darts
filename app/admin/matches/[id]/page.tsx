@@ -5,6 +5,7 @@ import {
   createThrowAction,
   deleteMatchAction,
   deleteThrowAction,
+  restoreThrowAction,
   updateMatchAction,
   updateThrowAction,
 } from '../../actions'
@@ -343,6 +344,7 @@ function ThrowCellCard({
   cell,
   match,
   returnTo,
+  isDeleted,
 }: {
   cell: ThrowCell | null
   match: Pick<
@@ -355,6 +357,7 @@ function ThrowCellCard({
     | 'playerBName'
   >
   returnTo: string
+  isDeleted?: boolean
 }) {
   if (!cell) {
     return (
@@ -422,14 +425,22 @@ function ThrowCellCard({
         />
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-3">
-        <form action={deleteThrowAction}>
-          <input name="returnTo" type="hidden" value={returnTo} />
-          <input name="id" type="hidden" value={playerThrow.id} />
-          <ConfirmSubmitButton confirmationMessage={`Delete throw "${playerThrow.id}"?`}>
-            Delete Throw
-          </ConfirmSubmitButton>
-        </form>
+<div className="mt-4 flex flex-wrap gap-3">
+        {isDeleted ? (
+          <form action={restoreThrowAction}>
+            <input name="returnTo" type="hidden" value={returnTo} />
+            <input name="throwId" type="hidden" value={playerThrow.id} />
+            <ActionButton tone="success">Restore Throw</ActionButton>
+          </form>
+        ) : (
+          <form action={deleteThrowAction}>
+            <input name="returnTo" type="hidden" value={returnTo} />
+            <input name="id" type="hidden" value={playerThrow.id} />
+            <ConfirmSubmitButton confirmationMessage={`Delete throw "${playerThrow.id}"?`}>
+              Delete Throw
+            </ConfirmSubmitButton>
+          </form>
+        )}
       </div>
 
       <div className="mt-4">
@@ -501,6 +512,11 @@ export default async function AdminMatchPage({
     where: { matchId: id, undoneAt: null },
     orderBy: [{ leg: 'asc' }, { time: 'asc' }, { id: 'asc' }],
   })) as AdminThrow[]
+  const throwAudits = await prisma.throwAudit.findMany({
+    where: { matchId: id },
+    orderBy: [{ leg: 'asc' }, { time: 'asc' }],
+  })
+  const deletedThrowIds = new Set(throwAudits.map((a) => a.throwId))
   const matchedThrows = query ? allThrows.filter((playerThrow) => matchesThrowQuery(playerThrow, query)) : allThrows
   const matchedThrowIds = query ? new Set(matchedThrows.map((playerThrow) => playerThrow.id)) : null
   const allLegGroups = getLegGroups(allThrows, match, matchedThrowIds)
@@ -691,19 +707,19 @@ export default async function AdminMatchPage({
                         <th className="px-3 py-2">{match.playerBName}</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {legGroup.rows.map((row) => (
-                        <tr key={`${legGroup.leg}-${row.visit}`} className="align-top">
-                          <td className="px-3 py-2 text-sm font-semibold text-slate-400">Visit {row.visit}</td>
-                          <td className="px-3 py-2">
-                            <ThrowCellCard cell={row.playerA} match={match} returnTo={returnTo} />
-                          </td>
-                          <td className="px-3 py-2">
-                            <ThrowCellCard cell={row.playerB} match={match} returnTo={returnTo} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+<tbody>
+                       {legGroup.rows.map((row) => (
+                         <tr key={`${legGroup.leg}-${row.visit}`} className="align-top">
+                           <td className="px-3 py-2 text-sm font-semibold text-slate-400">Visit {row.visit}</td>
+                           <td className="px-3 py-2">
+                             <ThrowCellCard cell={row.playerA} match={match} returnTo={returnTo} isDeleted={row.playerA ? deletedThrowIds.has(row.playerA.playerThrow.id) : undefined} />
+                           </td>
+                           <td className="px-3 py-2">
+                             <ThrowCellCard cell={row.playerB} match={match} returnTo={returnTo} isDeleted={row.playerB ? deletedThrowIds.has(row.playerB.playerThrow.id) : undefined} />
+                           </td>
+                         </tr>
+                       ))}
+                     </tbody>
                   </table>
                 </div>
               </article>

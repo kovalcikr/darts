@@ -21,6 +21,8 @@ jest.mock('../actions', () => ({
   deleteMatchAction: jest.fn(),
   deleteThrowAction: jest.fn(),
   deleteTournamentAction: jest.fn(),
+  restoreMatchAction: jest.fn(),
+  restoreThrowAction: jest.fn(),
   toggleTournamentGlobalStatsAction: jest.fn(),
   updateMatchAction: jest.fn(),
   updateThrowAction: jest.fn(),
@@ -63,6 +65,7 @@ describe('admin detail pages', () => {
         _count: { throwsList: 9 },
       },
     ] as never)
+    prismaMock.matchAudit.findMany.mockResolvedValue([] as never)
 
     const element = await AdminTournamentPage({
       params: Promise.resolve({ id: 't1' }),
@@ -124,6 +127,7 @@ describe('admin detail pages', () => {
         checkout: false,
       },
     ] as never)
+    prismaMock.throwAudit.findMany.mockResolvedValue([] as never)
 
     const element = await AdminMatchPage({
       params: Promise.resolve({ id: 'm1' }),
@@ -140,5 +144,66 @@ describe('admin detail pages', () => {
     expect(html).toContain('Start another leg')
     expect(html).toContain('Delete Throw')
     expect(html).not.toContain('View Matches')
+  })
+
+  test('renders tournament detail with deleted matches section', async () => {
+    prismaMock.tournament.findUnique.mockResolvedValue({
+      id: 't1',
+      name: 'Relax Darts CUP 01 2026',
+      season: 2026,
+      eventDate: new Date('2026-04-23T00:00:00.000Z'),
+      includeInGlobalStats: false,
+      _count: { matches: 1 },
+    } as never)
+    prismaMock.match.findMany.mockResolvedValue([
+      {
+        id: 'm1',
+        round: 'Final',
+        tournamentId: 't1',
+        playerAId: 'p1',
+        playerAName: 'Alice',
+        playerAImage: 'alice.jpg',
+        playerBId: 'p2',
+        playerBName: 'Bob',
+        playerBImage: 'bob.jpg',
+        runTo: 5,
+        playerALegs: 3,
+        playerBlegs: 1,
+        firstPlayer: 'p1',
+        _count: { throwsList: 9 },
+      },
+    ] as never)
+    prismaMock.matchAudit.findMany.mockResolvedValue([
+      {
+        id: 'audit1',
+        matchId: 'm2',
+        round: 'Semi Final',
+        tournamentId: 't1',
+        playerAId: 'p3',
+        playerAName: 'Charlie',
+        playerAImage: null,
+        playerBId: 'p4',
+        playerBName: 'Diana',
+        playerBImage: null,
+        runTo: 5,
+        playerALegs: 1,
+        playerBlegs: 3,
+        deletedAt: new Date('2026-04-24T12:00:00.000Z'),
+      },
+    ] as never)
+    prismaMock.throwAudit.groupBy.mockResolvedValue([
+      { matchId: 'm2', _count: { throwId: 9 } },
+    ] as never)
+
+    const element = await AdminTournamentPage({
+      params: Promise.resolve({ id: 't1' }),
+      searchParams: Promise.resolve({}),
+    })
+
+    const html = renderToStaticMarkup(element)
+
+    expect(html).toContain('Deleted Matches')
+    expect(html).toContain('Charlie vs Diana')
+    expect(html).toContain('Restore Match')
   })
 })

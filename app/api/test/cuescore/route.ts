@@ -1,5 +1,5 @@
 import { getCueScoreProviderName } from '@/app/lib/integrations/cuescore'
-import { getFakeCueScoreSnapshot, resetFakeCueScoreStore } from '@/app/lib/integrations/cuescore/fake'
+import { getFakeCueScoreSnapshot, resetFakeCueScoreStore, setFakeCueScoreDelay } from '@/app/lib/integrations/cuescore/fake'
 import { NextRequest, NextResponse } from 'next/server'
 
 function isTestCueScoreApiEnabled() {
@@ -37,6 +37,14 @@ export async function POST(request: NextRequest) {
     typeof body?.tournamentId === 'string' && body.tournamentId.trim().length > 0
       ? body.tournamentId.trim()
       : undefined
+
+  if (body?.delays && typeof body.delays === 'object') {
+    for (const [method, ms] of Object.entries(body.delays)) {
+      if (typeof ms === 'number') {
+        setFakeCueScoreDelay(method, ms)
+      }
+    }
+  }
 
   resetFakeCueScoreStore(tournamentId)
   return NextResponse.json({ ok: true })

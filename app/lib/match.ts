@@ -4,23 +4,25 @@ import getTournamentInfo from "./cuescore"
 import { revalidatePath, revalidateTag } from "next/cache";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
-import { findMatch, upsertMatch, updateMatchFirstPlayer, resetMatchData, findThrowsByMatchAndLeg, findThrowsByMatch, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory } from "./data";
+import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrowsByMatchAndLeg, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
 import { selectCurrentLegStarter } from "./leg-starter";
+import { calculateLegState } from "./scoring";
+import { isMatchComplete } from "./utils/match";
 
 interface CueScorePlayer {
-  playerId: number;
-  name: string;
-  image: string;
+    playerId: number;
+    name: string;
+    image: string;
 }
 
 interface CueScoreMatch {
-  matchId: number;
-  roundName: string;
-  round: number;
-  playerA: CueScorePlayer;
-  playerB: CueScorePlayer;
-  raceTo: number;
-  tournamentId: number
+    matchId: number;
+    roundName: string;
+    round: number;
+    playerA: CueScorePlayer;
+    playerB: CueScorePlayer;
+    raceTo: number;
+    tournamentId: number
 }
 
 export async function getCuescoreMatchCached(tournamentId: string, tableName: string) {
@@ -42,11 +44,8 @@ export async function getCuescoreMatch(tournamentId: string, tableName: string) 
   throw Error(`No match in progress on table ${tableName}`);
 }
 
-export async function getFullMatch(matchId, slow) {
-  if (slow) {
-    await new Promise(resolve => setTimeout(resolve, 2000));  // TODO: remove
-  }
-  const match = await getMatch(matchId);
+export async function getFullMatch(matchId) {
+   const match = await getMatch(matchId);
   if (!match) {
     return null;
   }
@@ -112,8 +111,8 @@ export async function getMatch(matchId) {
   return findMatch(matchId);
 }
 
-export async function createMatch(match) {
-  return await upsertMatch(match);
+export async function createMatch(match, slot?: string) {
+   return await upsertMatch(match, slot);
 }
 
 export async function setStartingPlayer(matchId, playerId) {
@@ -121,63 +120,38 @@ export async function setStartingPlayer(matchId, playerId) {
 }
 
 export async function startMatch(formData) {
-  await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
-  revalidatePath('/tables/[table]', 'page');
-  const cacheTag = `match${formData.get('table')}`
-  console.log('revalidating tag', cacheTag)
-  revalidateTag(cacheTag, 'max')
-}
+   await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
+   revalidatePath('/tables/[table]', 'page');
+   const cacheTag = `match${formData.get('table')}`
+   console.log('revalidating tag', cacheTag)
+   revalidateTag(cacheTag, 'max')
+  }
 
-export async function resetMatch(formData) {
-  await resetMatchData(formData.get('matchId'));
-  revalidatePath('/tables/[table]', 'layout');
-}
-
-export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
+  export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
   return await findThrowsByMatchAndLeg(matchId, leg, playerA, playerB);
 }
 
 export async function getScores(matchId: string, leg: number, playerA: string, playerB: string, firstPlayer: string) {
-  const playerThrows = await getThrows(matchId, leg, playerA, playerB);
-  if (playerThrows.length == 0) {
-    return ({
-      playerA: 501,
-      playerB: 501,
-      playerADarts: 0,
-      playerBDarts: 0,
-      nextPlayer: await nextPlayer(leg, 0, 0, playerA, playerB, firstPlayer)
-    })
-  }
-  console.log(playerThrows)
-  const playerAScore = await findScore(playerThrows, playerA);
-  const playerBScore = await findScore(playerThrows, playerB);
+  const playerThrows = await findActiveThrowsByMatchAndLeg(matchId, leg, playerA, playerB);
+  const throws = playerThrows.map((t: any) => ({
+    playerId: t.playerId,
+    score: t.score,
+    darts: t.darts,
+  }));
+
+  const state = calculateLegState({
+    throws,
+    leg,
+    playerAId: playerA,
+    playerBId: playerB,
+    firstPlayer,
+  });
+
   return {
-    playerA: 501 - (playerAScore?._sum.score ? playerAScore?._sum.score : 0),
-    playerB: 501 - (playerBScore?._sum.score ? playerBScore?._sum.score : 0),
-    playerADarts: playerAScore?._sum.darts ? playerAScore._sum.darts : 0,
-    playerBDarts: playerBScore?._sum.darts ? playerBScore._sum.darts : 0,
-    nextPlayer: await nextPlayer(leg, playerAScore?._count.score, playerBScore?._count.score, playerA, playerB, firstPlayer)
-  }
-}
-
-export async function findScore(playerThrows, player) {
-  for (var playerThrow of playerThrows) {
-    if (playerThrow.playerId == player)
-      return playerThrow;
-  }
-}
-
-/**
- * Calculate next player
- * @param leg 
- * @param throwsA 
- * @param throwsB 
- * @returns 0 if next is playerA, 1 if next is playerB
- */
-export async function nextPlayer(leg: number, throwsA: number, throwsB: number, playerA: string, playerB: string, firstPlayer: string) {
-  if ((leg + (throwsA ? throwsA : 0) + (throwsB ? throwsB : 0)) % 2 == 1) {
-    return firstPlayer;
-  } else {
-    return firstPlayer == playerA ? playerB : playerA;
-  }
+    playerA: state.playerAScoreLeft,
+    playerB: state.playerBScoreLeft,
+    playerADarts: state.playerADarts,
+    playerBDarts: state.playerBDarts,
+    nextPlayer: state.nextPlayer,
+  };
 }

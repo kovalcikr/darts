@@ -1,10 +1,25 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page, type TestInfo } from '@playwright/test';
+
+async function openStartedTableOne(page: Page, testInfo: TestInfo) {
+  const tournamentId = `ui-scoreboard-${testInfo.project.name}-${testInfo.parallelIndex}-${Date.now()}`;
+
+  await page.goto('/tournaments');
+  await page.getByPlaceholder('Tournament ID').fill(tournamentId);
+  await page.getByRole('button', { name: 'Otvoriť' }).click();
+
+  await expect(page).toHaveURL(/\/tables$/);
+  await page.getByRole('link', { name: 'Table 1' }).click();
+  await expect(page).toHaveURL(/\/tables\/1$/);
+  await expect(page.getByText('First to play:')).toBeVisible();
+  await page.locator('[data-testid^="start-player-"]').first().click();
+  await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
+}
 
 test.describe('scoreboard UI', () => {
-  test('renders the local test match details', async ({ page }) => {
-    await page.goto('/test');
+  test('renders the active tournament table match details', async ({ page }, testInfo) => {
+    await openStartedTableOne(page, testInfo);
 
-    await expect(page.getByText('ABC')).toBeVisible();
+    await expect(page.getByText(/Local Tournament ui-scoreboard-/)).toBeVisible();
     await expect(page.getByText('Round 1')).toBeVisible();
     await expect(page.getByText('First to 3 legs')).toBeVisible();
     await expect(page.getByText('Fero Hruska')).toBeVisible();
@@ -20,8 +35,8 @@ test.describe('scoreboard UI', () => {
     await expect(page.getByTestId('scoreboard-input')).toHaveText('0');
   });
 
-  test('updates and clears the entered score without submitting', async ({ page }) => {
-    await page.goto('/test');
+  test('updates and clears the entered score without submitting', async ({ page }, testInfo) => {
+    await openStartedTableOne(page, testInfo);
 
     const scoreInput = page.getByTestId('scoreboard-input');
 

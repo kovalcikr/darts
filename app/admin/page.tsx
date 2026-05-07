@@ -8,6 +8,7 @@ import {
   deleteTournamentAction,
   loginAdminAction,
   logoutAdminAction,
+  restoreTournamentAction,
   setActiveTournamentAction,
   toggleTournamentGlobalStatsAction,
   updateTournamentAction,
@@ -134,32 +135,41 @@ export default async function AdminPage({
       }
     : undefined
 
-  const [tournaments, throwCountsByTournament, activeTournament] = await Promise.all([
-    prisma.tournament.findMany({
-      where: tournamentWhere,
-      include: {
-        _count: {
-          select: { matches: true },
-        },
-      },
-      orderBy: [{ name: 'asc' }, { id: 'asc' }],
-    }),
-    prisma.playerThrow.groupBy({
-      by: ['tournamentId'],
-      where: {
-        undoneAt: null,
-      },
-      _count: {
-        id: true,
-      },
-    }),
-    getActiveTournament(),
-  ])
+const [tournaments, throwCountsByTournament, activeTournament, tournamentAudits] = await Promise.all([
+     prisma.tournament.findMany({
+       where: tournamentWhere,
+       include: {
+         _count: {
+           select: { matches: true },
+         },
+       },
+       orderBy: [{ name: 'asc' }, { id: 'asc' }],
+     }),
+     prisma.playerThrow.groupBy({
+       by: ['tournamentId'],
+       where: {
+         undoneAt: null,
+       },
+       _count: {
+         id: true,
+       },
+     }),
+     getActiveTournament(),
+     prisma.tournamentAudit.findMany({
+       where: query
+         ? {
+             tournamentId: { contains: query, mode: 'insensitive' as const },
+           }
+         : undefined,
+       select: { tournamentId: true },
+     }),
+   ])
 
-  const throwCountMap = new Map<string, number>(
-    throwCountsByTournament.map((item) => [item.tournamentId, item._count.id])
-  )
-  const activeTournamentId = activeTournament?.id ?? null
+const throwCountMap = new Map<string, number>(
+     throwCountsByTournament.map((item) => [item.tournamentId, item._count.id])
+   )
+   const activeTournamentId = activeTournament?.id ?? null
+   const deletedTournamentIds = new Set(tournamentAudits.map((audit) => audit.tournamentId))
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
@@ -179,10 +189,15 @@ export default async function AdminPage({
               </p>
             </div>
 
-            <form action={logoutAdminAction} className="self-start lg:self-auto">
-              <input name="returnTo" type="hidden" value={returnTo} />
-              <ActionButton tone="muted">Log out</ActionButton>
-            </form>
+            <div className="flex flex-wrap gap-3 self-start lg:self-auto">
+              <ActionLink href="/admin/deleted" tone="muted">
+                View Deleted Tournaments
+              </ActionLink>
+              <form action={logoutAdminAction}>
+                <input name="returnTo" type="hidden" value={returnTo} />
+                <ActionButton tone="muted">Log out</ActionButton>
+              </form>
+            </div>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -304,33 +319,41 @@ export default async function AdminPage({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <ActionLink href={`/admin/tournaments/${encodeURIComponent(tournament.id)}`} tone="primary">
-                    View Matches
-                  </ActionLink>
-                  {!isActiveTournament ? (
-                    <form action={setActiveTournamentAction}>
-                      <input name="returnTo" type="hidden" value={returnTo} />
-                      <input name="tournamentId" type="hidden" value={tournament.id} />
-                      <ActionButton tone="muted">Set Active</ActionButton>
-                    </form>
-                  ) : null}
-                  <form action={toggleTournamentGlobalStatsAction}>
-                    <input name="returnTo" type="hidden" value={returnTo} />
-                    <input name="id" type="hidden" value={tournament.id} />
-                    {tournament.includeInGlobalStats ? null : <input name="includeInGlobalStats" type="hidden" value="on" />}
-                    <ActionButton tone={tournament.includeInGlobalStats ? 'muted' : 'primary'}>
-                      {tournament.includeInGlobalStats ? 'Exclude from stats' : 'Include to stats'}
-                    </ActionButton>
-                  </form>
-                  <form action={deleteTournamentAction}>
-                    <input name="returnTo" type="hidden" value={returnTo} />
-                    <input name="id" type="hidden" value={tournament.id} />
-                    <ConfirmSubmitButton confirmationMessage={`Delete tournament "${tournament.name}" and all of its matches and throws?`}>
-                      Delete Tournament
-                    </ConfirmSubmitButton>
-                  </form>
-                </div>
+<div className="flex flex-wrap gap-3">
+                   <ActionLink href={`/admin/tournaments/${encodeURIComponent(tournament.id)}`} tone="primary">
+                     View Matches
+                   </ActionLink>
+                   {!isActiveTournament ? (
+                     <form action={setActiveTournamentAction}>
+                       <input name="returnTo" type="hidden" value={returnTo} />
+                       <input name="tournamentId" type="hidden" value={tournament.id} />
+                       <ActionButton tone="muted">Set Active</ActionButton>
+                     </form>
+                   ) : null}
+                   <form action={toggleTournamentGlobalStatsAction}>
+                     <input name="returnTo" type="hidden" value={returnTo} />
+                     <input name="id" type="hidden" value={tournament.id} />
+                     {tournament.includeInGlobalStats ? null : <input name="includeInGlobalStats" type="hidden" value="on" />}
+                     <ActionButton tone={tournament.includeInGlobalStats ? 'muted' : 'primary'}>
+                       {tournament.includeInGlobalStats ? 'Exclude from stats' : 'Include to stats'}
+                     </ActionButton>
+                   </form>
+                   {deletedTournamentIds.has(tournament.id) ? (
+                     <form action={restoreTournamentAction}>
+                       <input name="returnTo" type="hidden" value={returnTo} />
+                       <input name="tournamentId" type="hidden" value={tournament.id} />
+                       <ActionButton tone="success">Restore Tournament</ActionButton>
+                     </form>
+                   ) : (
+                     <form action={deleteTournamentAction}>
+                       <input name="returnTo" type="hidden" value={returnTo} />
+                       <input name="id" type="hidden" value={tournament.id} />
+                       <ConfirmSubmitButton confirmationMessage={`Delete tournament "${tournament.name}" and all of its matches and throws?`}>
+                         Delete Tournament
+                       </ConfirmSubmitButton>
+                     </form>
+                   )}
+                 </div>
               </div>
 
               <div className="mt-5">
@@ -361,8 +384,8 @@ export default async function AdminPage({
               </div>
             </article>
           )})}
-        </SectionShell>
-      </div>
-    </main>
-  )
+</SectionShell>
+        </div>
+     </main>
+   )
 }

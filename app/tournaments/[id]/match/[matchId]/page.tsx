@@ -4,7 +4,7 @@ import type { RouteParams } from "@/app/lib/next-types";
 
 export default async function MatchPage({ params }: { params: RouteParams<{ id: string, matchId: string }> }) {
     const { id, matchId } = await params;
-    const fullMatch = await getFullMatch(matchId, false);
+    const fullMatch = await getFullMatch(matchId);
 
     if (!fullMatch) {
         return (

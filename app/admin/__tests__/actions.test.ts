@@ -11,6 +11,9 @@ import {
   deleteTournamentAction,
   loginAdminAction,
   logoutAdminAction,
+  restoreMatchAction,
+  restoreThrowAction,
+  restoreTournamentAction,
   setActiveTournamentAction,
   toggleTournamentGlobalStatsAction,
   updateMatchAction,
@@ -240,11 +243,56 @@ describe('admin actions', () => {
   })
 
   test('deletes tournament with dependent records in a transaction', async () => {
-    prismaMock.tournament.findUnique.mockResolvedValue({ id: 't1' } as never)
+    mockCallbackTransaction()
+    const undoneAt = new Date('2026-04-23T12:35:00.000Z')
+    const redoInvalidatedAt = new Date('2026-04-23T12:36:00.000Z')
+    prismaMock.tournament.findUnique.mockResolvedValue({
+      id: 't1',
+      name: 'Cup',
+      season: null,
+      eventDate: null,
+      includeInGlobalStats: true,
+      matches: [
+        {
+          id: 'm1',
+          tournamentId: 't1',
+          round: 'Final',
+          playerAId: 'p1',
+          playerAName: 'Alpha',
+          playerAImage: 'a.jpg',
+          playerBId: 'p2',
+          playerBName: 'Beta',
+          playerBImage: 'b.jpg',
+          runTo: 7,
+          playerALegs: 4,
+          playerBlegs: 2,
+          isComplete: false,
+          firstPlayer: 'p1',
+          throwsList: [
+            {
+              id: 'pt1',
+              tournamentId: 't1',
+              matchId: 'm1',
+              leg: 1,
+              playerId: 'p1',
+              time: new Date('2026-04-23T12:34:56.000Z'),
+              score: 100,
+              darts: 3,
+              doubles: null,
+              checkout: false,
+              undoneAt,
+              redoInvalidatedAt,
+            },
+          ],
+        },
+      ],
+    } as never)
+    prismaMock.tournamentAudit.create.mockResolvedValue({ id: 'audit1' } as never)
+    prismaMock.matchAudit.create.mockResolvedValue({ id: 'ma1' } as never)
+    prismaMock.throwAudit.create.mockResolvedValue({ id: 'ta1' } as never)
     prismaMock.playerThrow.deleteMany.mockResolvedValue({ count: 3 } as never)
     prismaMock.match.deleteMany.mockResolvedValue({ count: 2 } as never)
     prismaMock.tournament.delete.mockResolvedValue({ id: 't1', name: 'Cup' } as never)
-    prismaMock.$transaction.mockResolvedValue([] as never)
 
     const formData = buildFormData({
       id: 't1',
@@ -253,11 +301,7 @@ describe('admin actions', () => {
 
     await expectRedirect(() => deleteTournamentAction(formData), '/admin?notice=Tournament+deleted.')
 
-    expect(prismaMock.$transaction).toHaveBeenCalledWith([
-      expect.anything(),
-      expect.anything(),
-      expect.anything(),
-    ])
+    expect(prismaMock.$transaction).toHaveBeenCalledWith(expect.any(Function))
     expect(prismaMock.playerThrow.deleteMany).toHaveBeenCalledWith({
       where: { tournamentId: 't1' },
     })
@@ -266,6 +310,17 @@ describe('admin actions', () => {
     })
     expect(prismaMock.tournament.delete).toHaveBeenCalledWith({
       where: { id: 't1' },
+    })
+    expect(prismaMock.tournamentAudit.create).toHaveBeenCalled()
+    expect(prismaMock.matchAudit.create).toHaveBeenCalled()
+    expect(prismaMock.throwAudit.create).toHaveBeenCalled()
+    const deleteBatchId = prismaMock.tournamentAudit.create.mock.calls[0][0].data.deleteBatchId
+    expect(deleteBatchId).toEqual(expect.any(String))
+    expect(prismaMock.matchAudit.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ deleteBatchId }),
+    })
+    expect(prismaMock.throwAudit.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ deleteBatchId, undoneAt, redoInvalidatedAt }),
     })
     expect(clearActiveTournamentIfMatches).toHaveBeenCalledWith('t1')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/dashboard')
@@ -332,7 +387,42 @@ describe('admin actions', () => {
   })
 
   test('deletes match', async () => {
-    prismaMock.match.findUnique.mockResolvedValue({ tournamentId: 't1' } as never)
+    mockCallbackTransaction()
+    const undoneAt = new Date('2026-04-23T12:35:00.000Z')
+    prismaMock.match.findUnique.mockResolvedValue({
+      id: 'm1',
+      tournamentId: 't1',
+      round: 'Final',
+      playerAId: 'p1',
+      playerAName: 'Alpha',
+      playerAImage: 'a.jpg',
+      playerBId: 'p2',
+      playerBName: 'Beta',
+      playerBImage: 'b.jpg',
+      runTo: 7,
+      playerALegs: 4,
+      playerBlegs: 2,
+      isComplete: false,
+      firstPlayer: 'p1',
+      throwsList: [
+        {
+          id: 'pt1',
+          tournamentId: 't1',
+          matchId: 'm1',
+          leg: 1,
+          playerId: 'p1',
+          time: new Date('2026-04-23T12:34:56.000Z'),
+          score: 100,
+          darts: 3,
+          doubles: null,
+          checkout: false,
+          undoneAt,
+          redoInvalidatedAt: null,
+        },
+      ],
+    } as never)
+    prismaMock.matchAudit.create.mockResolvedValue({ id: 'ma1' } as never)
+    prismaMock.throwAudit.create.mockResolvedValue({ id: 'ta1' } as never)
     prismaMock.match.delete.mockResolvedValue({ id: 'm1' } as never)
 
     const formData = buildFormData({
@@ -343,6 +433,13 @@ describe('admin actions', () => {
     await expectRedirect(() => deleteMatchAction(formData), '/admin?notice=Match+deleted.')
 
     expect(prismaMock.match.delete).toHaveBeenCalledWith({ where: { id: 'm1' } })
+    expect(prismaMock.matchAudit.create).toHaveBeenCalled()
+    expect(prismaMock.throwAudit.create).toHaveBeenCalled()
+    const deleteBatchId = prismaMock.matchAudit.create.mock.calls[0][0].data.deleteBatchId
+    expect(deleteBatchId).toEqual(expect.any(String))
+    expect(prismaMock.throwAudit.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ deleteBatchId, undoneAt, redoInvalidatedAt: null }),
+    })
   })
 
   test('updates throw with parsed numeric and date fields', async () => {
@@ -421,7 +518,24 @@ describe('admin actions', () => {
   })
 
   test('deletes throw', async () => {
-    prismaMock.playerThrow.findUnique.mockResolvedValue({ tournamentId: 't1', matchId: 'm1' } as never)
+    mockCallbackTransaction()
+    const undoneAt = new Date('2026-04-23T12:35:00.000Z')
+    const redoInvalidatedAt = new Date('2026-04-23T12:36:00.000Z')
+    prismaMock.playerThrow.findUnique.mockResolvedValue({
+      id: 'pt1',
+      tournamentId: 't1',
+      matchId: 'm1',
+      leg: 1,
+      playerId: 'p1',
+      time: new Date('2026-04-23T12:34:56.000Z'),
+      score: 100,
+      darts: 3,
+      doubles: null,
+      checkout: false,
+      undoneAt,
+      redoInvalidatedAt,
+    } as never)
+    prismaMock.throwAudit.create.mockResolvedValue({ id: 'ta1' } as never)
     prismaMock.playerThrow.delete.mockResolvedValue({ id: 'pt1' } as never)
 
     const formData = buildFormData({
@@ -432,5 +546,261 @@ describe('admin actions', () => {
     await expectRedirect(() => deleteThrowAction(formData), '/admin?notice=Throw+deleted.')
 
     expect(prismaMock.playerThrow.delete).toHaveBeenCalledWith({ where: { id: 'pt1' } })
+    expect(prismaMock.throwAudit.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        deleteBatchId: expect.any(String),
+        undoneAt,
+        redoInvalidatedAt,
+      }),
+    })
+  })
+
+  test('restores tournament', async () => {
+    mockCallbackTransaction()
+    prismaMock.tournamentAudit.findFirst.mockResolvedValue({
+      id: 'ta1',
+      tournamentId: 't1',
+      name: 'Restored Cup',
+      season: 2026,
+      eventDate: new Date('2026-04-23'),
+      includeInGlobalStats: true,
+      deleteBatchId: 'batch-1',
+      deletedAt: new Date(),
+      deletedBy: 'admin',
+    } as never)
+    prismaMock.tournament.create.mockResolvedValue({ id: 't1' } as never)
+    prismaMock.matchAudit.findMany.mockResolvedValue([
+      {
+        id: 'ma1',
+        matchId: 'm1',
+        tournamentId: 't1',
+        round: 'Final',
+        playerAId: 'p1',
+        playerAName: 'Alpha',
+        playerAImage: 'a.jpg',
+        playerBId: 'p2',
+        playerBName: 'Beta',
+        playerBImage: 'b.jpg',
+        runTo: 7,
+        playerALegs: 4,
+        playerBlegs: 2,
+        isComplete: false,
+        firstPlayer: 'p1',
+        deleteBatchId: 'batch-1',
+        deletedAt: new Date(),
+        deletedBy: 'admin',
+      },
+    ] as never)
+    prismaMock.throwAudit.findMany.mockResolvedValue([] as never)
+    prismaMock.match.create.mockResolvedValue({ id: 'm1' } as never)
+
+    const formData = buildFormData({
+      tournamentId: 't1',
+      returnTo: '/admin',
+    })
+
+    await expectRedirect(() => restoreTournamentAction(formData), '/admin?notice=Tournament+restored.')
+
+    expect(prismaMock.tournament.create).toHaveBeenCalled()
+    expect(prismaMock.matchAudit.findMany).toHaveBeenCalledWith({
+      where: { deleteBatchId: 'batch-1', tournamentId: 't1' },
+    })
+    expect(prismaMock.throwAudit.findMany).toHaveBeenCalledWith({
+      where: { deleteBatchId: 'batch-1', matchId: 'm1' },
+    })
+    expect(prismaMock.throwAudit.deleteMany).toHaveBeenCalledWith({
+      where: { deleteBatchId: 'batch-1' },
+    })
+  })
+
+  test('rejects unsafe legacy tournament restore without batch id', async () => {
+    mockCallbackTransaction()
+    prismaMock.tournamentAudit.findFirst.mockResolvedValue({
+      id: 'ta1',
+      tournamentId: 't1',
+      name: 'Legacy Cup',
+      season: 2026,
+      eventDate: null,
+      includeInGlobalStats: true,
+      deleteBatchId: null,
+      deletedAt: new Date(),
+      deletedBy: 'admin',
+    } as never)
+
+    const formData = buildFormData({
+      tournamentId: 't1',
+      returnTo: '/admin/deleted',
+    })
+
+    await expectRedirect(
+      () => restoreTournamentAction(formData),
+      '/admin/deleted?error=Tournament+audit+t1+cannot+be+safely+restored+because+it+has+no+delete+batch.'
+    )
+  })
+
+  test('restores match', async () => {
+    mockCallbackTransaction()
+    prismaMock.matchAudit.findFirst.mockResolvedValue({
+      id: 'ma1',
+      matchId: 'm1',
+      tournamentId: 't1',
+      round: 'Final',
+      playerAId: 'p1',
+      playerAName: 'Alpha',
+      playerAImage: 'a.jpg',
+      playerBId: 'p2',
+      playerBName: 'Beta',
+      playerBImage: 'b.jpg',
+      runTo: 7,
+      playerALegs: 4,
+      playerBlegs: 2,
+      isComplete: false,
+      firstPlayer: 'p1',
+      deleteBatchId: 'batch-2',
+      deletedAt: new Date(),
+      deletedBy: 'admin',
+    } as never)
+    prismaMock.match.create.mockResolvedValue({ id: 'm1' } as never)
+    prismaMock.throwAudit.findMany.mockResolvedValue([
+      {
+        id: 'ta1',
+        throwId: 'pt1',
+        tournamentId: 't1',
+        matchId: 'm1',
+        leg: 1,
+        playerId: 'p1',
+        time: new Date('2026-04-23T12:34:56.000Z'),
+        score: 100,
+        darts: 3,
+        doubles: null,
+        checkout: false,
+        undoneAt: null,
+        redoInvalidatedAt: null,
+        deleteBatchId: 'batch-2',
+        deletedAt: new Date(),
+        deletedBy: 'admin',
+      },
+    ] as never)
+    prismaMock.playerThrow.create.mockResolvedValue({ id: 'pt1' } as never)
+
+    const formData = buildFormData({
+      matchId: 'm1',
+      returnTo: '/admin',
+    })
+
+    await expectRedirect(() => restoreMatchAction(formData), '/admin?notice=Match+restored.')
+
+    expect(prismaMock.match.create).toHaveBeenCalled()
+    expect(prismaMock.throwAudit.findMany).toHaveBeenCalledWith({
+      where: { deleteBatchId: 'batch-2', matchId: 'm1' },
+    })
+    expect(prismaMock.throwAudit.deleteMany).toHaveBeenCalledWith({
+      where: { deleteBatchId: 'batch-2', matchId: 'm1' },
+    })
+  })
+
+  test('rejects unsafe legacy match restore without batch id', async () => {
+    mockCallbackTransaction()
+    prismaMock.matchAudit.findFirst.mockResolvedValue({
+      id: 'ma1',
+      matchId: 'm1',
+      tournamentId: 't1',
+      round: 'Final',
+      playerAId: 'p1',
+      playerAName: 'Alpha',
+      playerAImage: 'a.jpg',
+      playerBId: 'p2',
+      playerBName: 'Beta',
+      playerBImage: 'b.jpg',
+      runTo: 7,
+      playerALegs: 4,
+      playerBlegs: 2,
+      isComplete: false,
+      firstPlayer: 'p1',
+      deleteBatchId: null,
+      deletedAt: new Date(),
+      deletedBy: 'admin',
+    } as never)
+
+    const formData = buildFormData({
+      matchId: 'm1',
+      returnTo: '/admin/tournaments/t1',
+    })
+
+    await expectRedirect(
+      () => restoreMatchAction(formData),
+      '/admin/tournaments/t1?error=Match+audit+m1+cannot+be+safely+restored+because+it+has+no+delete+batch.'
+    )
+  })
+
+  test('restores throw', async () => {
+    mockCallbackTransaction()
+    const undoneAt = new Date('2026-04-23T12:35:00.000Z')
+    const redoInvalidatedAt = new Date('2026-04-23T12:36:00.000Z')
+    prismaMock.throwAudit.findFirst.mockResolvedValue({
+      id: 'ta1',
+      throwId: 'pt1',
+      tournamentId: 't1',
+      matchId: 'm1',
+      leg: 1,
+      playerId: 'p1',
+      time: new Date('2026-04-23T12:34:56.000Z'),
+      score: 100,
+      darts: 3,
+      doubles: null,
+      checkout: false,
+      undoneAt,
+      redoInvalidatedAt,
+      deleteBatchId: 'batch-3',
+      deletedAt: new Date(),
+      deletedBy: 'admin',
+    } as never)
+    prismaMock.playerThrow.create.mockResolvedValue({ id: 'pt1' } as never)
+    prismaMock.throwAudit.delete.mockResolvedValue({ id: 'ta1' } as never)
+
+    const formData = buildFormData({
+      throwId: 'pt1',
+      returnTo: '/admin',
+    })
+
+    await expectRedirect(() => restoreThrowAction(formData), '/admin?notice=Throw+restored.')
+
+    expect(prismaMock.playerThrow.create).toHaveBeenCalled()
+    expect(prismaMock.playerThrow.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ undoneAt, redoInvalidatedAt }),
+    })
+    expect(prismaMock.throwAudit.delete).toHaveBeenCalled()
+  })
+
+  test('rejects unsafe legacy throw restore without batch id', async () => {
+    mockCallbackTransaction()
+    prismaMock.throwAudit.findFirst.mockResolvedValue({
+      id: 'ta1',
+      throwId: 'pt1',
+      tournamentId: 't1',
+      matchId: 'm1',
+      leg: 1,
+      playerId: 'p1',
+      time: new Date('2026-04-23T12:34:56.000Z'),
+      score: 100,
+      darts: 3,
+      doubles: null,
+      checkout: false,
+      undoneAt: null,
+      redoInvalidatedAt: null,
+      deleteBatchId: null,
+      deletedAt: new Date(),
+      deletedBy: 'admin',
+    } as never)
+
+    const formData = buildFormData({
+      throwId: 'pt1',
+      returnTo: '/admin/matches/m1',
+    })
+
+    await expectRedirect(
+      () => restoreThrowAction(formData),
+      '/admin/matches/m1?error=Throw+audit+pt1+cannot+be+safely+restored+because+it+has+no+delete+batch.'
+    )
   })
 })

@@ -110,4 +110,18 @@ describe('active tournament settings', () => {
       },
     })
   })
+
+  test('does not clear active tournament when different tournament is deleted', async () => {
+    mockResolved(prismaMock.appSetting.deleteMany, { count: 0 })
+
+    await clearActiveTournamentIfMatches('t1')
+
+    expect(prismaMock.appSetting.deleteMany).toHaveBeenCalledWith({
+      where: {
+        key: ACTIVE_TOURNAMENT_SETTING_KEY,
+        value: 't1',
+      },
+    })
+    // The count of 0 means no rows were deleted, which is correct when active tournament is different
+  })
 })
