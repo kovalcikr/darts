@@ -2,4 +2,4 @@ import { refreshMatchLiveState } from './refresh'
 
 export { refreshMatchLiveState }
 export { findMatchLiveStates } from './repository'
-export type { MatchLiveState, DashboardSnapshot } from './model'
+export type { MatchLiveState } from './model'
