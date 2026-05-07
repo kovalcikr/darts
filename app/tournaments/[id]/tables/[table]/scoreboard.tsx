@@ -25,7 +25,7 @@ type ScoreBoardProps = {
 
 const DEFAULT_CHECKOUT_DARTS = 3;
 
-function getDefaultCheckoutDarts(allowedCheckoutDarts: number[]) {
+function getDefaultCheckoutDarts(allowedCheckoutDarts: (1 | 2 | 3)[]) {
   if (allowedCheckoutDarts.length === 1) {
     return allowedCheckoutDarts[0];
   }
@@ -33,7 +33,7 @@ function getDefaultCheckoutDarts(allowedCheckoutDarts: number[]) {
   return allowedCheckoutDarts.includes(DEFAULT_CHECKOUT_DARTS) ? DEFAULT_CHECKOUT_DARTS : null;
 }
 
-function getValidCheckoutDartsSelection(allowedCheckoutDarts: number[], selectedDarts: number | null) {
+function getValidCheckoutDartsSelection(allowedCheckoutDarts: (1 | 2 | 3)[], selectedDarts: 1 | 2 | 3 | null): 1 | 2 | 3 | null {
   if (allowedCheckoutDarts.length === 1) {
     return allowedCheckoutDarts[0];
   }
@@ -47,8 +47,8 @@ export function CheckoutDartsSelector({
    onSelectedDartsChange,
   }: {
    remainingScore: number
-   selectedDarts: number | null
-   onSelectedDartsChange: (darts: number | null) => void
+   selectedDarts: 1 | 2 | 3 | null
+   onSelectedDartsChange: (darts: 1 | 2 | 3 | null) => void
   }) {
    const allowedCheckoutDarts = getAllowedCheckoutDarts(remainingScore);
 
@@ -93,7 +93,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
     const [currentScore, setCurrentScore] = useState("0");
     const [dartsCount, setDartsCount] = useState(false);
     const [hydrated, setHydrated] = useState(false);
-    const [selectedCheckoutDarts, setSelectedCheckoutDarts] = useState<number | null>(null);
+    const [selectedCheckoutDarts, setSelectedCheckoutDarts] = useState<1 | 2 | 3 | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
    const currentScoreRef = useRef("0");
    const playerDisplayNames = buildScoreboardPlayerDisplayNames(playerNames);
@@ -187,7 +187,7 @@ function DartsCount() {
       const allowedCheckoutDarts = getAllowedCheckoutDarts(currentPlayerScore);
 
       async function handleDartsOK() {
-        if (selectedCheckoutDarts === null || !allowedCheckoutDarts.includes(selectedCheckoutDarts)) {
+        if (selectedCheckoutDarts === null) {
           return;
         }
         setIsSubmitting(true);
