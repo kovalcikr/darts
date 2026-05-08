@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import GamepadButton from "./gamepad-button";
-import { recordThrow, undoLastThrow, redoThrow } from "@/app/lib/match-workflow";
+import { recordThrow, undoLastThrow, redoThrow } from "./actions";
 import type { ScoreboardThrowHistoryItem } from "@/app/lib/model/fullmatch";
 import {
   buildScoreboardPlayerDisplayNames,

@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { setScore } from '../lib/cuescore';
-import { recordThrow, undoLastThrow, redoThrow } from '../lib/match-workflow';
-import { findLastThrow, findMatchAvg, getPlayerThrowInfo } from '../lib/playerThrow';
-import * as data from '../lib/data';
-import * as matchLiveState from '../lib/match-live-state';
-import { prismaMock } from './mocks';
+import { recordThrow, undoLastThrow, redoThrow } from '../actions';
+import { findLastThrow, findMatchAvg, getPlayerThrowInfo } from '../../../../../lib/playerThrow';
+import * as data from '../../../../../lib/data';
+import * as matchLiveState from '../../../../../lib/match-live-state';
+import { setScore } from '../../../../../lib/cuescore';
+import { prismaMock } from '../../../../../__tests__/mocks';
 
-jest.mock('../lib/data');
-jest.mock('../lib/match-live-state', () => ({
+jest.mock('../../../../../lib/data');
+jest.mock('../../../../../lib/match-live-state', () => ({
     refreshMatchLiveState: jest.fn(),
     findMatchLiveStates: jest.fn(),
 }));
-jest.mock('../lib/cuescore', () => ({
+jest.mock('../../../../../lib/cuescore', () => ({
     setScore: jest.fn(),
 }));
 jest.mock('next/cache', () => ({
@@ -20,7 +20,7 @@ jest.mock('next/cache', () => ({
     revalidateTag: jest.fn(),
 }));
 
-describe('playerThrow', () => {
+describe('server-actions', () => {
     const tx = undefined as any;
 
     beforeEach(() => {
@@ -292,7 +292,9 @@ describe('playerThrow', () => {
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 2);
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
+});
 
+describe('playerThrow', () => {
     test('findLastThrow delegates to the data layer', async () => {
         const lastThrow = { id: 'throw-1', score: 140 };
         jest.mocked(data.findLastThrow).mockResolvedValue(lastThrow as any);

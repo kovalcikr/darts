@@ -1,6 +1,6 @@
 'use client'
 
-import { undoLastThrow } from "@/app/lib/match-workflow";
+import { undoLastThrow } from "./actions";
 import GamepadButton from "./gamepad-button";
 import { finishMatch } from "@/app/lib/cuescore";
 import type { Match } from "@/prisma/client";

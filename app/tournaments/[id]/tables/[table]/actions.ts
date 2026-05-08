@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache"
 import prisma from "@/app/lib/db"
 import type { Prisma } from "@/prisma/client"
-import { 
+import {
   aggregatePlayerThrow,
   createPlayerThrow,
   updateMatchLegs,
@@ -19,11 +19,9 @@ import {
 } from "@/app/lib/data"
 import { refreshMatchLiveState } from "@/app/lib/match-live-state"
 import { setScore } from "@/app/lib/cuescore"
-import { getAllowedCheckoutDarts } from "@/app/lib/scoring"
+import { getAllowedCheckoutDarts, STARTING_SCORE } from "@/app/lib/scoring"
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
-
-const STARTING_SCORE = 501
 
 async function revalidateScoreboard(table: string) {
   revalidatePath('/tables/[table]', 'page')
@@ -43,19 +41,19 @@ export async function recordThrow(
   }
 ): Promise<void> {
   const { tournamentId, matchId, table, leg, playerId, score, dartsCount } = params
-  
+
   let needScoreSync = false
   let syncMatch: { tournamentId: string; id: string; playerALegs: number; playerBlegs: number } | null = null
-  
+
   await prisma.$transaction(async (tx) => {
     const currentScore = await aggregatePlayerThrow(matchId, leg, playerId, tx)
     const previousScore = currentScore._sum.score ?? 0
     const nextScore = previousScore + score
-    
+
     if (nextScore > STARTING_SCORE) {
       throw new Error('Bust')
     }
-    
+
     let closeLeg = false
     if (nextScore === STARTING_SCORE) {
       const remainingScore = STARTING_SCORE - previousScore
@@ -64,10 +62,10 @@ export async function recordThrow(
       }
       closeLeg = true
     }
-    
+
     await invalidateRedoableThrows(matchId, tx)
     await createPlayerThrow(tournamentId, matchId, leg, playerId, score, dartsCount, closeLeg, tx)
-    
+
     if (closeLeg) {
       syncMatch = await findMatch(matchId, tx)
       syncMatch = await updateMatchLegs(
@@ -81,10 +79,10 @@ export async function recordThrow(
       )
       needScoreSync = true
     }
-    
+
     await refreshMatchLiveState(matchId, table, tx)
   })
-  
+
   if (needScoreSync && syncMatch) {
     await setScore(
       syncMatch.tournamentId,
@@ -93,7 +91,7 @@ export async function recordThrow(
       syncMatch.playerBlegs
     )
   }
-  
+
   await revalidateScoreboard(table)
 }
 
@@ -105,16 +103,16 @@ export async function undoLastThrow(
   }
 ): Promise<void> {
   const { matchId, table, leg } = params
-  
+
   let needScoreSync = false
   let syncMatch: { tournamentId: string; id: string; playerALegs: number; playerBlegs: number } | null = null
-  
+
   await prisma.$transaction(async (tx) => {
     const lastThrow = await findLastThrowData(matchId, leg, undefined, tx)
-    
+
     if (!lastThrow) {
       const previousLegLastThrow = await findPreviousLegLastThrow(matchId, leg, tx)
-      
+
       if (previousLegLastThrow) {
         await markPlayerThrowUndone(previousLegLastThrow.id, tx)
         syncMatch = await findMatch(matchId, tx)
@@ -134,10 +132,10 @@ export async function undoLastThrow(
     } else {
       await markPlayerThrowUndone(lastThrow.id, tx)
     }
-    
+
     await refreshMatchLiveState(matchId, table, tx)
   })
-  
+
   if (needScoreSync && syncMatch) {
     await setScore(
       syncMatch.tournamentId,
@@ -146,7 +144,7 @@ export async function undoLastThrow(
       syncMatch.playerBlegs
     )
   }
-  
+
   await revalidateScoreboard(table)
 }
 
@@ -158,16 +156,16 @@ export async function redoThrow(
   }
 ): Promise<void> {
   const { matchId, table, leg } = params
-  
+
   let needScoreSync = false
   let syncMatch: { tournamentId: string; id: string; playerALegs: number; playerBlegs: number } | null = null
-  
+
   await prisma.$transaction(async (tx) => {
     const throwToRedo = await findRedoableThrow(matchId, tx)
     if (!throwToRedo) return
-    
+
     const restoredThrow = await restorePlayerThrow(throwToRedo.id, tx)
-    
+
     if (restoredThrow.checkout) {
       syncMatch = await findMatch(matchId, tx)
       syncMatch = await updateMatchLegs(
@@ -181,10 +179,10 @@ export async function redoThrow(
       )
       needScoreSync = true
     }
-    
+
     await refreshMatchLiveState(matchId, table, tx)
   })
-  
+
   if (needScoreSync && syncMatch) {
     await setScore(
       syncMatch.tournamentId,
@@ -193,6 +191,6 @@ export async function redoThrow(
       syncMatch.playerBlegs
     )
   }
-  
+
   await revalidateScoreboard(table)
 }

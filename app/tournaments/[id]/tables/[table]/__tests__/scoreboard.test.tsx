@@ -8,7 +8,7 @@ import { useState } from 'react';
 import type { ScoreboardThrowHistoryItem } from '@/app/lib/model/fullmatch';
 import ScoreBoard, { CheckoutDartsSelector } from '../scoreboard';
 
-jest.mock('@/app/lib/match-workflow', () => ({
+jest.mock('../actions', () => ({
   recordThrow: jest.fn(),
   redoThrow: jest.fn(),
   undoLastThrow: jest.fn(),
