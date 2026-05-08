@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateScoreboard, revalidateTournamentPaths } from "./revalidation";
 import { getCueScoreGateway } from "./integrations/cuescore";
 
 export default async function getTournamentInfo(tournamentId : string) {
@@ -23,11 +23,8 @@ export async function finishMatch(tournamentId, matchId, playerALegs, playerBleg
     scoreA: playerALegs,
     scoreB: playerBlegs,
   });
-  revalidatePath(`/stats/tournaments/${tournamentId}`);
-  revalidatePath('/tables/[table]', 'page');
-  const cacheTag = `match${table}`
-  console.log('revalidating tag', cacheTag)
-  revalidateTag(cacheTag, 'max')
+  revalidateTournamentPaths([tournamentId]);
+  revalidateScoreboard(table);
 }
 
 export async function getRankings(rankingId: string) {

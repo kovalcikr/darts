@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateScoreboard } from "./revalidation";
 import { setScore } from "./cuescore";
 import {
     aggregatePlayerThrow,
@@ -24,13 +24,6 @@ import prisma from "./db";
 import { calculateThreeDartAverage, getAllowedCheckoutDarts } from "./scoring";
 
 const STARTING_SCORE = 501;
-
-async function revalidateScoreboard(table) {
-    revalidatePath('/tables/[table]', 'page');
-    const cacheTag = `match${table}`
-    console.log('revalidating tag', cacheTag)
-    revalidateTag(cacheTag, 'max')
-}
 
 export async function addThrowAction(tournamentId, matchId, leg, playerId, score, dartsCount, table) {
     let closeLeg = false;

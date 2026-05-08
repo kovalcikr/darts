@@ -1,6 +1,7 @@
 import 'server-only'
 
 import prisma from './db'
+import { revalidateActiveTournamentPaths } from './revalidation'
 
 export const ACTIVE_TOURNAMENT_SETTING_KEY = 'activeTournamentId'
 
@@ -45,6 +46,8 @@ export async function setActiveTournament(tournamentId: string) {
       value: tournament.id,
     },
   })
+
+  revalidateActiveTournamentPaths()
 }
 
 export async function clearActiveTournament() {

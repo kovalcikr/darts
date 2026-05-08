@@ -2,7 +2,12 @@
 
 import type { Prisma } from '@/prisma/client'
 import { randomUUID } from 'crypto'
-import { revalidatePath } from 'next/cache'
+import {
+  revalidateSharedPaths,
+  revalidateAdminPaths,
+  revalidateTournamentPaths,
+  revalidateActiveTournamentPaths,
+} from '@/app/lib/revalidation'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import {
@@ -141,46 +146,6 @@ function getErrorMessage(error: unknown) {
   }
 
   return 'Unexpected admin action error.'
-}
-
-function revalidateSharedPaths() {
-  revalidatePath('/admin')
-  revalidatePath('/')
-  revalidatePath('/players')
-  revalidatePath('/tournaments')
-  revalidatePath('/stats/tournaments')
-}
-
-function revalidateAdminPaths(matchIds: Array<string | null | undefined>, tournamentIds: Array<string | null | undefined>) {
-  const uniqueMatchIds = Array.from(new Set(matchIds.filter((matchId): matchId is string => Boolean(matchId))))
-  const uniqueTournamentIds = Array.from(
-    new Set(tournamentIds.filter((tournamentId): tournamentId is string => Boolean(tournamentId)))
-  )
-
-  for (const tournamentId of uniqueTournamentIds) {
-    revalidatePath(`/admin/tournaments/${tournamentId}`)
-  }
-
-  for (const matchId of uniqueMatchIds) {
-    revalidatePath(`/admin/matches/${matchId}`)
-  }
-}
-
-function revalidateTournamentPaths(tournamentIds: Array<string | null | undefined>) {
-  const uniqueTournamentIds = Array.from(
-    new Set(tournamentIds.filter((tournamentId): tournamentId is string => Boolean(tournamentId)))
-  )
-
-  for (const tournamentId of uniqueTournamentIds) {
-    revalidatePath(`/stats/tournaments/${tournamentId}`)
-    revalidatePath(`/stats/tournaments/${tournamentId}/cache`)
-  }
-}
-
-function revalidateActiveTournamentPaths() {
-  revalidatePath('/tables')
-  revalidatePath('/dashboard')
-  revalidatePath('/tables/[table]', 'page')
 }
 
 const THROW_TIME_STEP_MS = 1_000

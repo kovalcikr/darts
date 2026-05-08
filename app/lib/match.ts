@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateScoreboard } from "./revalidation";
 import { findMatch, findThrowsByMatch, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory, updateMatchFirstPlayer, aggregateMatchThrows } from "./data";
 import { findMatchLiveStates, refreshMatchLiveState } from "./match-live-state";
 import { calculateThreeDartAverage } from "./scoring";
@@ -211,8 +211,5 @@ export async function startMatch(formData: FormData) {
     await refreshMatchLiveState(matchId, table ?? null, tx);
   });
 
-  revalidatePath('/tables/[table]', 'page');
-  const cacheTag = `match${table}`;
-  console.log('revalidating tag', cacheTag);
-  revalidateTag(cacheTag, 'max');
+  revalidateScoreboard(table);
 }

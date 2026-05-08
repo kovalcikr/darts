@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import getTournamentInfo from "./cuescore";
-import { revalidatePath } from "next/cache";
+import { revalidateTournamentList } from "./revalidation";
 import { upsertTournament, findTournamentsBySeason } from "./data";
 import type { CueScoreTournament } from "./integrations/cuescore/types";
 import { inferTournamentSeason, parseTournamentDate } from "./tournament-metadata";
@@ -21,7 +21,7 @@ export async function openTournamentForm(prevState: any, data: FormData) {
 export async function openTournament(tournamentId: string) {
     const tournament = await getTournamentInfo(tournamentId);
     await createTournament(tournament, tournamentId);
-    revalidatePath("/stats/tournaments");
+    revalidateTournamentList();
 }
 
 export async function openActiveTournament(tournamentId: string) {
