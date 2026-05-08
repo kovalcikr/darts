@@ -4,7 +4,7 @@ import type { CueScoreMatch } from '@/app/lib/integrations/cuescore/types';
 import type { DashboardTournamentFetcher } from '../tournament-fetcher';
 
 jest.mock('@/app/lib/table-mappings', () => ({
-  getTableIdBySlot: jest.fn().mockResolvedValue('table1'),
+  getTableIdBySlot: jest.fn().mockImplementation((slot: number) => Promise.resolve(`table${slot}`)),
 }));
 
 jest.mock('@/app/lib/data', () => ({
@@ -37,7 +37,7 @@ describe('dashboard snapshot', () => {
 
   test('returns nested structure with arrays', async () => {
     const mockFetcher: DashboardTournamentFetcher = {
-      getMatchInTable: jest.fn().mockResolvedValue(null),
+      getMatches: jest.fn<() => Promise<CueScoreMatch[]>>().mockResolvedValue([]),
     };
 
     const result = await getDashboardSnapshot('t1', mockFetcher);
@@ -48,6 +48,35 @@ describe('dashboard snapshot', () => {
     expect(result.matches).toHaveLength(6);
     expect(result.liveStates).toHaveLength(6);
     expect(result.tableIds).toHaveLength(6);
+  });
+
+  test('uses injected fetcher to get matches in a single call', async () => {
+    const match = mockCueScoreMatch({ table: { name: 'table1' } });
+    const mockFetcher: DashboardTournamentFetcher = {
+      getMatches: jest.fn<() => Promise<CueScoreMatch[]>>().mockResolvedValue([match]),
+    };
+
+    await getDashboardSnapshot('t1', mockFetcher);
+
+    expect(mockFetcher.getMatches).toHaveBeenCalledTimes(1);
+    expect(mockFetcher.getMatches).toHaveBeenCalledWith('t1');
+  });
+
+  test('maps matches to their correct table slots', async () => {
+    const matchSlot1 = mockCueScoreMatch({ matchId: '1', table: { name: 'table1' } });
+    const matchSlot3 = mockCueScoreMatch({ matchId: '3', table: { name: 'table3' } });
+    const mockFetcher: DashboardTournamentFetcher = {
+      getMatches: jest.fn<() => Promise<CueScoreMatch[]>>().mockResolvedValue([matchSlot1, matchSlot3]),
+    };
+
+    const result = await getDashboardSnapshot('t1', mockFetcher);
+
+    expect(result.matches[0]?.matchId).toBe('1');
+    expect(result.matches[1]).toBeNull();
+    expect(result.matches[2]?.matchId).toBe('3');
+    expect(result.matches[3]).toBeNull();
+    expect(result.matches[4]).toBeNull();
+    expect(result.matches[5]).toBeNull();
   });
 
   test('getMatchCacheTag generates correct tag', () => {
@@ -67,16 +96,5 @@ describe('dashboard snapshot', () => {
       matchInfo: 'matchInfo6',
       firstPlayer: 'firstPlayer6',
     });
-  });
-
-  test('uses injected fetcher to get matches', async () => {
-    const match = mockCueScoreMatch();
-    const mockFetcher: DashboardTournamentFetcher = {
-      getMatchInTable: jest.fn().mockResolvedValue(match),
-    };
-
-    await getDashboardSnapshot('t1', mockFetcher);
-
-    expect(mockFetcher.getMatchInTable).toHaveBeenCalledWith('t1', 'table1');
   });
 });

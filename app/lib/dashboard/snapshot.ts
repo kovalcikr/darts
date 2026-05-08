@@ -51,22 +51,25 @@ export async function getDashboardSnapshot(
   const tournamentFetcher = fetcher ?? await createDefaultTournamentFetcher()
   
   const tableIds = await Promise.all([1, 2, 3, 4, 5, 6].map(getTableIdBySlot))
-  
-  const matches = await Promise.all(
-    tableIds.map(async (tableId) => {
-      const match = await tournamentFetcher.getMatchInTable(tournamentId, tableId)
-      return match
-    })
-  )
+
+  const matches = await tournamentFetcher.getMatches(tournamentId)
+  const matchByTableName = new Map<string, CueScoreMatch>()
+  for (const match of matches) {
+    if (match.table?.name) {
+      matchByTableName.set(match.table.name, match)
+    }
+  }
+
+  const tableMatches = tableIds.map((tableId) => matchByTableName.get(tableId) ?? null)
 
   const liveStates = await findMatchLiveStates(
-    matches
+    tableMatches
       .map((m) => (m?.matchId ? String(m.matchId) : null))
       .filter((id): id is string => Boolean(id))
   )
   const liveStateByMatchId = new Map(liveStates.map((ls) => [ls.matchId, ls]))
 
-  const tableProjections: TableProjection[] = matches.map((match, i) => ({
+  const tableProjections: TableProjection[] = tableMatches.map((match, i) => ({
     tableId: tableIds[i],
     match,
     liveState: match?.matchId ? liveStateByMatchId.get(String(match.matchId)) ?? null : null,

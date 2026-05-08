@@ -2,20 +2,17 @@ import type { CueScoreGateway, CueScoreMatch } from '@/app/lib/integrations/cues
 import { getCueScoreGateway } from '@/app/lib/integrations/cuescore'
 
 export interface DashboardTournamentFetcher {
-  getMatchInTable(tournamentId: string, tableId: string): Promise<CueScoreMatch | null>
+  getMatches(tournamentId: string): Promise<CueScoreMatch[]>
 }
 
 export class CueScoreTournamentFetcher implements DashboardTournamentFetcher {
   constructor(private readonly gateway: CueScoreGateway) {}
 
-  async getMatchInTable(tournamentId: string, tableId: string): Promise<CueScoreMatch | null> {
+  async getMatches(tournamentId: string): Promise<CueScoreMatch[]> {
     const tournament = await this.gateway.getTournament(tournamentId)
-    for (const match of tournament.matches) {
-      if (match.matchstatus === 'playing' && match?.table?.name === tableId) {
-        return { ...match, matchId: String(match.matchId) }
-      }
-    }
-    return null
+    return tournament.matches
+      .filter((match) => match.matchstatus === 'playing')
+      .map((match) => ({ ...match, matchId: String(match.matchId) }))
   }
 }
 
