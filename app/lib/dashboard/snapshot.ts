@@ -1,5 +1,6 @@
 import type { MatchLiveState } from '../match-live-state/model'
 import type { CueScoreMatch } from '../integrations/cuescore/types'
+import type { DashboardTournamentFetcher } from './tournament-fetcher'
 
 export type TableCacheTags = {
   match: string
@@ -39,19 +40,21 @@ export type DashboardSnapshot = {
   tableIds: (string | null)[]
 }
 
-export async function getDashboardSnapshot(tournamentId: string): Promise<DashboardSnapshot> {
+export async function getDashboardSnapshot(
+  tournamentId: string,
+  fetcher?: DashboardTournamentFetcher
+): Promise<DashboardSnapshot> {
   const { findMatchLiveStates } = await import('../data')
-  const { getCuescoreMatchCached } = await import('../match')
   const { getTableIdBySlot } = await import('../table-mappings')
-
+  const { createDefaultTournamentFetcher } = await import('./tournament-fetcher')
+  
+  const tournamentFetcher = fetcher ?? await createDefaultTournamentFetcher()
+  
   const tableIds = await Promise.all([1, 2, 3, 4, 5, 6].map(getTableIdBySlot))
-
+  
   const matches = await Promise.all(
     tableIds.map(async (tableId) => {
-      const match = await getCuescoreMatchCached(tournamentId, tableId)
-      if (match) {
-        match.matchId = String(match.matchId)
-      }
+      const match = await tournamentFetcher.getMatchInTable(tournamentId, tableId)
       return match
     })
   )

@@ -1,19 +1,18 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import { getDashboardSnapshot, getMatchCacheTag, createTableCacheTags } from '../snapshot';
-import { prismaMock } from '@/app/__tests__/mocks';
 import type { CueScoreMatch } from '@/app/lib/integrations/cuescore/types';
-import type { MatchLiveState } from '@/app/lib/match-live-state/model';
+import type { DashboardTournamentFetcher } from '../tournament-fetcher';
 
 jest.mock('@/app/lib/table-mappings', () => ({
   getTableIdBySlot: jest.fn().mockResolvedValue('table1'),
 }));
 
-jest.mock('@/app/lib/match', () => ({
-  getCuescoreMatchCached: jest.fn().mockResolvedValue(null),
-}));
-
 jest.mock('@/app/lib/data', () => ({
   findMatchLiveStates: jest.fn().mockResolvedValue([]),
+}));
+
+jest.mock('@/app/lib/dashboard/tournament-fetcher', () => ({
+  createDefaultTournamentFetcher: jest.fn(),
 }));
 
 const mockCueScoreMatch = (overrides: Partial<CueScoreMatch> = {}): CueScoreMatch => ({
@@ -25,7 +24,7 @@ const mockCueScoreMatch = (overrides: Partial<CueScoreMatch> = {}): CueScoreMatc
   raceTo: 3,
   tournamentId: 1,
   matchstatus: 'playing' as const,
-  table: { name: '1', nameNumeric: 1 },
+  table: { name: '1' },
   scoreA: 0,
   scoreB: 1,
   ...overrides,
@@ -37,7 +36,11 @@ describe('dashboard snapshot', () => {
   });
 
   test('returns nested structure with arrays', async () => {
-    const result = await getDashboardSnapshot('t1');
+    const mockFetcher: DashboardTournamentFetcher = {
+      getMatchInTable: jest.fn().mockResolvedValue(null),
+    };
+
+    const result = await getDashboardSnapshot('t1', mockFetcher);
 
     expect(result).toHaveProperty('matches');
     expect(result).toHaveProperty('liveStates');
@@ -64,5 +67,16 @@ describe('dashboard snapshot', () => {
       matchInfo: 'matchInfo6',
       firstPlayer: 'firstPlayer6',
     });
+  });
+
+  test('uses injected fetcher to get matches', async () => {
+    const match = mockCueScoreMatch();
+    const mockFetcher: DashboardTournamentFetcher = {
+      getMatchInTable: jest.fn().mockResolvedValue(match),
+    };
+
+    await getDashboardSnapshot('t1', mockFetcher);
+
+    expect(mockFetcher.getMatchInTable).toHaveBeenCalledWith('t1', 'table1');
   });
 });

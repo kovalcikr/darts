@@ -21,3 +21,5 @@ export function getCueScoreGateway(): CueScoreGateway {
     ? new FakeCueScoreGateway()
     : new RealCueScoreGateway()
 }
+
+export { FakeCueScoreGateway }
