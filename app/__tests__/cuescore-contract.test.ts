@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { createTournament } from '../lib/tournament'
-import * as match from '../lib/match'
+import { ingestCuescoreMatch } from '../lib/match-ingestion'
 import getTournamentInfo from '../lib/cuescore'
 import * as data from '../lib/data'
 import { tournament72952399Fixture } from '../../cuescore/fixtures/tournament-72952399'
@@ -37,30 +37,23 @@ describe('cuescore tournament contract', () => {
     })
   })
 
-  test('getCuescoreMatch resolves the in-progress table from the real payload shape', async () => {
+  test('ingestCuescoreMatch finds in-progress match and persists it', async () => {
     jest.mocked(getTournamentInfo).mockResolvedValue(cloneFixture() as any)
+    jest.mocked(data.upsertMatch).mockResolvedValue({ id: 'persisted-match-1' } as any)
 
-    const result = await match.getCuescoreMatch('72952399', '11')
+    const result = await ingestCuescoreMatch('72952399', '11', '1')
 
-    expect(result.matchId).toBe(80588671)
-    expect(result.roundName).toBe('Round 1')
-    expect(result.matchstatus).toBe('playing')
-    expect(result.table?.name).toBe('11')
+    expect(data.upsertMatch).toHaveBeenCalledWith(
+      expect.objectContaining({ matchId: 80588671, roundName: 'Round 1', matchstatus: 'playing' }),
+      '1',
+    )
+    expect(result).toEqual({ id: 'persisted-match-1' })
   })
 
-  test('getCuescoreMatchCached stringifies numeric CueScore match ids', async () => {
+  test('ingestCuescoreMatch throws when table has no match in progress', async () => {
     jest.mocked(getTournamentInfo).mockResolvedValue(cloneFixture() as any)
 
-    const result = await match.getCuescoreMatchCached('72952399', '11')
-
-    expect(result?.matchId).toBe('80588671')
-    expect(typeof result?.matchId).toBe('string')
-  })
-
-  test('getCuescoreMatch ignores non-playing matches even when table is an array', async () => {
-    jest.mocked(getTournamentInfo).mockResolvedValue(cloneFixture() as any)
-
-    await expect(match.getCuescoreMatch('72952399', '12')).rejects.toThrow(
+    await expect(ingestCuescoreMatch('72952399', '12', '1')).rejects.toThrow(
       'No match in progress on table 12'
     )
   })

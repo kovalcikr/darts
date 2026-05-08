@@ -1,6 +1,6 @@
 import { test, expect, describe, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
 import prisma from '../lib/db';
-import { getFullMatch } from '../lib/match';
+import { getMatchDetails } from '../lib/match';
 
 describe('Match Details Integration Test', () => {
     let tournament;
@@ -88,21 +88,21 @@ describe('Match Details Integration Test', () => {
     });
 
     test('should return full match details', async () => {
-        const fullMatch = await getFullMatch(match.id, false);
+        const data = await getMatchDetails(match.id);
 
-        expect(fullMatch).toBeDefined();
-        expect(fullMatch.match.id).toBe(match.id);
-        expect(fullMatch.playerA.name).toBe(player1.name);
-        expect(fullMatch.playerB.name).toBe(player2.name);
-        expect(fullMatch.playerA.legCount).toBe(1);
-        expect(fullMatch.playerB.legCount).toBe(1);
-        expect(fullMatch.throws.length).toBe(10);
-        expect(fullMatch.playerA.matchAvg).toBeCloseTo(90.4);
-        expect(fullMatch.playerB.matchAvg).toBeCloseTo(90.2);
-        expect(fullMatch.playerA.bestCheckout).toBe(141);
-        expect(fullMatch.playerB.bestCheckout).toBe(140);
-        expect(fullMatch.playerA.bestLeg).toBe(9);
-        expect(fullMatch.playerB.bestLeg).toBe(9);
+        expect(data).toBeDefined();
+        expect(data.match.id).toBe(match.id);
+        expect(data.playerA.name).toBe(player1.name);
+        expect(data.playerB.name).toBe(player2.name);
+        expect(data.playerA.legCount).toBe(1);
+        expect(data.playerB.legCount).toBe(1);
+        expect(data.throws.length).toBe(10);
+        expect(data.playerA.matchAvg).toBeCloseTo(90.4);
+        expect(data.playerB.matchAvg).toBeCloseTo(90.2);
+        expect(data.playerA.bestCheckout).toBe(141);
+        expect(data.playerB.bestCheckout).toBe(140);
+        expect(data.playerA.bestLeg).toBe(9);
+        expect(data.playerB.bestLeg).toBe(9);
     });
 
     test('should return 0 for best leg if player has not won any legs', async () => {
@@ -134,9 +134,9 @@ describe('Match Details Integration Test', () => {
             ],
         });
 
-        const fullMatch = await getFullMatch(matchWithoutWin.id, false);
+        const data = await getMatchDetails(matchWithoutWin.id);
 
-        expect(fullMatch.playerA.bestLeg).toBe(0);
-        expect(fullMatch.playerB.bestLeg).toBe(6);
+        expect(data.playerA.bestLeg).toBe(0);
+        expect(data.playerB.bestLeg).toBe(6);
     });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals'
 import * as data from '@/app/lib/data'
 import * as cuescore from '@/app/lib/cuescore'
+import * as matchLiveState from '@/app/lib/match-live-state'
 
 jest.mock('@/app/lib/data', () => ({
   updateMatchFirstPlayer: jest.fn(),
@@ -10,6 +11,10 @@ jest.mock('@/app/lib/cuescore', () => ({
   getCueScoreGateway: jest.fn(),
 }))
 
+jest.mock('@/app/lib/match-live-state', () => ({
+  refreshMatchLiveState: jest.fn(),
+}))
+
 jest.mock('next/cache', () => ({
   revalidatePath: jest.fn(),
   revalidateTag: jest.fn(),
@@ -17,14 +22,14 @@ jest.mock('next/cache', () => ({
 
 describe('Dashboard caching - match invalidation', () => {
   const { revalidateTag } = jest.requireMock('next/cache') as Record<string, jest.Mock>
-  
+
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   test('startMatch invalidates cache for correct table', async () => {
     const { startMatch } = require('@/app/lib/match')
-    
+
     const formData = new FormData()
     formData.set('matchId', 'm1')
     formData.set('firstPlayer', 'p1')

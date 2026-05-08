@@ -1,12 +1,12 @@
-import { getFullMatch } from "@/app/lib/match";
+import { getMatchDetails } from "@/app/lib/match";
 import Link from "next/link";
 import type { RouteParams } from "@/app/lib/next-types";
 
 export default async function MatchPage({ params }: { params: RouteParams<{ id: string, matchId: string }> }) {
     const { id, matchId } = await params;
-    const fullMatch = await getFullMatch(matchId);
+    const data = await getMatchDetails(matchId);
 
-    if (!fullMatch) {
+    if (!data) {
         return (
             <div className="w-full h-screen flex items-center justify-center bg-gray-900 text-gray-100">
                 <h1 className="text-2xl font-bold">Zápas nenájdený...</h1>
@@ -21,7 +21,7 @@ export default async function MatchPage({ params }: { params: RouteParams<{ id: 
                     <div className="py-4 px-4">
                         <div className="relative flex items-center">
                             <h1 className="font-bold text-xl text-white">
-                                {fullMatch.playerA.name} <span className="text-sky-400">vs</span> {fullMatch.playerB.name}
+                                {data.playerA.name} <span className="text-sky-400">vs</span> {data.playerB.name}
                             </h1>
                             <div className="relative flex items-center ml-auto">
                                 <nav className="text-sm leading-6 font-semibold text-gray-400">
@@ -38,8 +38,8 @@ export default async function MatchPage({ params }: { params: RouteParams<{ id: 
             </header>
             <main className="flex-auto">
                 <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                    <PlayerStats playerA={fullMatch.playerA} playerB={fullMatch.playerB} />
-                    <ThrowsList throws={fullMatch.throws} playerA={fullMatch.playerA} playerB={fullMatch.playerB} />
+                    <PlayerStats playerA={data.playerA} playerB={data.playerB} />
+                    <ThrowsList throws={data.throws} playerA={data.playerA} playerB={data.playerB} />
                 </div>
             </main>
         </div>

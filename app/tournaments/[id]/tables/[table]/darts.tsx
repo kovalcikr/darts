@@ -2,7 +2,7 @@ import PlayerLegs from "../../../../tournaments/[id]/tables/[table]/player-legs"
 import PlayerScore from "../../../../tournaments/[id]/tables/[table]/player-score";
 import ScoreBoard from "../../../../tournaments/[id]/tables/[table]/scoreboard";
 import TournamentHeader from "../../../../tournaments/[id]/tables/[table]/tournament-header";
-import { getFullMatch } from "@/app/lib/match";
+import { getLiveScoringData } from "@/app/lib/match";
 import Winner from "./winner";
 import ChoosePlayer from "./choose-player";
 import PlayerName from "./player-name";
@@ -11,24 +11,24 @@ import { getPlayerCardAccentClassName } from "./scoreboard-display";
 
 
 export default async function Darts({ table, matchId, tournamentId }: { table: string, matchId: string, tournamentId?: string }) {
-   const fullMatch = await getFullMatch(matchId);
+   const data = await getLiveScoringData(matchId);
 
-   if (!fullMatch) {
+   if (!data) {
      return <Wait id={tournamentId ?? ""} table={table} />;
    }
 
-   const match = fullMatch.match;
-   const playerAAvg = fullMatch.playerA.matchAvg;
-   const playerBAvg = fullMatch.playerB.matchAvg;
+   const match = data.match;
+   const playerAAvg = data.playerA.matchAvg;
+   const playerBAvg = data.playerB.matchAvg;
 
-   const playerLeft = match.firstPlayer == match.playerAId ? fullMatch.playerA : fullMatch.playerB;
-   const playerRight = playerLeft == fullMatch.playerA ? fullMatch.playerB : fullMatch.playerA;
+   const playerLeft = match.firstPlayer == match.playerAId ? data.playerA : data.playerB;
+   const playerRight = playerLeft == data.playerA ? data.playerB : data.playerA;
 
-   const currentPlayerScore = fullMatch.playerA.active ? fullMatch.playerA.score : fullMatch.playerB.score;
+   const currentPlayerScore = data.playerA.active ? data.playerA.score : data.playerB.score;
 
    return (
      <main className="flex h-dvh flex-col overflow-hidden bg-gray-900 font-normal text-gray-300">
-       <TournamentHeader tournament={fullMatch.tournament} round={match.round} format={String(match.runTo)} table={table} />
+       <TournamentHeader tournament={data.tournament} round={match.round} format={String(match.runTo)} table={table} />
        {match.runTo != match.playerALegs && match.runTo != match.playerBlegs &&
          <div className="flex h-[34dvh] min-h-0 shrink-0 flex-col px-2 py-2">
            {!match.firstPlayer ?
@@ -41,7 +41,7 @@ export default async function Darts({ table, matchId, tournamentId }: { table: s
                  data-active={playerLeft.active ? "true" : "false"}
                >
                  <PlayerName player={playerLeft} />
-                 <PlayerScore player={playerLeft} startedLeg={fullMatch.startingPlayerId === playerLeft.id} />
+                  <PlayerScore player={playerLeft} startedLeg={data.startingPlayerId === playerLeft.id} />
                  <PlayerLegs player={playerLeft} />
                </div>
                <div
@@ -50,7 +50,7 @@ export default async function Darts({ table, matchId, tournamentId }: { table: s
                  data-active={playerRight.active ? "true" : "false"}
                >
                  <PlayerName player={playerRight} />
-                 <PlayerScore player={playerRight} startedLeg={fullMatch.startingPlayerId === playerRight.id} />
+                  <PlayerScore player={playerRight} startedLeg={data.startingPlayerId === playerRight.id} />
                  <PlayerLegs player={playerRight} />
                </div>
              </div>
@@ -60,28 +60,28 @@ export default async function Darts({ table, matchId, tournamentId }: { table: s
        {match.firstPlayer &&
          <div className="min-h-0 flex-1 text-3xl">
            {match.runTo == match.playerALegs ?
-             <Winner player={match.playerAName} image={match.playerAImage} match={match} leg={fullMatch.currentLeg} table={table} />
+              <Winner player={match.playerAName} image={match.playerAImage} match={match} leg={data.currentLeg} table={table} />
              :
              (
                match.runTo == match.playerBlegs ?
-                 <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={fullMatch.currentLeg} table={table} />
+                  <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={data.currentLeg} table={table} />
                  :
                  <ScoreBoard
-                   tournamentId={fullMatch.tournament.id}
-                   matchId={match.id}
-                   leg={fullMatch.currentLeg}
-                   player={fullMatch.nextPlayer}
-                   currentPlayerScore={currentPlayerScore}
-                   table={table}
-                   throwHistory={fullMatch.throwHistory}
-                   playerNames={{
-                     [fullMatch.playerA.id]: fullMatch.playerA.name,
-                     [fullMatch.playerB.id]: fullMatch.playerB.name,
-                   }}
-                   playerAccents={{
-                     [playerLeft.id]: 'left',
-                     [playerRight.id]: 'right',
-                   }}
+                    tournamentId={data.tournament.id}
+                    matchId={match.id}
+                    leg={data.currentLeg}
+                    player={data.nextPlayer}
+                    currentPlayerScore={currentPlayerScore}
+                    table={table}
+                    throwHistory={data.throwHistory}
+                    playerNames={{
+                      [data.playerA.id]: data.playerA.name,
+                      [data.playerB.id]: data.playerB.name,
+                    }}
+                    playerAccents={{
+                      [playerLeft.id]: 'left',
+                      [playerRight.id]: 'right',
+                    }}
                  />
              )
            }

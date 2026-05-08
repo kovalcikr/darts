@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { createMatch, getCuescoreMatch } from '@/app/lib/match'
+import { ingestCuescoreMatch } from '@/app/lib/match-ingestion'
 import Darts from './[id]/tables/[table]/darts'
 import Wait from './[id]/tables/[table]/wait'
 import { getTableIdBySlot } from '@/app/lib/table-mappings'
@@ -18,9 +18,8 @@ export default async function TableScoreboardPage({
 
   let match = null
 
-  try {
-    const cueScoreMatch = await getCuescoreMatch(tournamentId, cuescoreTableId)
-    match = await createMatch(cueScoreMatch, slot)
+try {
+    match = await ingestCuescoreMatch(tournamentId, cuescoreTableId, slot)
   } catch (e) {
     console.log(e)
     return <Wait id={tournamentId} table={slot} />
