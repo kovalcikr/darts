@@ -16,6 +16,10 @@ jest.mock('@/app/lib/db', () => ({
   default: mockDeep<PrismaClient>(),
 }))
 
+jest.mock('../lib/revalidation', () => ({
+  revalidateActiveTournamentPaths: jest.fn(),
+}))
+
 const prismaMock = prisma as any
 
 function mockResolved(fn: unknown, value: unknown) {

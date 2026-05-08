@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath, revalidateTag } from "next/cache"
+import { revalidateScoreboard } from "@/app/lib/revalidation"
 import prisma from "@/app/lib/db"
 import type { Prisma } from "@/prisma/client"
 import {
@@ -23,12 +23,6 @@ import { getAllowedCheckoutDarts, STARTING_SCORE } from "@/app/lib/scoring"
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 
-async function revalidateScoreboard(table: string) {
-  revalidatePath('/tables/[table]', 'page')
-  const cacheTag = `match${table}`
-  revalidateTag(cacheTag, 'max')
-}
-
 export async function recordThrow(
   params: {
     tournamentId: string
@@ -43,7 +37,14 @@ export async function recordThrow(
   const { tournamentId, matchId, table, leg, playerId, score, dartsCount } = params
 
   let needScoreSync = false
-  let syncMatch: { tournamentId: string; id: string; playerALegs: number; playerBlegs: number } | null = null
+  let syncMatch: {
+    tournamentId: string | null
+    id: string
+    playerAId: string
+    playerALegs: number
+    playerBlegs: number
+    runTo: number
+  } | null = null
 
   await prisma.$transaction(async (tx) => {
     const currentScore = await aggregatePlayerThrow(matchId, leg, playerId, tx)
@@ -105,7 +106,14 @@ export async function undoLastThrow(
   const { matchId, table, leg } = params
 
   let needScoreSync = false
-  let syncMatch: { tournamentId: string; id: string; playerALegs: number; playerBlegs: number } | null = null
+  let syncMatch: {
+    tournamentId: string | null
+    id: string
+    playerAId: string
+    playerALegs: number
+    playerBlegs: number
+    runTo: number
+  } | null = null
 
   await prisma.$transaction(async (tx) => {
     const lastThrow = await findLastThrowData(matchId, leg, undefined, tx)
@@ -158,7 +166,14 @@ export async function redoThrow(
   const { matchId, table, leg } = params
 
   let needScoreSync = false
-  let syncMatch: { tournamentId: string; id: string; playerALegs: number; playerBlegs: number } | null = null
+  let syncMatch: {
+    tournamentId: string | null
+    id: string
+    playerAId: string
+    playerALegs: number
+    playerBlegs: number
+    runTo: number
+  } | null = null
 
   await prisma.$transaction(async (tx) => {
     const throwToRedo = await findRedoableThrow(matchId, tx)
