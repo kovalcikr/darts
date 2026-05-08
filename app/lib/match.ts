@@ -5,8 +5,9 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
 import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrowsByMatchAndLeg, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
-import { selectCurrentLegStarter } from "./leg-starter";
-import { calculateLegState } from "./scoring";
+import { findMatchLiveStates, refreshMatchLiveState } from "./match-live-state";
+import { calculateThreeDartAverage, calculateLegState } from "./scoring";
+import prisma from "./db";
 
 interface CueScorePlayer {
     playerId: number;
@@ -48,12 +49,41 @@ export async function getFullMatch(matchId) {
   if (!match) {
     return null;
   }
-  const leg = match.playerALegs + match.playerBlegs + 1;
-  const scores = await getScores(match.id, leg, match.playerAId, match.playerBId, match.firstPlayer);
-  const playerALast = (await findLastThrow(match.id, leg, match.playerAId))?.score;
-  const playerBLast = (await findLastThrow(match.id, leg, match.playerBId))?.score;
-  const playerAAvg = (await findMatchAvg(match.id, match.playerAId));
-  const playerBAvg = (await findMatchAvg(match.id, match.playerBId));
+  
+  // Try to read from MatchLiveState projection first
+  const liveStates = await findMatchLiveStates([matchId]);
+  const liveState = liveStates[0] ?? null;
+  
+  let scores, nextPlayer, startingPlayerId, playerAAvg, playerBAvg, lastThrows;
+  
+  if (liveState && liveState.matchId === matchId) {
+    // Use projection data
+    scores = {
+      playerA: liveState.playerAScoreLeft,
+      playerB: liveState.playerBScoreLeft,
+      playerADarts: match.playerALegs > 0 ? 3 : 0, // approximation from leg count
+      playerBDarts: match.playerBlegs > 0 ? 3 : 0,
+      nextPlayer: liveState.activePlayerId,
+    };
+    nextPlayer = liveState.activePlayerId;
+    startingPlayerId = liveState.startingPlayerId;
+    playerAAvg = calculateThreeDartAverage(liveState.playerATotalScore, liveState.playerATotalDarts);
+    playerBAvg = calculateThreeDartAverage(liveState.playerBTotalScore, liveState.playerBTotalDarts);
+    lastThrows = liveState.lastThrows;
+  } else {
+    // Fallback to old behavior (for transition period)
+    const leg = match.playerALegs + match.playerBlegs + 1;
+    const oldScores = await getScores(match.id, leg, match.playerAId, match.playerBId, match.firstPlayer);
+    scores = oldScores;
+    nextPlayer = oldScores.nextPlayer;
+    startingPlayerId = match.firstPlayer;
+    playerAAvg = await findMatchAvg(match.id, match.playerAId);
+    playerBAvg = await findMatchAvg(match.id, match.playerBId);
+    lastThrows = [];
+  }
+  
+  const playerALast = (await findLastThrow(match.id, 1, match.playerAId))?.score;
+  const playerBLast = (await findLastThrow(match.id, 1, match.playerBId))?.score;
   const throws = await findThrowsByMatch(matchId);
   const throwHistory = await findScoreboardThrowHistory(match.id, 6);
 
@@ -66,7 +96,7 @@ export async function getFullMatch(matchId) {
     lastThrow: playerALast,
     matchAvg: playerAAvg,
     legCount: match.playerALegs,
-    active: scores.nextPlayer == match.playerAId,
+    active: nextPlayer == match.playerAId,
     highestScore: await findHighestScoreInMatch(matchId, match.playerAId),
     bestCheckout: await findBestCheckoutInMatch(matchId, match.playerAId),
     bestLeg: await findBestLegInMatch(matchId, match.playerAId),
@@ -81,7 +111,7 @@ export async function getFullMatch(matchId) {
     lastThrow: playerBLast,
     matchAvg: playerBAvg,
     legCount: match.playerBlegs,
-    active: scores.nextPlayer == match.playerBId,
+    active: nextPlayer == match.playerBId,
     highestScore: await findHighestScoreInMatch(matchId, match.playerBId),
     bestCheckout: await findBestCheckoutInMatch(matchId, match.playerBId),
     bestLeg: await findBestLegInMatch(matchId, match.playerBId),
@@ -90,14 +120,9 @@ export async function getFullMatch(matchId) {
   const fullMatch: FullMatch = {
     match: match,
     tournament: match.tournament,
-    currentLeg: leg,
-    nextPlayer: scores.nextPlayer,
-    startingPlayerId: selectCurrentLegStarter({
-      leg,
-      playerAId: match.playerAId,
-      playerBId: match.playerBId,
-      firstPlayer: match.firstPlayer,
-    }),
+    currentLeg: match.playerALegs + match.playerBlegs + 1,
+    nextPlayer: nextPlayer,
+    startingPlayerId: startingPlayerId,
     playerA: playerA,
     playerB: playerB,
     throws: throws,
@@ -119,12 +144,20 @@ export async function setStartingPlayer(matchId, playerId) {
 }
 
 export async function startMatch(formData) {
-   await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
-   revalidatePath('/tables/[table]', 'page');
-   const cacheTag = `match${formData.get('table')}`
-   console.log('revalidating tag', cacheTag)
-   revalidateTag(cacheTag, 'max')
-  }
+    const matchId = formData.get('matchId');
+    const firstPlayer = formData.get('firstPlayer');
+    const table = formData.get('table');
+    
+    await prisma.$transaction(async (tx) => {
+        await updateMatchFirstPlayer(matchId, firstPlayer, tx);
+        await refreshMatchLiveState(matchId, table ?? null, tx);
+    });
+    
+    revalidatePath('/tables/[table]', 'page');
+    const cacheTag = `match${table}`
+    console.log('revalidating tag', cacheTag)
+    revalidateTag(cacheTag, 'max')
+}
 
   export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
   return await findThrowsByMatchAndLeg(matchId, leg, playerA, playerB);
