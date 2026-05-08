@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { GET } from '../route'
 import { getActiveTournament } from '@/app/lib/active-tournament'
-import { getDashboardTournamentSnapshot } from '../snapshot'
+import { getDashboardSnapshot } from '@/app/lib/dashboard/snapshot'
 import { NextRequest } from 'next/server'
 
 jest.mock('@/app/lib/active-tournament', () => ({
   getActiveTournament: jest.fn(),
 }))
 
-jest.mock('../snapshot', () => ({
-  getDashboardTournamentSnapshot: jest.fn(),
+jest.mock('@/app/lib/dashboard/snapshot', () => ({
+  getDashboardSnapshot: jest.fn(),
 }))
 
 describe('/api/dashboard active tournament route', () => {
@@ -25,19 +25,15 @@ describe('/api/dashboard active tournament route', () => {
 
     expect(response.status).toBe(404)
     expect(body.error.code).toBe('ACTIVE_TOURNAMENT_NOT_SET')
-    expect(getDashboardTournamentSnapshot).not.toHaveBeenCalled()
+    expect(getDashboardSnapshot).not.toHaveBeenCalled()
   })
 
   test('loads the active tournament dashboard snapshot', async () => {
     jest.mocked(getActiveTournament).mockResolvedValue({ id: 'active-t1', name: 'Active Cup' } as never)
-    jest.mocked(getDashboardTournamentSnapshot).mockResolvedValue({
+    jest.mocked(getDashboardSnapshot).mockResolvedValue({
       matches: [{ matchId: 'm1' }, null, null, null, null, null],
-      matchInfos: [null, null, null, null, null, null],
       liveStates: [null, null, null, null, null, null],
       tableIds: ['1', null, null, null, null, null],
-      firstPlayers: [null, null, null, null, null, null],
-      matchAvgA: [null, null, null, null, null, null],
-      matchAvgB: [null, null, null, null, null, null],
     } as never)
 
     const response = await GET(new NextRequest('http://localhost:3000/api/dashboard'))
@@ -45,6 +41,6 @@ describe('/api/dashboard active tournament route', () => {
 
     expect(response.status).toBe(200)
     expect(body.matches).toHaveLength(6)
-    expect(getDashboardTournamentSnapshot).toHaveBeenCalledWith('active-t1')
+    expect(getDashboardSnapshot).toHaveBeenCalledWith('active-t1')
   })
 })

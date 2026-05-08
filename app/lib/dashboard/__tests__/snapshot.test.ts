@@ -1,8 +1,20 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import { getDashboardSnapshot, getMatchCacheTag, getLiveMatchInfo, getLiveAverage, createTableCacheTags } from '../snapshot';
+import { getDashboardSnapshot, getMatchCacheTag, createTableCacheTags } from '../snapshot';
 import { prismaMock } from '@/app/__tests__/mocks';
 import type { CueScoreMatch } from '@/app/lib/integrations/cuescore/types';
 import type { MatchLiveState } from '@/app/lib/match-live-state/model';
+
+jest.mock('@/app/lib/table-mappings', () => ({
+  getTableIdBySlot: jest.fn().mockResolvedValue('table1'),
+}));
+
+jest.mock('@/app/lib/match', () => ({
+  getCuescoreMatchCached: jest.fn().mockResolvedValue(null),
+}));
+
+jest.mock('@/app/lib/data', () => ({
+  findMatchLiveStates: jest.fn().mockResolvedValue([]),
+}));
 
 const mockCueScoreMatch = (overrides: Partial<CueScoreMatch> = {}): CueScoreMatch => ({
   matchId: '1',
@@ -25,51 +37,20 @@ describe('dashboard snapshot', () => {
   });
 
   test('returns nested structure with arrays', async () => {
-    prismaMock.matchLiveState.findMany.mockResolvedValue([]);
-    
     const result = await getDashboardSnapshot('t1');
 
     expect(result).toHaveProperty('matches');
     expect(result).toHaveProperty('liveStates');
-    expect(result).toHaveProperty('matchInfos');
     expect(result).toHaveProperty('tableIds');
-    expect(result).toHaveProperty('firstPlayers');
-    expect(result).toHaveProperty('matchAvgA');
-    expect(result).toHaveProperty('matchAvgB');
     expect(result.matches).toHaveLength(6);
     expect(result.liveStates).toHaveLength(6);
+    expect(result.tableIds).toHaveLength(6);
   });
 
   test('getMatchCacheTag generates correct tag', () => {
     expect(getMatchCacheTag(1)).toBe('match1');
     expect(getMatchCacheTag(2)).toBe('match2');
     expect(getMatchCacheTag(6)).toBe('match6');
-  });
-
-  test('getLiveMatchInfo returns null when no live state', () => {
-    const match = mockCueScoreMatch({ matchId: 'm1', playerA: { playerId: 1, name: 'A', image: '' }, playerB: { playerId: 2, name: 'B', image: '' } });
-    const result = getLiveMatchInfo(null, match);
-    expect(result).toBeNull();
-  });
-
-  test('getLiveAverage calculates correct average', () => {
-    const liveState: MatchLiveState = {
-      matchId: 'm1',
-      tournamentId: 't1',
-      table: '1',
-      leg: 1,
-      playerAScoreLeft: 401,
-      playerBScoreLeft: 501,
-      playerATotalScore: 100,
-      playerBTotalScore: 0,
-      playerATotalDarts: 3,
-      playerBTotalDarts: 0,
-      activePlayerId: 'pA',
-      startingPlayerId: 'pA',
-      lastThrows: [],
-    };
-    expect(getLiveAverage(liveState, 'A')).toBe(100);
-    expect(getLiveAverage(liveState, 'B')).toBe(0);
   });
 
   test('createTableCacheTags generates correct tags', () => {

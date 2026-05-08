@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import NoActiveTournament from '@/app/components/NoActiveTournament';
 import DartIcon from '@/app/components/DartIcon';
-import { selectCurrentLegStarter } from '@/app/lib/leg-starter';
-import { getNextPlayer } from '@/app/lib/scoring';
 import type { DashboardSnapshot } from '@/app/lib/dashboard/snapshot';
 import type { MatchLiveState } from '@/app/lib/match-live-state/model';
 import type { CueScoreMatch } from '@/app/lib/integrations/cuescore/types';
@@ -73,12 +71,7 @@ export default function DashboardView() {
                     key={i}
                     tableId={String(i + 1)}
                     match={match}
-                    matchInfo={data.matchInfos[i]?.score}
-                    lastThrows={data.matchInfos[i]?.lastThrows}
                     liveState={data.liveStates[i]}
-                    firstPlayer={data.firstPlayers[i]}
-                    avgPlayerA={data.matchAvgA[i]}
-                    avgPlayerB={data.matchAvgB[i]}
                 />
             ))}
         </div>
@@ -89,45 +82,23 @@ function formatAverage(totalScore: number, totalDarts: number) {
     return totalDarts > 0 ? (totalScore / totalDarts * 3).toFixed(1) : null;
 }
 
-function formatAverageValue(average?: number) {
-    return average && average > 0 ? average.toFixed(1) : null;
-}
-
-function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firstPlayer, avgPlayerA, avgPlayerB }: {
+function TableDashboard({ tableId, match, liveState }: {
     tableId: string
     match: CueScoreMatch | null
-    matchInfo: { playerId: string; _sum: { score: number }; _count: { score: number } }[] | undefined
-    lastThrows?: MatchLiveState['lastThrows']
     liveState: MatchLiveState | null
-    firstPlayer: string | null
-    avgPlayerA: number | null
-    avgPlayerB: number | null
 }) {
     const leg = (match?.scoreA || 0) + (match?.scoreB || 0) + 1;
     const playerAId = match?.playerA?.playerId?.toString();
     const playerBId = match?.playerB?.playerId?.toString();
-    const playerAInfo = matchInfo?.find(e => e.playerId == playerAId)
-    const playerBInfo = matchInfo?.find(e => e.playerId == playerBId)
-    const fallbackNextPlayer = match && firstPlayer ? getNextPlayer({
-        leg,
-        throwCount: (playerAInfo?._count?.score ?? 0) + (playerBInfo?._count?.score ?? 0),
-        firstPlayer,
-        playerAId: playerAId ?? '',
-        playerBId: playerBId ?? '',
-    }) : null;
-    const nextP = liveState?.activePlayerId ?? fallbackNextPlayer;
-    const projectedLastThrows = Array.isArray(liveState?.lastThrows) ? liveState.lastThrows : null;
-    const currentLastThrows = projectedLastThrows ?? lastThrows;
-    const playerAScore = liveState ? liveState.playerAScoreLeft : 501 - (playerAInfo?._sum?.score || 0);
-    const playerBScore = liveState ? liveState.playerBScoreLeft : 501 - (playerBInfo?._sum?.score || 0);
-    const playerAAvgDisplay = liveState ? formatAverage(liveState.playerATotalScore, liveState.playerATotalDarts) : formatAverageValue(avgPlayerA);
-    const playerBAvgDisplay = liveState ? formatAverage(liveState.playerBTotalScore, liveState.playerBTotalDarts) : formatAverageValue(avgPlayerB);
-    const startingPlayerId = liveState?.startingPlayerId ?? (match && firstPlayer ? selectCurrentLegStarter({
-        leg,
-        playerAId,
-        playerBId,
-        firstPlayer,
-    }) : null);
+
+    const nextP = liveState?.activePlayerId ?? null;
+    const currentLastThrows = liveState?.lastThrows ?? [];
+    const playerAScore = liveState?.playerAScoreLeft ?? 501;
+    const playerBScore = liveState?.playerBScoreLeft ?? 501;
+    const playerAAvgDisplay = liveState ? formatAverage(liveState.playerATotalScore, liveState.playerATotalDarts) : null;
+    const playerBAvgDisplay = liveState ? formatAverage(liveState.playerBTotalScore, liveState.playerBTotalDarts) : null;
+    const startingPlayerId = liveState?.startingPlayerId ?? null;
+
     return (
         <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4" data-testid={`dashboard-table-${tableId}`}>
             <h1 className="absolute top-2 left-2 text-xs md:text-sm font-bold text-gray-500">#{tableId}</h1>

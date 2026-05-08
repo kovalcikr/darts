@@ -52,7 +52,6 @@ describe('DashboardView', () => {
           playerA: { playerId: 'pA', name: 'Player A', image: '/a.png' },
           playerB: { playerId: 'pB', name: 'Player B', image: '/b.png' },
         }],
-        matchInfos: [{ score: [], lastThrows: [] }],
         liveStates: [{
           leg: 2,
           playerAScoreLeft: 501,
@@ -66,9 +65,6 @@ describe('DashboardView', () => {
           lastThrows: [],
         }],
         tableIds: ['1'],
-        firstPlayers: [null],
-        matchAvgA: [0],
-        matchAvgB: [0],
       }),
     } as Response)
     global.fetch = fetchMock
@@ -83,42 +79,7 @@ describe('DashboardView', () => {
     expect(screen.queryByText(/Started leg:/)).toBeNull()
   })
 
-  test('derives the dashboard leg starter from first player fallback state', async () => {
-    const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        matches: [{
-          raceTo: 3,
-          scoreA: 1,
-          scoreB: 0,
-          playerA: { playerId: 'pA', name: 'Player A', image: '/a.png' },
-          playerB: { playerId: 'pB', name: 'Player B', image: '/b.png' },
-        }],
-        matchInfos: [{
-          score: [
-            { playerId: 'pA', _sum: { score: 60 }, _count: { score: 1 } },
-            { playerId: 'pB', _sum: { score: 0 }, _count: { score: 0 } },
-          ],
-          lastThrows: [],
-        }],
-        liveStates: [null],
-        tableIds: ['1'],
-        firstPlayers: ['pA'],
-        matchAvgA: [null],
-        matchAvgB: [null],
-      }),
-    } as Response)
-    global.fetch = fetchMock
-
-    render(<DashboardView />)
-
-    const legsRow = await screen.findByLabelText('Player B started this leg. Legs: 0')
-
-    expect(within(legsRow).getByTestId('dashboard-leg-starter-icon')).not.toBeNull()
-    expect(screen.getAllByTestId('dashboard-leg-starter-icon')).toHaveLength(1)
-  })
-
-  test('does not crash when dashboard starter data is missing', async () => {
+  test('renders with null liveState without crashing', async () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -129,12 +90,8 @@ describe('DashboardView', () => {
           playerA: { playerId: 'pA', name: 'Player A', image: '/a.png' },
           playerB: { playerId: 'pB', name: 'Player B', image: '/b.png' },
         }],
-        matchInfos: [{ score: [], lastThrows: [] }],
         liveStates: [null],
         tableIds: ['1'],
-        firstPlayers: [null],
-        matchAvgA: [null],
-        matchAvgB: [null],
       }),
     } as Response)
     global.fetch = fetchMock
