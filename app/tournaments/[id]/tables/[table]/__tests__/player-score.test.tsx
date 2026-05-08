@@ -5,7 +5,7 @@
 import { describe, expect, test } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import PlayerScore from '../player-score';
-import { selectCurrentLegStarter } from '@/app/lib/leg-starter';
+import { getNextPlayer } from '@/app/lib/scoring';
 import type { Player } from '@/app/lib/model/fullmatch';
 
 function makePlayer(id: string, name: string, active = false): Player {
@@ -36,8 +36,9 @@ function renderPlayers({
 }) {
   const playerA = makePlayer('pA', 'Player A', activePlayer === 'pA');
   const playerB = makePlayer('pB', 'Player B', activePlayer === 'pB');
-  const starter = selectCurrentLegStarter({
+  const starter = getNextPlayer({
     leg,
+    throwCount: 0,
     playerAId: playerA.id,
     playerBId: playerB.id,
     firstPlayer,
