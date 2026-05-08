@@ -30,6 +30,11 @@ jest.mock('@/app/lib/db', () => ({
   },
 }))
 
+jest.mock('@/app/lib/match-live-state', () => ({
+  refreshMatchLiveState: jest.fn(),
+  findMatchLiveStates: jest.fn(),
+}))
+
 jest.mock('next/cache', () => ({
   revalidatePath: jest.fn(),
   revalidateTag: jest.fn(),
@@ -37,7 +42,7 @@ jest.mock('next/cache', () => ({
 
 describe('Dashboard caching - playerThrow invalidation', () => {
   const revalidateTag = (jest.requireMock('next/cache') as Record<string, jest.Mock>).revalidateTag
-  
+
   beforeEach(() => {
     jest.clearAllMocks()
     ;(prisma.$transaction as unknown as jest.Mock).mockImplementation(async (fn) => {
@@ -45,26 +50,26 @@ describe('Dashboard caching - playerThrow invalidation', () => {
     })
   })
 
-  test('addThrowAction invalidates cache for correct table', async () => {
-    const { addThrowAction } = require('@/app/lib/playerThrow')
-    
-    await addThrowAction('t1', 'm1', 1, 'p1', 60, 3, '2')
+  test('recordThrow invalidates cache for correct table', async () => {
+    const { recordThrow } = jest.requireActual('@/app/tournaments/[id]/tables/[table]/actions')
+
+    await recordThrow({ tournamentId: 't1', matchId: 'm1', leg: 1, playerId: 'p1', score: 60, dartsCount: 3, table: '2' })
 
     expect(revalidateTag).toHaveBeenCalledWith('match2', 'max')
   })
 
-  test('undoThrow invalidates cache for correct table', async () => {
-    const { undoThrow } = require('@/app/lib/playerThrow')
-    
-    await undoThrow('m1', 1, '4')
+  test('undoLastThrow invalidates cache for correct table', async () => {
+    const { undoLastThrow } = jest.requireActual('@/app/tournaments/[id]/tables/[table]/actions')
+
+    await undoLastThrow({ matchId: 'm1', leg: 1, table: '4' })
 
     expect(revalidateTag).toHaveBeenCalledWith('match4', 'max')
   })
 
   test('redoThrow invalidates cache for correct table', async () => {
-    const { redoThrow } = require('@/app/lib/playerThrow')
-    
-    await redoThrow('m1', '5')
+    const { redoThrow } = jest.requireActual('@/app/tournaments/[id]/tables/[table]/actions')
+
+    await redoThrow({ matchId: 'm1', leg: 1, table: '5' })
 
     expect(revalidateTag).toHaveBeenCalledWith('match5', 'max')
   })

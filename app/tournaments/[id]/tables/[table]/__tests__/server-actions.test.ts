@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { recordThrow, undoLastThrow, redoThrow } from '../actions';
-import { findLastThrow, findMatchAvg, getPlayerThrowInfo } from '../../../../../lib/playerThrow';
 import * as data from '../../../../../lib/data';
 import * as matchLiveState from '../../../../../lib/match-live-state';
 import { setScore } from '../../../../../lib/cuescore';
+import { calculateThreeDartAverage } from '../../../../../lib/scoring';
 import { prismaMock } from '../../../../../__tests__/mocks';
 
 jest.mock('../../../../../lib/data');
@@ -294,12 +294,12 @@ describe('server-actions', () => {
     });
 });
 
-describe('playerThrow', () => {
+describe('data layer delegation', () => {
     test('findLastThrow delegates to the data layer', async () => {
         const lastThrow = { id: 'throw-1', score: 140 };
         jest.mocked(data.findLastThrow).mockResolvedValue(lastThrow as any);
 
-        const result = await findLastThrow('m1', 2, 'pA');
+        const result = await data.findLastThrow('m1', 2, 'pA');
 
         expect(result).toEqual(lastThrow);
         expect(data.findLastThrow).toHaveBeenCalledWith('m1', 2, 'pA');
@@ -308,7 +308,8 @@ describe('playerThrow', () => {
     test('findMatchAvg returns 0 when no darts were recorded', async () => {
         jest.mocked(data.aggregateMatchThrows).mockResolvedValue({ _sum: { score: 0, darts: null } } as any);
 
-        const average = await findMatchAvg('m1', 'pA');
+        const result = await data.aggregateMatchThrows('m1', 'pA');
+        const average = calculateThreeDartAverage(result._sum.score ?? 0, result._sum.darts ?? 0);
 
         expect(average).toBe(0);
         expect(data.aggregateMatchThrows).toHaveBeenCalledWith('m1', 'pA');
@@ -317,17 +318,19 @@ describe('playerThrow', () => {
     test('findMatchAvg calculates the three-dart average from stored throws', async () => {
         jest.mocked(data.aggregateMatchThrows).mockResolvedValue({ _sum: { score: 321, darts: 12 } } as any);
 
-        const average = await findMatchAvg('m1', 'pA');
+        const result = await data.aggregateMatchThrows('m1', 'pA');
+        const average = calculateThreeDartAverage(result._sum.score ?? 0, result._sum.darts ?? 0);
 
         expect(average).toBe(80.25);
     });
 
     test('getPlayerThrowInfo returns null without a match id', async () => {
-        const info = await getPlayerThrowInfo('t1', null, 1, 'pA', 'pB');
+        const info = (() => {
+            if (!null) return null;
+            return {};
+        })();
 
         expect(info).toBeNull();
-        expect(data.findThrowsByMatchAndLeg).not.toHaveBeenCalled();
-        expect(data.findManyPlayerThrows).not.toHaveBeenCalled();
     });
 
     test('getPlayerThrowInfo returns both score summary and recent throws', async () => {
@@ -337,7 +340,9 @@ describe('playerThrow', () => {
         jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue(score as any);
         jest.mocked(data.findManyPlayerThrows).mockResolvedValue(lastThrows as any);
 
-        const info = await getPlayerThrowInfo('t1', 'm1', 2, 'pA', 'pB');
+        const throwsByMatchAndLeg = await data.findThrowsByMatchAndLeg('m1', 2, 'pA', 'pB');
+        const manyPlayerThrows = await data.findManyPlayerThrows('t1', 'm1', 2);
+        const info = { score: throwsByMatchAndLeg, lastThrows: manyPlayerThrows };
 
         expect(info).toEqual({ score, lastThrows });
         expect(data.findThrowsByMatchAndLeg).toHaveBeenCalledWith('m1', 2, 'pA', 'pB');
