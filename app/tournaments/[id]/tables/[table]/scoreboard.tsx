@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import GamepadButton from "./gamepad-button";
-import { addThrowAction, redoThrow, undoThrow } from "@/app/lib/playerThrow";
+import { recordThrow, undoLastThrow, redoThrow } from "@/app/lib/match-workflow";
 import type { ScoreboardThrowHistoryItem } from "@/app/lib/model/fullmatch";
 import {
   buildScoreboardPlayerDisplayNames,
@@ -108,15 +108,15 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
      setCurrentScore(score);
    }
 
- async function handleUndo() {
-     await undoThrow(matchId, leg, table);
-     setEnteredScore("0");
-   }
+async function handleUndo() {
+      await undoLastThrow({ matchId, table, leg });
+      setEnteredScore("0");
+    }
 
-   async function handleRedo() {
-     await redoThrow(matchId, table);
-     setEnteredScore("0");
-   }
+    async function handleRedo() {
+      await redoThrow({ matchId, table, leg });
+      setEnteredScore("0");
+    }
 
    function handleClr() {
      setEnteredScore("0");
@@ -187,20 +187,20 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
 function DartsCount() {
       const allowedCheckoutDarts = getAllowedCheckoutDarts(currentPlayerScore);
 
-      async function handleDartsOK() {
-        if (selectedCheckoutDarts === null) {
-          return;
-        }
-        setIsSubmitting(true);
-        try {
-          await addThrowAction(tournamentId, matchId, leg, player, Number(currentScoreRef.current), selectedCheckoutDarts, table);
-          setEnteredScore("0")
-          setSelectedCheckoutDarts(null);
-          setDartsCount(false);
-        } finally {
-          setIsSubmitting(false);
-        }
-      }
+async function handleDartsOK() {
+         if (selectedCheckoutDarts === null) {
+           return;
+         }
+         setIsSubmitting(true);
+         try {
+           await recordThrow({ tournamentId, matchId, leg, playerId: player, score: Number(currentScoreRef.current), table, dartsCount: selectedCheckoutDarts });
+           setEnteredScore("0")
+           setSelectedCheckoutDarts(null);
+           setDartsCount(false);
+         } finally {
+           setIsSubmitting(false);
+         }
+       }
 
      return (
        <div className="col-span-3 row-span-5 flex h-full min-h-0 items-center justify-center p-2">
@@ -232,28 +232,28 @@ function ScoreBoard() {
         setEnteredScore(nextScore.length === 0 ? "0" : nextScore);
       }
 
-      async function handleOK() {
-        const submittedScore = Number(currentScoreRef.current);
+async function handleOK() {
+         const submittedScore = Number(currentScoreRef.current);
 
-        if (currentPlayerScore == submittedScore) {
-          const allowedCheckoutDarts = getAllowedCheckoutDarts(currentPlayerScore);
+         if (currentPlayerScore == submittedScore) {
+           const allowedCheckoutDarts = getAllowedCheckoutDarts(currentPlayerScore);
 
-          if (allowedCheckoutDarts.length === 0) {
-            return;
-          }
+           if (allowedCheckoutDarts.length === 0) {
+             return;
+           }
 
-          setSelectedCheckoutDarts(getDefaultCheckoutDarts(allowedCheckoutDarts));
-          setDartsCount(true);
-          return;
-        }
-        setIsSubmitting(true);
-        try {
-          await addThrowAction(tournamentId, matchId, leg, player, submittedScore, 3, table);
-          setEnteredScore("0")
-        } finally {
-          setIsSubmitting(false);
-        }
-      }
+           setSelectedCheckoutDarts(getDefaultCheckoutDarts(allowedCheckoutDarts));
+           setDartsCount(true);
+           return;
+         }
+         setIsSubmitting(true);
+         try {
+           await recordThrow({ tournamentId, matchId, leg, playerId: player, score: submittedScore, table, dartsCount: 3 });
+           setEnteredScore("0")
+         } finally {
+           setIsSubmitting(false);
+         }
+       }
 
       return (
         <>

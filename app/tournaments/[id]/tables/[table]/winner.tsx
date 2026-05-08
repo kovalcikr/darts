@@ -1,6 +1,6 @@
 'use client'
 
-import { undoThrow } from "@/app/lib/playerThrow";
+import { undoLastThrow } from "@/app/lib/match-workflow";
 import GamepadButton from "./gamepad-button";
 import { finishMatch } from "@/app/lib/cuescore";
 import type { Match } from "@/prisma/client";
@@ -42,11 +42,11 @@ export default function Winner({ player, image, match, leg, table }: { player: s
           isLoading={isFinishing}
         />
 <GamepadButton
-           name="Undo"
-           color="bg-gray-800/80 p-5 text-gray-300 ring-white/10 hover:bg-gray-700"
-           onClick={async () => await undoThrow(match.id, leg, table)}
-           disabled={isFinishing}
-         />
+            name="Undo"
+            color="bg-gray-800/80 p-5 text-gray-300 ring-white/10 hover:bg-gray-700"
+            onClick={async () => await undoLastThrow({ matchId: match.id, table, leg })}
+            disabled={isFinishing}
+          />
       </div>
     </div>
   );

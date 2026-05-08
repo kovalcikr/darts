@@ -8,10 +8,10 @@ import { useState } from 'react';
 import type { ScoreboardThrowHistoryItem } from '@/app/lib/model/fullmatch';
 import ScoreBoard, { CheckoutDartsSelector } from '../scoreboard';
 
-jest.mock('@/app/lib/playerThrow', () => ({
-  addThrowAction: jest.fn(),
+jest.mock('@/app/lib/match-workflow', () => ({
+  recordThrow: jest.fn(),
   redoThrow: jest.fn(),
-  undoThrow: jest.fn(),
+  undoLastThrow: jest.fn(),
 }));
 
 function CheckoutDartsSelectorHarness({

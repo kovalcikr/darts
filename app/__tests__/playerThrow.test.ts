@@ -1,18 +1,17 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { setScore } from '../lib/cuescore';
-import {
-    addThrowAction,
-    findLastThrow,
-    findMatchAvg,
-    getPlayerThrowInfo,
-    redoThrow,
-    undoThrow,
-} from '../lib/playerThrow';
+import { recordThrow, undoLastThrow, redoThrow } from '../lib/match-workflow';
+import { findLastThrow, findMatchAvg, getPlayerThrowInfo } from '../lib/playerThrow';
 import * as data from '../lib/data';
+import * as matchLiveState from '../lib/match-live-state';
 import { prismaMock } from './mocks';
 
 jest.mock('../lib/data');
+jest.mock('../lib/match-live-state', () => ({
+    refreshMatchLiveState: jest.fn(),
+    findMatchLiveStates: jest.fn(),
+}));
 jest.mock('../lib/cuescore', () => ({
     setScore: jest.fn(),
 }));
@@ -22,7 +21,7 @@ jest.mock('next/cache', () => ({
 }));
 
 describe('playerThrow', () => {
-    const tx = {} as any;
+    const tx = undefined as any;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -30,23 +29,23 @@ describe('playerThrow', () => {
         jest.mocked(setScore).mockResolvedValue(undefined as any);
     });
 
-    test('addThrowAction stores a normal throw and revalidates the table', async () => {
+    test('recordThrow stores a normal throw and revalidates the table', async () => {
         jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 180 } } as any);
 
-        await addThrowAction('t1', 'm1', 1, 'pA', 100, 3, '11');
+        await recordThrow({ tournamentId: 't1', matchId: 'm1', leg: 1, playerId: 'pA', score: 100, table: '11', dartsCount: 3 });
 
         expect(data.aggregatePlayerThrow).toHaveBeenCalledWith('m1', 1, 'pA', tx);
         expect(data.invalidateRedoableThrows).toHaveBeenCalledWith('m1', tx);
         expect(data.createPlayerThrow).toHaveBeenCalledWith('t1', 'm1', 1, 'pA', 100, 3, false, tx);
         expect(data.findMatch).not.toHaveBeenCalled();
         expect(data.updateMatchLegs).not.toHaveBeenCalled();
-        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
+        expect(matchLiveState.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
-    test('addThrowAction closes the leg and syncs the updated score', async () => {
+    test('recordThrow closes the leg and syncs the updated score', async () => {
         const currentMatch = {
             id: 'm1',
             tournamentId: 't1',
@@ -64,46 +63,46 @@ describe('playerThrow', () => {
         jest.mocked(data.findMatch).mockResolvedValue(currentMatch as any);
         jest.mocked(data.updateMatchLegs).mockResolvedValue(updatedMatch as any);
 
-        await addThrowAction('t1', 'm1', 2, 'pA', 60, 2, '11');
+        await recordThrow({ tournamentId: 't1', matchId: 'm1', leg: 2, playerId: 'pA', score: 60, table: '11', dartsCount: 2 });
 
         expect(data.invalidateRedoableThrows).toHaveBeenCalledWith('m1', tx);
         expect(data.createPlayerThrow).toHaveBeenCalledWith('t1', 'm1', 2, 'pA', 60, 2, true, tx);
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
         expect(data.updateMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pA', 1, 1, 5, tx);
-        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
+        expect(matchLiveState.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
-    test('addThrowAction rejects an impossible checkout dart count without mutating state', async () => {
+    test('recordThrow rejects an impossible checkout dart count without mutating state', async () => {
         jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 370 } } as any);
 
-        await expect(addThrowAction('t1', 'm1', 2, 'pA', 131, 2, '11')).rejects.toThrow('Invalid checkout darts count');
+        await expect(recordThrow({ tournamentId: 't1', matchId: 'm1', leg: 2, playerId: 'pA', score: 131, table: '11', dartsCount: 2 })).rejects.toThrow('Invalid checkout darts count');
 
         expect(data.createPlayerThrow).not.toHaveBeenCalled();
         expect(data.invalidateRedoableThrows).not.toHaveBeenCalled();
         expect(data.findMatch).not.toHaveBeenCalled();
-        expect(data.refreshMatchLiveState).not.toHaveBeenCalled();
+        expect(matchLiveState.refreshMatchLiveState).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).not.toHaveBeenCalled();
         expect(revalidateTag).not.toHaveBeenCalled();
     });
 
-    test('addThrowAction rejects an impossible checkout score without mutating state', async () => {
+    test('recordThrow rejects an impossible checkout score without mutating state', async () => {
         jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 332 } } as any);
 
-        await expect(addThrowAction('t1', 'm1', 2, 'pA', 169, 3, '11')).rejects.toThrow('Invalid checkout darts count');
+        await expect(recordThrow({ tournamentId: 't1', matchId: 'm1', leg: 2, playerId: 'pA', score: 169, table: '11', dartsCount: 3 })).rejects.toThrow('Invalid checkout darts count');
 
         expect(data.createPlayerThrow).not.toHaveBeenCalled();
         expect(data.invalidateRedoableThrows).not.toHaveBeenCalled();
         expect(data.findMatch).not.toHaveBeenCalled();
-        expect(data.refreshMatchLiveState).not.toHaveBeenCalled();
+        expect(matchLiveState.refreshMatchLiveState).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).not.toHaveBeenCalled();
         expect(revalidateTag).not.toHaveBeenCalled();
     });
 
-    test('addThrowAction waits for score sync before revalidating after a checkout', async () => {
+    test('recordThrow waits for score sync before revalidating after a checkout', async () => {
         const currentMatch = {
             id: 'm1',
             tournamentId: 't1',
@@ -126,7 +125,7 @@ describe('playerThrow', () => {
         jest.mocked(data.updateMatchLegs).mockResolvedValue(updatedMatch as any);
         jest.mocked(setScore).mockReturnValue(setScorePromise as any);
 
-        const actionPromise = addThrowAction('t1', 'm1', 2, 'pA', 60, 2, '11');
+        const actionPromise = recordThrow({ tournamentId: 't1', matchId: 'm1', leg: 2, playerId: 'pA', score: 60, table: '11', dartsCount: 2 });
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
@@ -140,35 +139,35 @@ describe('playerThrow', () => {
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
-    test('addThrowAction rejects bust scores without mutating state', async () => {
+    test('recordThrow rejects bust scores without mutating state', async () => {
         jest.mocked(data.aggregatePlayerThrow).mockResolvedValue({ _sum: { score: 500 } } as any);
 
-        await expect(addThrowAction('t1', 'm1', 1, 'pA', 2, 1, false, '11')).rejects.toThrow('Bust');
+        await expect(recordThrow({ tournamentId: 't1', matchId: 'm1', leg: 1, playerId: 'pA', score: 2, table: '11', dartsCount: 1 })).rejects.toThrow('Bust');
 
         expect(data.createPlayerThrow).not.toHaveBeenCalled();
         expect(data.invalidateRedoableThrows).not.toHaveBeenCalled();
         expect(data.findMatch).not.toHaveBeenCalled();
-        expect(data.refreshMatchLiveState).not.toHaveBeenCalled();
+        expect(matchLiveState.refreshMatchLiveState).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).not.toHaveBeenCalled();
         expect(revalidateTag).not.toHaveBeenCalled();
     });
 
-    test('undoThrow marks the latest throw in the current leg as undone', async () => {
+    test('undoLastThrow marks the latest throw in the current leg as undone', async () => {
         jest.mocked(data.findLastThrow).mockResolvedValue({ id: 'throw-1' } as any);
 
-        await undoThrow('m1', 2, '11');
+        await undoLastThrow({ matchId: 'm1', table: '11', leg: 2 });
 
         expect(data.findLastThrow).toHaveBeenCalledWith('m1', 2, undefined, tx);
         expect(data.markPlayerThrowUndone).toHaveBeenCalledWith('throw-1', tx);
         expect(data.findPreviousLegLastThrow).not.toHaveBeenCalled();
-        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
+        expect(matchLiveState.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
-    test('undoThrow reopens the previous leg when the current leg is empty', async () => {
+    test('undoLastThrow reopens the previous leg when the current leg is empty', async () => {
         const currentMatch = {
             id: 'm1',
             tournamentId: 't1',
@@ -187,17 +186,17 @@ describe('playerThrow', () => {
         jest.mocked(data.findMatch).mockResolvedValue(currentMatch as any);
         jest.mocked(data.decrementMatchLegs).mockResolvedValue(updatedMatch as any);
 
-        await undoThrow('m1', 3, '11');
+        await undoLastThrow({ matchId: 'm1', table: '11', leg: 3 });
 
         expect(data.markPlayerThrowUndone).toHaveBeenCalledWith('throw-prev', tx);
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
         expect(data.decrementMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pB', 1, 2, 5, tx);
-        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
+        expect(matchLiveState.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
-    test('undoThrow waits for score sync before revalidating when reopening a leg', async () => {
+    test('undoLastThrow waits for score sync before revalidating when reopening a leg', async () => {
         const currentMatch = {
             id: 'm1',
             tournamentId: 't1',
@@ -221,7 +220,7 @@ describe('playerThrow', () => {
         jest.mocked(data.decrementMatchLegs).mockResolvedValue(updatedMatch as any);
         jest.mocked(setScore).mockReturnValue(setScorePromise as any);
 
-        const actionPromise = undoThrow('m1', 3, '11');
+        const actionPromise = undoLastThrow({ matchId: 'm1', table: '11', leg: 3 });
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
@@ -235,16 +234,16 @@ describe('playerThrow', () => {
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
 
-    test('undoThrow resets the starting player when no throws exist yet', async () => {
+    test('undoLastThrow resets the starting player when no throws exist yet', async () => {
         jest.mocked(data.findLastThrow).mockResolvedValue(null);
         jest.mocked(data.findPreviousLegLastThrow).mockResolvedValue(null);
 
-        await undoThrow('m1', 1, '11');
+        await undoLastThrow({ matchId: 'm1', table: '11', leg: 1 });
 
         expect(data.updateMatchFirstPlayer).toHaveBeenCalledWith('m1', null, tx);
         expect(data.markPlayerThrowUndone).not.toHaveBeenCalled();
         expect(data.decrementMatchLegs).not.toHaveBeenCalled();
-        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
+        expect(matchLiveState.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
@@ -253,13 +252,13 @@ describe('playerThrow', () => {
         jest.mocked(data.findRedoableThrow).mockResolvedValue({ id: 'throw-1', checkout: false } as any);
         jest.mocked(data.restorePlayerThrow).mockResolvedValue({ id: 'throw-1', checkout: false } as any);
 
-        await redoThrow('m1', '11');
+        await redoThrow({ matchId: 'm1', table: '11', leg: 1 });
 
         expect(data.findRedoableThrow).toHaveBeenCalledWith('m1', tx);
         expect(data.restorePlayerThrow).toHaveBeenCalledWith('throw-1', tx);
         expect(data.findMatch).not.toHaveBeenCalled();
         expect(data.updateMatchLegs).not.toHaveBeenCalled();
-        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
+        expect(matchLiveState.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
         expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
@@ -284,12 +283,12 @@ describe('playerThrow', () => {
         jest.mocked(data.findMatch).mockResolvedValue(currentMatch as any);
         jest.mocked(data.updateMatchLegs).mockResolvedValue(updatedMatch as any);
 
-        await redoThrow('m1', '11');
+        await redoThrow({ matchId: 'm1', table: '11', leg: 2 });
 
         expect(data.restorePlayerThrow).toHaveBeenCalledWith('throw-prev', tx);
         expect(data.findMatch).toHaveBeenCalledWith('m1', tx);
         expect(data.updateMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pB', 1, 1, 5, tx);
-        expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
+        expect(matchLiveState.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 2);
         expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
     });
