@@ -19,11 +19,5 @@ export {
     findMatchesByTournament, deletePlayerThrow
 } from './queries'
 
-// Transaction utilities
-export { runInTransaction } from './tx'
-
-// Match operations
-export { getSyncedMatchLegState } from './match-operations'
-
 // Live state - re-exported from match-live-state for consistency
 export { refreshMatchLiveState, findMatchLiveStates } from '../match-live-state'

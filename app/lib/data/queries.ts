@@ -2,7 +2,7 @@ import 'server-only'
 import prisma from "../db";
 import type { Prisma } from '@/prisma/client'
 import { generateLegacyTournamentNamesForSeason } from "../tournament-metadata";
-import { getSyncedMatchLegState } from "./match-operations";
+
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 
@@ -236,9 +236,28 @@ export async function findScoreboardThrowHistory(matchId: string, limit = 6, tx?
         .slice(0, limit);
 }
 
+function syncedMatchLegState(match: {
+    raceTo?: unknown
+    runTo?: unknown
+    scoreA?: unknown
+    scoreB?: unknown
+}): { playerALegs: number; playerBlegs: number; isComplete: boolean } | null {
+    const runTo = Number(match.raceTo ?? match.runTo);
+    const playerALegs = Number(match.scoreA);
+    const playerBlegs = Number(match.scoreB);
+    if (!Number.isInteger(runTo) || !Number.isInteger(playerALegs) || !Number.isInteger(playerBlegs)) {
+        return null;
+    }
+    return {
+        playerALegs,
+        playerBlegs,
+        isComplete: playerALegs >= runTo || playerBlegs >= runTo,
+    };
+}
+
 export async function upsertMatch(match: any, slot?: string, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
-    const syncedMatchLegState = getSyncedMatchLegState(match);
+    const state = syncedMatchLegState(match);
 
     const persistedMatch = await client.match.upsert({
         create: {
@@ -252,7 +271,7 @@ export async function upsertMatch(match: any, slot?: string, tx?: PrismaTransact
             playerBImage: match.playerB.image,
             round: match.roundName,
             runTo: match.raceTo,
-            ...(syncedMatchLegState ?? {})
+            ...(state ?? {})
         },
         update: {
             playerAId: String(match.playerA.playerId),
@@ -263,7 +282,7 @@ export async function upsertMatch(match: any, slot?: string, tx?: PrismaTransact
             playerBImage: match.playerB.image,
             round: match.roundName,
             runTo: match.raceTo,
-            ...(syncedMatchLegState ?? {})
+            ...(state ?? {})
         },
         where: {
             id: String(match.matchId)
