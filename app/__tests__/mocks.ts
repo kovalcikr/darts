@@ -4,10 +4,14 @@ import prisma from '../lib/db';
 import axios from 'axios';
 import { jest, beforeEach, test, expect } from '@jest/globals';
 
-jest.mock('../lib/db', () => ({
-    __esModule: true,
-    default: mockDeep<PrismaClient>(),
-}))
+jest.mock('../lib/db', () => {
+    const mockPrisma = mockDeep<PrismaClient>();
+    return {
+        __esModule: true,
+        default: mockPrisma,
+        getPrismaClient: (tx?: any) => tx || mockPrisma,
+    };
+})
 
 jest.mock('axios');
 beforeEach(() => {

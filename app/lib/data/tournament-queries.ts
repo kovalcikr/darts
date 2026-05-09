@@ -1,11 +1,6 @@
 import 'server-only'
-import prisma from "../db";
-import type { Prisma } from '@/prisma/client'
+import prisma, { type PrismaTransactionClient, getPrismaClient } from "@/app/lib/db";
 import { generateLegacyTournamentNamesForSeason } from "../tournament-metadata";
-
-type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
-
-const getPrismaClient = (tx?: PrismaTransactionClient) => tx || prisma;
 
 export type TournamentUpsertInput = {
     name: string

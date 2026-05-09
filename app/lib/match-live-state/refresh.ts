@@ -1,19 +1,16 @@
 'use server'
 
-import prisma from '@/app/lib/db'
-import type { Prisma } from '@/prisma/client'
+import prisma, { type PrismaTransactionClient, getPrismaClient } from '@/app/lib/db';
 import { STARTING_SCORE, getNextPlayer } from '@/app/lib/scoring'
 import type { MatchLiveState } from './model'
 import { storeMatchLiveState } from './repository'
-
-type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 
 export async function refreshMatchLiveState(
     matchId: string,
     table?: string | null,
     tx?: PrismaTransactionClient
 ): Promise<MatchLiveState | null> {
-    const client = tx || prisma
+    const client = getPrismaClient(tx)
 
     const match = await client.match.findUnique({
         where: { id: matchId },

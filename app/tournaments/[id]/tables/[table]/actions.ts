@@ -2,7 +2,6 @@
 
 import { revalidateScoreboard } from "@/app/lib/revalidation"
 import prisma from "@/app/lib/db"
-import type { Prisma } from "@/prisma/client"
 import {
   aggregatePlayerThrow,
   createPlayerThrow,
@@ -20,8 +19,6 @@ import {
 import { refreshMatchLiveState } from "@/app/lib/match-live-state"
 import { setScore } from "@/app/lib/cuescore"
 import { getAllowedCheckoutDarts, STARTING_SCORE } from "@/app/lib/scoring"
-
-type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 
 export async function recordThrow(
   params: {

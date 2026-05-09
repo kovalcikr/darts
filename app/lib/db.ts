@@ -2,7 +2,12 @@ import 'server-only'
 
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@/prisma/client'
+import type { Prisma } from '@/prisma/client'
 import { getDatabaseUrl } from './database-url'
+
+export type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
+
+export const getPrismaClient = (tx?: PrismaTransactionClient) => tx || prisma
 
 const prismaClientSingleton = () => {
   const connectionString = getDatabaseUrl()
