@@ -10,7 +10,8 @@ describe('active tournament live route guardrails', () => {
   test('dashboard client fetches the active dashboard API only', () => {
     const source = readWorkspaceFile('app/dashboard/dashboard-view.tsx')
 
-    expect(source).toContain('/api/dashboard')
+    expect(source).toContain('./actions')
+    expect(source).not.toContain('/api/dashboard')
     expect(source).not.toContain('/api/dashboard/tournament/')
   })
 

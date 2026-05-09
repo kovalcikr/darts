@@ -6,22 +6,7 @@ import DartIcon from '@/app/components/DartIcon';
 import type { DashboardSnapshot } from '@/app/lib/dashboard/snapshot';
 import type { MatchLiveState } from '@/app/lib/match-live-state/model';
 import type { CueScoreMatch } from '@/app/lib/integrations/cuescore/types';
-
-const ACTIVE_TOURNAMENT_NOT_SET = 'ACTIVE_TOURNAMENT_NOT_SET';
-
-async function fetchServerData() {
-    const response = await fetch('/api/dashboard');
-    if (response.ok) {
-        return { type: 'data', data: await response.json() };
-    }
-
-    const body = await response.json().catch(() => null);
-    if (response.status === 404 && body?.error?.code === ACTIVE_TOURNAMENT_NOT_SET) {
-        return { type: 'inactive' };
-    }
-
-    throw new Error('Failed to fetch server data');
-}
+import { fetchDashboardSnapshot } from './actions';
 
 export default function DashboardView() {
     const [data, setData] = useState<DashboardSnapshot | null>(null);
@@ -33,16 +18,16 @@ export default function DashboardView() {
 
         const fetchData = async () => {
             try {
-                const result = await fetchServerData();
+                const result = await fetchDashboardSnapshot();
                 setError(null);
 
-                if (result.type === 'inactive') {
+                if (result === null) {
                     setData(null);
                     setInactive(true);
                     return;
                 }
 
-                setData(result.data);
+                setData(result);
                 setInactive(false);
             } catch (err) {
                 setError(err.message);
