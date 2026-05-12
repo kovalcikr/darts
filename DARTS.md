@@ -76,8 +76,9 @@ A touch-optimized interface for scoring matches in real-time:
 - Auto-refresh while waiting for a match to start (every 20 seconds)
 
 **Checkout Handling**
-- When reaching zero, player selects checkout darts (2, 3, or 4)
+- When reaching zero, player selects checkout darts (1, 2, or 3)
 - Only valid checkout options are enabled based on remaining score
+- The finishing dart must land on a double or bullseye (double-out rule)
 - OK button records the checkout with dart count
 
 ---
@@ -132,7 +133,7 @@ Secured administrative interface with login:
 2. Wait for match to appear (auto-refreshes every 20 seconds)
 3. Select starting player when match begins
 4. Enter dart scores using num-pad interface
-5. Select checkout darts (2-4) when finishing a leg
+5. Select checkout darts (1-3) when finishing a leg
 6. Use UNDO/REDO to correct mistakes
 7. Complete match when all legs are won
 
