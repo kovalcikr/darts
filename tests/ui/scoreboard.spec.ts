@@ -1,7 +1,7 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
 async function openStartedTableOne(page: Page, testInfo: TestInfo) {
-  const tournamentId = `ui-scoreboard-${testInfo.project.name}-${testInfo.parallelIndex}-${Date.now()}`;
+  const tournamentId = `ui-scoreboard-${testInfo.project.name}-${testInfo.parallelIndex}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   await page.goto('/tournaments');
   await page.getByPlaceholder('Tournament ID').fill(tournamentId);
@@ -11,8 +11,12 @@ async function openStartedTableOne(page: Page, testInfo: TestInfo) {
   await page.getByRole('link', { name: 'Table 1' }).click();
   await expect(page).toHaveURL(/\/tables\/1$/);
   await expect(page.getByText('First to play:')).toBeVisible();
+  
+  // Wait for form submission and redirect
   await page.locator('[data-testid^="start-player-"]').first().click();
-  await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
+  
+  // Wait for the scoreboard to appear (indicates successful navigation)
+  await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible({ timeout: 10000 });
 }
 
 test.describe('scoreboard UI', () => {

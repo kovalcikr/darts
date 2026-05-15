@@ -2,6 +2,7 @@
 
 import getTournamentInfo from "./cuescore"
 import { revalidatePath, revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
 import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrowsByMatchAndLeg, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
@@ -121,10 +122,12 @@ export async function setStartingPlayer(matchId, playerId) {
 
 export async function startMatch(formData) {
    await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
+   const table = formData.get('table');
    revalidatePath('/tables/[table]', 'page');
-   const cacheTag = `match${formData.get('table')}`
+   const cacheTag = `match${table}`
    console.log('revalidating tag', cacheTag)
    revalidateTag(cacheTag, 'max')
+   redirect(`/tables/${encodeURIComponent(table)}`);
   }
 
   export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {

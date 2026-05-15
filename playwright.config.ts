@@ -6,7 +6,7 @@ const chromiumExecutablePath = resolveChromiumExecutablePath();
 
 export default defineConfig({
   testDir: './tests/ui',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
@@ -23,15 +23,15 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium-desktop',
-      use: {
-        ...devices['Desktop Chrome'],
-      },
-    },
-    {
       name: 'chromium-mobile',
       use: {
         ...devices['Pixel 7'],
+      },
+    },
+    {
+      name: 'chromium-desktop',
+      use: {
+        ...devices['Desktop Chrome'],
       },
     },
   ],
