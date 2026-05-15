@@ -1,14 +1,18 @@
 import { afterAll, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import axios from 'axios';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
+import * as revalidation from '../lib/cache/revalidation';
 import getTournamentInfo, { setScore, finishMatch, getRankings, getResults } from '../lib/cuescore';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 jest.mock('next/cache', () => ({
-    revalidateTag: jest.fn(),
     revalidatePath: jest.fn(),
+}));
+
+jest.mock('../lib/cache/revalidation', () => ({
+    revalidateTableById: jest.fn(),
 }));
 
 global.fetch = jest.fn() as any;
@@ -20,6 +24,7 @@ describe('cuescore', () => {
         process.env.CUESCORE_PROVIDER = 'real';
         (fetch as jest.Mock).mockClear();
         mockedAxios.get.mockClear();
+        jest.clearAllMocks();
         (fetch as jest.Mock).mockImplementation(() =>
             Promise.resolve({
                 headers: { getSetCookie: () => ['test_cookie'] },
@@ -76,8 +81,7 @@ describe('cuescore', () => {
             }
         });
         expect(revalidatePath).toHaveBeenCalledWith('/stats/tournaments/1');
-        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
-        expect(revalidateTag).toHaveBeenCalledWith('match5', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('5');
     });
 
     test('finishMatch error', async () => {

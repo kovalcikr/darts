@@ -1,7 +1,7 @@
 'use server'
 
 import getTournamentInfo from "./cuescore"
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findLastThrow, findMatchAvg } from "./playerThrow";
@@ -9,6 +9,7 @@ import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrows
 import { selectCurrentLegStarter } from "./leg-starter";
 import { calculateLegState } from "./scoring";
 import { isMatchComplete } from "./utils/match";
+import { revalidateTableById } from "./cache/revalidation";
 
 interface CueScorePlayer {
     playerId: number;
@@ -123,12 +124,9 @@ export async function setStartingPlayer(matchId, playerId) {
 export async function startMatch(formData) {
    await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
    const table = formData.get('table');
-   revalidatePath('/tables/[table]', 'page');
-   const cacheTag = `match${table}`
-   console.log('revalidating tag', cacheTag)
-   revalidateTag(cacheTag, 'max')
+   await revalidateTableById(table);
    redirect(`/tables/${encodeURIComponent(table)}`);
-  }
+}
 
   export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
   return await findThrowsByMatchAndLeg(matchId, leg, playerA, playerB);

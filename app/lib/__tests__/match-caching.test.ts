@@ -10,9 +10,8 @@ jest.mock('@/app/lib/cuescore', () => ({
   getCueScoreGateway: jest.fn(),
 }))
 
-jest.mock('next/cache', () => ({
-  revalidatePath: jest.fn(),
-  revalidateTag: jest.fn(),
+jest.mock('@/app/lib/cache/revalidation', () => ({
+  revalidateTableById: jest.fn(),
 }))
 
 jest.mock('next/navigation', () => ({
@@ -20,7 +19,7 @@ jest.mock('next/navigation', () => ({
 }))
 
 describe('Dashboard caching - match invalidation', () => {
-  const { revalidateTag } = jest.requireMock('next/cache') as Record<string, jest.Mock>
+  const { revalidateTableById } = jest.requireMock('@/app/lib/cache/revalidation') as Record<string, jest.Mock>
   
   beforeEach(() => {
     jest.clearAllMocks()
@@ -37,7 +36,7 @@ describe('Dashboard caching - match invalidation', () => {
     const { redirect } = require('next/navigation')
     await startMatch(formData)
 
-    expect(revalidateTag).toHaveBeenCalledWith('match3', 'max')
+    expect(revalidateTableById).toHaveBeenCalledWith('3')
     expect(redirect).toHaveBeenCalledWith('/tables/3')
   })
 })
