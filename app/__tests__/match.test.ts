@@ -20,6 +20,9 @@ jest.mock('next/cache', () => ({
     revalidateTag: jest.fn(),
     revalidatePath: jest.fn(),
 }));
+jest.mock('next/navigation', () => ({
+    redirect: jest.fn(),
+}));
 
 const mockMatch: Match & { tournament: { id: string; name: string } } = {
     id: 'm1',
@@ -127,8 +130,10 @@ describe('match', () => {
         formData.append('firstPlayer', 'pA');
         formData.append('table', '1');
         jest.mocked(data.updateMatchFirstPlayer).mockResolvedValue(null);
+        const { redirect } = await import('next/navigation');
         await match.startMatch(formData);
         expect(data.updateMatchFirstPlayer).toHaveBeenCalledWith('m1', 'pA');
+        expect(redirect).toHaveBeenCalledWith('/tables/1');
     });
 
     test('getThrows', async () => {
