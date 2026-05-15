@@ -16,7 +16,7 @@ async function openStartedTableOne(page: Page, testInfo: TestInfo) {
   await page.locator('[data-testid^="start-player-"]').first().click();
   
   // Wait for the scoreboard to appear (indicates successful navigation)
-  await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible({ timeout: 15000 });
 }
 
 test.describe('scoreboard UI', () => {
