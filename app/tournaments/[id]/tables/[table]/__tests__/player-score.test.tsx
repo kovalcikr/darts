@@ -5,8 +5,31 @@
 import { describe, expect, test } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import PlayerScore from '../player-score';
-import { selectCurrentLegStarter } from '@/app/lib/leg-starter';
 import type { Player } from '@/app/lib/model/fullmatch';
+
+function selectCurrentLegStarter({
+    leg,
+    playerAId,
+    playerBId,
+    firstPlayer,
+}: {
+    leg?: number | null
+    playerAId?: string | null
+    playerBId?: string | null
+    firstPlayer?: string | null
+}) {
+    if (!Number.isInteger(leg) || !playerAId || !playerBId || !firstPlayer) {
+        return null;
+    }
+
+    if (firstPlayer !== playerAId && firstPlayer !== playerBId) {
+        return null;
+    }
+
+    return leg! % 2 === 1
+        ? firstPlayer
+        : firstPlayer === playerAId ? playerBId : playerAId;
+}
 
 function makePlayer(id: string, name: string, active = false): Player {
   return {
