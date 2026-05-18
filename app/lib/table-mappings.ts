@@ -38,13 +38,19 @@ export async function getTableMappings(): Promise<TableMapping[]> {
 }
 
 export async function getTableIdBySlot(slot: number): Promise<string> {
-  const mappings = await getTableMappings()
-  const mapping = mappings.find((m) => m.slot === slot)
-  
-  if (!mapping) {
-    const defaultMapping = defaultTableMappings.find((m) => m.slot === slot)
-    return defaultMapping?.cuescoreTableName ?? '11'
-  }
-  
-  return mapping.cuescoreTableName
+   const mappings = await getTableMappings()
+   const mapping = mappings.find((m) => m.slot === slot)
+   
+   if (!mapping) {
+     const defaultMapping = defaultTableMappings.find((m) => m.slot === slot)
+     return defaultMapping?.cuescoreTableName ?? '11'
+   }
+   
+   return mapping.cuescoreTableName
+}
+
+export async function getTableSlotByTableId(tableId: string): Promise<number | null> {
+   const mappings = await getTableMappings()
+   const mapping = mappings.find((m) => m.cuescoreTableName === tableId)
+   return mapping?.slot ?? null
 }

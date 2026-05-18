@@ -22,8 +22,8 @@ export {
 // Transaction utilities
 export { runInTransaction } from './tx'
 
-// Match operations
+// Match operations (re-exports canonical implementation)
 export { getSyncedMatchLegState, refreshMatchLiveState } from './match-operations'
 
-// Re-export from match-live-state
-export { findMatchLiveStates, refreshMatchLiveState as refreshMatchLiveStateFromRepo } from '../match-live-state'
+// Match live state repository
+export { findMatchLiveStates, upsertMatchLiveState } from '../match-live-state/repository'

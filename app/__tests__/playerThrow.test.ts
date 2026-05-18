@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { revalidatePath, revalidateTag } from 'next/cache';
 import { setScore } from '../lib/cuescore';
 import {
     addThrowAction,
@@ -10,15 +9,15 @@ import {
     undoThrow,
 } from '../lib/playerThrow';
 import * as data from '../lib/data';
+import * as revalidation from '../lib/cache/revalidation';
 import { prismaMock } from './mocks';
 
 jest.mock('../lib/data');
 jest.mock('../lib/cuescore', () => ({
     setScore: jest.fn(),
 }));
-jest.mock('next/cache', () => ({
-    revalidatePath: jest.fn(),
-    revalidateTag: jest.fn(),
+jest.mock('../lib/cache/revalidation', () => ({
+    revalidateTableById: jest.fn(),
 }));
 
 describe('playerThrow', () => {
@@ -42,8 +41,7 @@ describe('playerThrow', () => {
         expect(data.updateMatchLegs).not.toHaveBeenCalled();
         expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
-        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('11');
     });
 
     test('addThrowAction closes the leg and syncs the updated score', async () => {
@@ -72,7 +70,7 @@ describe('playerThrow', () => {
         expect(data.updateMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pA', 1, 1, 5, tx);
         expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
-        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('11');
     });
 
     test('addThrowAction rejects an impossible checkout dart count without mutating state', async () => {
@@ -85,8 +83,7 @@ describe('playerThrow', () => {
         expect(data.findMatch).not.toHaveBeenCalled();
         expect(data.refreshMatchLiveState).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidatePath).not.toHaveBeenCalled();
-        expect(revalidateTag).not.toHaveBeenCalled();
+        expect(revalidation.revalidateTableById).not.toHaveBeenCalled();
     });
 
     test('addThrowAction rejects an impossible checkout score without mutating state', async () => {
@@ -99,8 +96,7 @@ describe('playerThrow', () => {
         expect(data.findMatch).not.toHaveBeenCalled();
         expect(data.refreshMatchLiveState).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidatePath).not.toHaveBeenCalled();
-        expect(revalidateTag).not.toHaveBeenCalled();
+        expect(revalidation.revalidateTableById).not.toHaveBeenCalled();
     });
 
     test('addThrowAction waits for score sync before revalidating after a checkout', async () => {
@@ -130,14 +126,12 @@ describe('playerThrow', () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
-        expect(revalidatePath).not.toHaveBeenCalled();
-        expect(revalidateTag).not.toHaveBeenCalled();
+        expect(revalidation.revalidateTableById).not.toHaveBeenCalled();
 
         releaseSetScore!();
         await actionPromise;
 
-        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
-        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('11');
     });
 
     test('addThrowAction rejects bust scores without mutating state', async () => {
@@ -150,8 +144,7 @@ describe('playerThrow', () => {
         expect(data.findMatch).not.toHaveBeenCalled();
         expect(data.refreshMatchLiveState).not.toHaveBeenCalled();
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidatePath).not.toHaveBeenCalled();
-        expect(revalidateTag).not.toHaveBeenCalled();
+        expect(revalidation.revalidateTableById).not.toHaveBeenCalled();
     });
 
     test('undoThrow marks the latest throw in the current leg as undone', async () => {
@@ -164,8 +157,7 @@ describe('playerThrow', () => {
         expect(data.findPreviousLegLastThrow).not.toHaveBeenCalled();
         expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
-        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('11');
     });
 
     test('undoThrow reopens the previous leg when the current leg is empty', async () => {
@@ -194,7 +186,7 @@ describe('playerThrow', () => {
         expect(data.decrementMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pB', 1, 2, 5, tx);
         expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
-        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('11');
     });
 
     test('undoThrow waits for score sync before revalidating when reopening a leg', async () => {
@@ -225,14 +217,12 @@ describe('playerThrow', () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
-        expect(revalidatePath).not.toHaveBeenCalled();
-        expect(revalidateTag).not.toHaveBeenCalled();
+        expect(revalidation.revalidateTableById).not.toHaveBeenCalled();
 
         releaseSetScore!();
         await actionPromise;
 
-        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
-        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('11');
     });
 
     test('undoThrow resets the starting player when no throws exist yet', async () => {
@@ -246,7 +236,7 @@ describe('playerThrow', () => {
         expect(data.decrementMatchLegs).not.toHaveBeenCalled();
         expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('11');
     });
 
     test('redoThrow restores the latest redoable throw', async () => {
@@ -261,8 +251,7 @@ describe('playerThrow', () => {
         expect(data.updateMatchLegs).not.toHaveBeenCalled();
         expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).not.toHaveBeenCalled();
-        expect(revalidatePath).toHaveBeenCalledWith('/tables/[table]', 'page');
-        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('11');
     });
 
     test('redoThrow recloses a restored checkout leg and syncs the score', async () => {
@@ -291,7 +280,7 @@ describe('playerThrow', () => {
         expect(data.updateMatchLegs).toHaveBeenCalledWith('m1', 'pA', 'pB', 1, 1, 5, tx);
         expect(data.refreshMatchLiveState).toHaveBeenCalledWith('m1', '11', tx);
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 2);
-        expect(revalidateTag).toHaveBeenCalledWith('match11', 'max');
+        expect(revalidation.revalidateTableById).toHaveBeenCalledWith('11');
     });
 
     test('findLastThrow delegates to the data layer', async () => {
