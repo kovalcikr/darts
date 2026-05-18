@@ -1,5 +1,6 @@
 import { findMatch, findThrowsByMatch, findScoreboardThrowHistory, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, aggregateMatchThrows } from '@/app/lib/data'
 import { calculateThreeDartAverage, STARTING_SCORE } from '@/app/lib/scoring'
+import { getNextPlayer, getLegStarter } from '@/app/lib/leg-turn'
 import type { Match, Tournament, PlayerThrow } from '@/prisma/client'
 
 export type PlayerStats = {
@@ -35,16 +36,6 @@ export type MatchState = {
     status: 'active' | 'undone'
     activityTime: Date
   }>
-}
-
-function getCurrentLegStarter(leg: number, firstPlayer: string | null, playerAId: string, playerBId: string): string | null {
-  if (!firstPlayer || !Number.isInteger(leg) || !playerAId || !playerBId) {
-    return null
-  }
-  if (firstPlayer !== playerAId && firstPlayer !== playerBId) {
-    return null
-  }
-  return leg % 2 === 1 ? firstPlayer : (firstPlayer === playerAId ? playerBId : playerAId)
 }
 
 async function getPlayerMatchStats(matchId: string, playerId: string) {
@@ -86,12 +77,21 @@ export async function getMatchState(matchId: string): Promise<MatchState | null>
   const playerADarts = playerALegThrows.reduce((s, t) => s + t.darts, 0)
   const playerBDarts = playerBLegThrows.reduce((s, t) => s + t.darts, 0)
 
-  const throwCount = playerALegThrows.length + playerBLegThrows.length
-  const nextPlayer = match.firstPlayer
-    ? (leg + throwCount) % 2 === 1 ? match.firstPlayer : (match.firstPlayer === match.playerAId ? match.playerBId : match.playerAId)
-    : match.playerAId
+  const nextPlayer = getNextPlayer({
+    currentLeg: leg,
+    throwsByA: playerALegThrows.length,
+    throwsByB: playerBLegThrows.length,
+    firstPlayer: match.firstPlayer,
+    playerAId: match.playerAId,
+    playerBId: match.playerBId,
+  })
 
-  const currentLegStarter = getCurrentLegStarter(leg, match.firstPlayer, match.playerAId, match.playerBId)
+  const currentLegStarter = getLegStarter({
+    leg,
+    firstPlayer: match.firstPlayer,
+    playerAId: match.playerAId,
+    playerBId: match.playerBId,
+  })
 
   const [playerAStats, playerBStats] = await Promise.all([
     getPlayerMatchStats(matchId, match.playerAId),
