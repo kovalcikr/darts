@@ -21,7 +21,7 @@ import {
 } from "./data";
 import { findMatch } from "./data";
 import prisma from "./db";
-import { calculateThreeDartAverage, getAllowedCheckoutDarts } from "./scoring";
+import { calculateThreeDartAverage, getAllowedCheckoutDarts } from "./score-entry";
 
 const STARTING_SCORE = 501;
 

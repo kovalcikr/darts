@@ -1,6 +1,5 @@
 import type { MatchLiveState } from './model'
-import { STARTING_SCORE } from '../scoring'
-import { getNextPlayer } from '../leg-turn'
+import { STARTING_SCORE, getNextPlayer } from '../score-entry'
 
 export type MatchForLiveState = {
     id: string

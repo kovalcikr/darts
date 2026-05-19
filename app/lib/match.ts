@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FullMatch, Player } from "./model/fullmatch";
 import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrowsByMatchAndLeg, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
-import { calculateLegState } from "./scoring";
+import { calculateLegState } from "./score-entry";
 import { getMatchState } from "./match-state";
 import { isMatchComplete } from "./utils/match";
 import { revalidateTableById } from "./cache/revalidation";

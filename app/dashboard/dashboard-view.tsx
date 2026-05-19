@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import NoActiveTournament from '@/app/components/NoActiveTournament';
 import DartIcon from '@/app/components/DartIcon';
-import { getNextPlayer, getLegStarter } from '@/app/lib/leg-turn'
+import { getNextPlayer, getLegStarter } from '@/app/lib/score-entry'
 
 const ACTIVE_TOURNAMENT_NOT_SET = 'ACTIVE_TOURNAMENT_NOT_SET';
 

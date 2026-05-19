@@ -1,6 +1,5 @@
 import { findMatch, findThrowsByMatch, findScoreboardThrowHistory, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, aggregateMatchThrows } from '@/app/lib/data'
-import { calculateThreeDartAverage, STARTING_SCORE } from '@/app/lib/scoring'
-import { getNextPlayer, getLegStarter } from '@/app/lib/leg-turn'
+import { calculateThreeDartAverage, STARTING_SCORE, getNextPlayer, getLegStarter } from '@/app/lib/score-entry'
 import type { Match, Tournament, PlayerThrow } from '@/prisma/client'
 
 export type PlayerStats = {

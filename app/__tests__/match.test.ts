@@ -165,7 +165,7 @@ describe('match', () => {
     });
 
     test('nextPlayer via scoring module', async () => {
-        const { calculateLegState } = await import('../lib/scoring');
+        const { calculateLegState } = await import('../lib/score-entry');
         
         // Test the next player logic through the scoring module
         let state = calculateLegState({ leg: 1, throws: [], playerAId: 'pA', playerBId: 'pB', firstPlayer: 'pA' });
