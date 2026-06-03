@@ -79,6 +79,10 @@ export function getAllowedCheckoutDarts(
   return ([1, 2, 3] as const).filter((d) => canCheckoutExactly(remainingScore, d))
 }
 
+export const IMPOSSIBLE_THREE_DART_SCORES: number[] = [
+  163, 166, 169, 172, 173, 175, 176, 178, 179,
+]
+
 export function calculateLegState(params: {
   throws: Array<{ playerId: string; score: number; darts: number }>
   leg: number
