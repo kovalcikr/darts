@@ -16,7 +16,7 @@ const DEFAULT_PLAYER_NAMES = [
   'Erik Laki',
   'Robert Stoynov',
   'Patrik Juhasz',
-  'Martin Samek',
+  'Patrik Samek',
   'AlexandertheGreatestDartsPlayerWithAnExtremelyLongUnbrokenName',
   'Žofia Šampiónová Extra Long Tactical Checkout Specialist',
   'Peter Kovarik',
