@@ -1,12 +1,18 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import * as match from '../lib/match';
 import getTournamentInfo from '../lib/cuescore';
+import { findLastThrow, findMatchAvg } from '../lib/playerThrow';
 import type { Match } from '@/prisma/client';
 import * as data from '../lib/data';
 
 jest.mock('../lib/cuescore', () => ({
     __esModule: true,
     default: jest.fn(),
+}));
+
+jest.mock('../lib/playerThrow', () => ({
+    findLastThrow: jest.fn(),
+    findMatchAvg: jest.fn(),
 }));
 
 jest.mock('../lib/data');
@@ -71,12 +77,10 @@ describe('match', () => {
     test('getFullMatch', async () => {
         const matchId = 'm1';
         jest.mocked(data.findMatch).mockResolvedValue(mockMatch);
-        jest.mocked(data.findThrowsByMatch).mockResolvedValue([]);
-        jest.mocked(data.findScoreboardThrowHistory).mockResolvedValue([]);
-        jest.mocked(data.findHighestScoreInMatch).mockResolvedValue(180);
-        jest.mocked(data.findBestCheckoutInMatch).mockResolvedValue(100);
-        jest.mocked(data.findBestLegInMatch).mockResolvedValue(15);
-        jest.mocked(data.aggregateMatchThrows).mockResolvedValue({ _sum: { score: 1000, darts: 50 } });
+        jest.mocked(data.findThrowsByMatchAndLeg).mockResolvedValue([]);
+        jest.mocked(data.findActiveThrowsByMatchAndLeg).mockResolvedValue([]);
+        jest.mocked(findLastThrow).mockResolvedValue({ score: 60 } as any);
+        jest.mocked(findMatchAvg).mockResolvedValue(80);
 
         const fullMatch = await match.getFullMatch(matchId);
 
@@ -91,8 +95,10 @@ describe('match', () => {
         const fullMatch = await match.getFullMatch('missing-match');
 
         expect(fullMatch).toBeNull();
+        expect(data.findThrowsByMatchAndLeg).not.toHaveBeenCalled();
+        expect(findLastThrow).not.toHaveBeenCalled();
+        expect(findMatchAvg).not.toHaveBeenCalled();
         expect(data.findThrowsByMatch).not.toHaveBeenCalled();
-        expect(data.findScoreboardThrowHistory).not.toHaveBeenCalled();
         expect(data.findHighestScoreInMatch).not.toHaveBeenCalled();
         expect(data.findBestCheckoutInMatch).not.toHaveBeenCalled();
         expect(data.findBestLegInMatch).not.toHaveBeenCalled();

@@ -1,14 +1,14 @@
 'use server'
 
 import getTournamentInfo from "./cuescore"
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { FullMatch, Player } from "./model/fullmatch";
-import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrowsByMatchAndLeg, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
+import { findLastThrow, findMatchAvg } from "./playerThrow";
+import { findMatch, findThrowsByMatch, findThrowsByMatchAndLeg, findActiveThrowsByMatchAndLeg, findHighestScoreInMatch, findBestCheckoutInMatch, findBestLegInMatch, findScoreboardThrowHistory, upsertMatch, updateMatchFirstPlayer } from "./data";
+import { selectCurrentLegStarter } from "./leg-starter";
 import { calculateLegState } from "./scoring";
-import { getMatchState } from "./match-state";
 import { isMatchComplete } from "./utils/match";
-import { revalidateTableById } from "./cache/revalidation";
 
 interface CueScorePlayer {
     playerId: number;
@@ -45,22 +45,67 @@ export async function getCuescoreMatch(tournamentId: string, tableName: string) 
   throw Error(`No match in progress on table ${tableName}`);
 }
 
-export async function getFullMatch(matchId, _unused?: boolean) {
-  const state = await getMatchState(matchId)
-  if (!state) {
-    return null
+export async function getFullMatch(matchId) {
+   const match = await getMatch(matchId);
+  if (!match) {
+    return null;
   }
-  return {
-    match: state.match,
-    tournament: state.match.tournament,
-    currentLeg: state.currentLeg,
-    nextPlayer: state.nextPlayer,
-    startingPlayerId: state.startingPlayerId,
-    playerA: state.playerA as Player,
-    playerB: state.playerB as Player,
-    throws: state.throws,
-    throwHistory: state.throwHistory,
+  const leg = match.playerALegs + match.playerBlegs + 1;
+  const scores = await getScores(match.id, leg, match.playerAId, match.playerBId, match.firstPlayer);
+  const playerALast = (await findLastThrow(match.id, leg, match.playerAId))?.score;
+  const playerBLast = (await findLastThrow(match.id, leg, match.playerBId))?.score;
+  const playerAAvg = (await findMatchAvg(match.id, match.playerAId));
+  const playerBAvg = (await findMatchAvg(match.id, match.playerBId));
+  const throws = await findThrowsByMatch(matchId);
+  const throwHistory = await findScoreboardThrowHistory(match.id, 6);
+
+  const playerA: Player = {
+    id: match.playerAId,
+    name: match.playerAName,
+    imageUrl: match.playerAImage,
+    score: scores.playerA,
+    dartsCount: scores.playerADarts,
+    lastThrow: playerALast,
+    matchAvg: playerAAvg,
+    legCount: match.playerALegs,
+    active: scores.nextPlayer == match.playerAId,
+    highestScore: await findHighestScoreInMatch(matchId, match.playerAId),
+    bestCheckout: await findBestCheckoutInMatch(matchId, match.playerAId),
+    bestLeg: await findBestLegInMatch(matchId, match.playerAId),
   }
+
+  const playerB: Player = {
+    id: match.playerBId,
+    name: match.playerBName,
+    imageUrl: match.playerBImage,
+    score: scores.playerB,
+    dartsCount: scores.playerBDarts,
+    lastThrow: playerBLast,
+    matchAvg: playerBAvg,
+    legCount: match.playerBlegs,
+    active: scores.nextPlayer == match.playerBId,
+    highestScore: await findHighestScoreInMatch(matchId, match.playerBId),
+    bestCheckout: await findBestCheckoutInMatch(matchId, match.playerBId),
+    bestLeg: await findBestLegInMatch(matchId, match.playerBId),
+  }
+
+  const fullMatch: FullMatch = {
+    match: match,
+    tournament: match.tournament,
+    currentLeg: leg,
+    nextPlayer: scores.nextPlayer,
+    startingPlayerId: selectCurrentLegStarter({
+      leg,
+      playerAId: match.playerAId,
+      playerBId: match.playerBId,
+      firstPlayer: match.firstPlayer,
+    }),
+    playerA: playerA,
+    playerB: playerB,
+    throws: throws,
+    throwHistory,
+  }
+  return fullMatch;
 }
 
 export async function getMatch(matchId) {
@@ -78,9 +123,12 @@ export async function setStartingPlayer(matchId, playerId) {
 export async function startMatch(formData) {
    await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
    const table = formData.get('table');
-   await revalidateTableById(table);
+   revalidatePath('/tables/[table]', 'page');
+   const cacheTag = `match${table}`
+   console.log('revalidating tag', cacheTag)
+   revalidateTag(cacheTag, 'max')
    redirect(`/tables/${encodeURIComponent(table)}`);
-}
+  }
 
   export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
   return await findThrowsByMatchAndLeg(matchId, leg, playerA, playerB);

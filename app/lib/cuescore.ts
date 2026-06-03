@@ -1,7 +1,6 @@
 'use server'
 
-import { revalidatePath } from "next/cache";
-import { revalidateTableById } from "./cache/revalidation";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getCueScoreGateway } from "./integrations/cuescore";
 
 export default async function getTournamentInfo(tournamentId : string) {
@@ -18,14 +17,17 @@ export async function setScore(tournamentId, matchId, playerALegs, playerBlegs) 
 }
 
 export async function finishMatch(tournamentId, matchId, playerALegs, playerBlegs, table) {
-   await getCueScoreGateway().finishMatch({
-     tournamentId,
-     matchId,
-     scoreA: playerALegs,
-     scoreB: playerBlegs,
-   });
-   revalidatePath(`/stats/tournaments/${tournamentId}`);
-   await revalidateTableById(table)
+  await getCueScoreGateway().finishMatch({
+    tournamentId,
+    matchId,
+    scoreA: playerALegs,
+    scoreB: playerBlegs,
+  });
+  revalidatePath(`/stats/tournaments/${tournamentId}`);
+  revalidatePath('/tables/[table]', 'page');
+  const cacheTag = `match${table}`
+  console.log('revalidating tag', cacheTag)
+  revalidateTag(cacheTag, 'max')
 }
 
 export async function getRankings(rankingId: string) {
