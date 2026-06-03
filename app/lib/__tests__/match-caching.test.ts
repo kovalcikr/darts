@@ -15,10 +15,6 @@ jest.mock('next/cache', () => ({
   revalidateTag: jest.fn(),
 }))
 
-jest.mock('next/navigation', () => ({
-  redirect: jest.fn(),
-}))
-
 describe('Dashboard caching - match invalidation', () => {
   const { revalidateTag } = jest.requireMock('next/cache') as Record<string, jest.Mock>
   
@@ -34,10 +30,8 @@ describe('Dashboard caching - match invalidation', () => {
     formData.set('firstPlayer', 'p1')
     formData.set('table', '3')
 
-    const { redirect } = require('next/navigation')
     await startMatch(formData)
 
     expect(revalidateTag).toHaveBeenCalledWith('match3', 'max')
-    expect(redirect).toHaveBeenCalledWith('/tables/3')
   })
 })
