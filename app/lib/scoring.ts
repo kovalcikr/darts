@@ -1,5 +1,3 @@
-import { getNextPlayer, type LegTurnContext } from './leg-turn'
-
 export type ScoringThrow = {
   id: string
   playerId: string
@@ -45,7 +43,7 @@ const SCORING_DART_SCORES = Array.from(
     ...BOARD_NUMBERS.map((n) => n * 2),
     ...BOARD_NUMBERS.map((n) => n * 3),
     50,
-  ]),
+  ])
 ).sort((a, b) => a - b)
 
 const FINISHING_DOUBLE_SCORES = Array.from(
@@ -96,28 +94,29 @@ export function calculateLegState(params: {
     startingScore = STARTING_SCORE,
   } = params
 
-  const playerAThrows = throws.filter((t) => t.playerId === playerAId)
-  const playerBThrows = throws.filter((t) => t.playerId === playerBId)
-
-  const playerAStats = playerAThrows
+  const playerAStats = throws
+    .filter((t) => t.playerId === playerAId)
     .reduce(
       (acc, t) => ({ sum: acc.sum + t.score, count: acc.count + t.darts }),
       { sum: 0, count: 0 }
     )
-  const playerBStats = playerBThrows
+  const playerBStats = throws
+    .filter((t) => t.playerId === playerBId)
     .reduce(
       (acc, t) => ({ sum: acc.sum + t.score, count: acc.count + t.darts }),
       { sum: 0, count: 0 }
     )
 
-  const nextPlayer = getNextPlayer({
-    currentLeg: leg,
-    throwsByA: playerAThrows.length,
-    throwsByB: playerBThrows.length,
-    firstPlayer,
-    playerAId,
-    playerBId,
-  })
+  const throwCount = throws.length
+  let nextPlayer: string | null = null
+
+  if (firstPlayer) {
+    if ((leg + throwCount) % 2 === 1) {
+      nextPlayer = firstPlayer
+    } else {
+      nextPlayer = firstPlayer === playerAId ? playerBId : playerAId
+    }
+  }
 
   return {
     playerAScoreLeft: startingScore - playerAStats.sum,
