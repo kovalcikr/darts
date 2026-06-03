@@ -1,6 +1,5 @@
 import type { MatchLiveState } from './model'
 import { STARTING_SCORE } from '../scoring'
-import { getNextPlayer } from '../leg-turn'
 
 export type MatchForLiveState = {
     id: string
@@ -39,6 +38,18 @@ function findLegGroup(groups: LegTotalsGroup[], playerId: string) {
     return groups.find(g => g.playerId === playerId)
 }
 
+function getNextActivePlayer(
+    leg: number,
+    throwCount: number,
+    firstPlayer: string | null,
+    playerAId: string,
+    playerBId: string
+): string | null {
+    if (!firstPlayer) return null
+    if ((leg + throwCount) % 2 === 1) return firstPlayer
+    return firstPlayer === playerAId ? playerBId : playerAId
+}
+
 export function buildMatchLiveState(
     match: MatchForLiveState,
     table: string | null | undefined,
@@ -55,14 +66,13 @@ export function buildMatchLiveState(
 
     const throwCount = (playerALegTotals?._count?.id ?? 0) + (playerBLegTotals?._count?.id ?? 0)
 
-    const activePlayerId = getNextPlayer({
-        currentLeg: leg,
-        throwsByA: playerALegTotals?._count?.id ?? 0,
-        throwsByB: playerBLegTotals?._count?.id ?? 0,
-        firstPlayer: match.firstPlayer,
-        playerAId: match.playerAId,
-        playerBId: match.playerBId,
-    })
+    const activePlayerId = getNextActivePlayer(
+        leg,
+        throwCount,
+        match.firstPlayer,
+        match.playerAId,
+        match.playerBId
+    )
 
     const lastThrowsData = lastThrows.map(t => ({
         playerId: t.playerId,

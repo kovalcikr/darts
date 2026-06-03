@@ -3,7 +3,30 @@
 import { useEffect, useState } from 'react';
 import NoActiveTournament from '@/app/components/NoActiveTournament';
 import DartIcon from '@/app/components/DartIcon';
-import { getNextPlayer, getLegStarter } from '@/app/lib/leg-turn'
+
+function selectCurrentLegStarter({
+    leg,
+    playerAId,
+    playerBId,
+    firstPlayer,
+}: {
+    leg?: number | null
+    playerAId?: string | null
+    playerBId?: string | null
+    firstPlayer?: string | null
+}) {
+    if (!Number.isInteger(leg) || !playerAId || !playerBId || !firstPlayer) {
+        return null;
+    }
+
+    if (firstPlayer !== playerAId && firstPlayer !== playerBId) {
+        return null;
+    }
+
+    return leg! % 2 === 1
+        ? firstPlayer
+        : firstPlayer === playerAId ? playerBId : playerAId;
+}
 
 const ACTIVE_TOURNAMENT_NOT_SET = 'ACTIVE_TOURNAMENT_NOT_SET';
 
@@ -83,23 +106,20 @@ function formatAverageValue(average?: number) {
 }
 
 function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firstPlayer, avgPlayerA, avgPlayerB }: { tableId: string, match: any, matchInfo: any, lastThrows?: any[], liveState?: any, firstPlayer?: string, avgPlayerA?: number, avgPlayerB?: number }) {
+    function nextPlayer(leg: number, throwsA: number, throwsB: number, playerA: string, playerB: string, firstPlayer: string) {
+        if ((leg + (throwsA ? throwsA : 0) + (throwsB ? throwsB : 0)) % 2 == 1) {
+            return firstPlayer;
+        } else {
+            return firstPlayer == playerA ? playerB : playerA;
+        }
+    }
+
     const leg = (match?.scoreA || 0) + (match?.scoreB || 0) + 1;
     const playerAId = match?.playerA?.playerId?.toString();
     const playerBId = match?.playerB?.playerId?.toString();
     const playerAInfo = matchInfo?.find(e => e.playerId == playerAId)
     const playerBInfo = matchInfo?.find(e => e.playerId == playerBId)
-    
-    const fallbackNextPlayer = match && firstPlayer && playerAId && playerBId
-      ? getNextPlayer({
-          currentLeg: leg,
-          throwsByA: playerAInfo?._count?.id ?? 0,
-          throwsByB: playerBInfo?._count?.id ?? 0,
-          firstPlayer,
-          playerAId,
-          playerBId,
-        })
-      : null;
-    
+    const fallbackNextPlayer = match && firstPlayer ? nextPlayer(leg, playerAInfo?._count?.score, playerBInfo?._count?.score, playerAId, playerBId, firstPlayer) : null;
     const nextP = liveState?.activePlayerId ?? fallbackNextPlayer;
     const projectedLastThrows = Array.isArray(liveState?.lastThrows) ? liveState.lastThrows : null;
     const currentLastThrows = projectedLastThrows ?? lastThrows;
@@ -107,15 +127,12 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firs
     const playerBScore = liveState ? liveState.playerBScoreLeft : 501 - (playerBInfo?._sum?.score || 0);
     const playerAAvgDisplay = liveState ? formatAverage(liveState.playerATotalScore, liveState.playerATotalDarts) : formatAverageValue(avgPlayerA);
     const playerBAvgDisplay = liveState ? formatAverage(liveState.playerBTotalScore, liveState.playerBTotalDarts) : formatAverageValue(avgPlayerB);
-    
-    const startingPlayerId = liveState?.startingPlayerId ?? (match && firstPlayer && playerAId && playerBId
-        ? getLegStarter({
-            leg,
-            firstPlayer,
-            playerAId,
-            playerBId,
-          })
-        : null);
+    const startingPlayerId = liveState?.startingPlayerId ?? (match && firstPlayer ? selectCurrentLegStarter({
+        leg,
+        playerAId,
+        playerBId,
+        firstPlayer,
+    }) : null);
     return (
         <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4" data-testid={`dashboard-table-${tableId}`}>
             <h1 className="absolute top-2 left-2 text-xs md:text-sm font-bold text-gray-500">#{tableId}</h1>
