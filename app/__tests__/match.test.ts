@@ -4,6 +4,7 @@ import getTournamentInfo from '../lib/cuescore';
 import { findLastThrow, findMatchAvg } from '../lib/playerThrow';
 import type { Match } from '@/prisma/client';
 import * as data from '../lib/data';
+import { redirect } from 'next/navigation';
 
 jest.mock('../lib/cuescore', () => ({
     __esModule: true,
@@ -19,6 +20,9 @@ jest.mock('../lib/data');
 jest.mock('next/cache', () => ({
     revalidateTag: jest.fn(),
     revalidatePath: jest.fn(),
+}));
+jest.mock('next/navigation', () => ({
+    redirect: jest.fn(),
 }));
 
 const mockMatch: Match & { tournament: { id: string; name: string } } = {
@@ -129,6 +133,7 @@ describe('match', () => {
         jest.mocked(data.updateMatchFirstPlayer).mockResolvedValue(null);
         await match.startMatch(formData);
         expect(data.updateMatchFirstPlayer).toHaveBeenCalledWith('m1', 'pA');
+        expect(redirect).toHaveBeenCalledWith('/tables/1');
     });
 
     test('getThrows', async () => {

@@ -15,6 +15,10 @@ jest.mock('next/cache', () => ({
   revalidateTag: jest.fn(),
 }))
 
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn(),
+}))
+
 describe('Dashboard caching - match invalidation', () => {
   const { revalidateTag } = jest.requireMock('next/cache') as Record<string, jest.Mock>
   
