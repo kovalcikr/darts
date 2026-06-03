@@ -3,7 +3,41 @@ import {
   calculateLegState,
   calculateThreeDartAverage,
   getAllowedCheckoutDarts,
+  IMPOSSIBLE_THREE_DART_SCORES,
 } from '../scoring'
+
+function computeImpossibleThreeDartScores(): number[] {
+  const range = (start: number, end: number) =>
+    Array.from({ length: end - start + 1 }, (_, i) => start + i)
+  const boardNumbers = range(1, 20)
+  const scoringDartScores = Array.from(
+    new Set([
+      0,
+      ...boardNumbers,
+      25,
+      ...boardNumbers.map((n: number) => n * 2),
+      ...boardNumbers.map((n: number) => n * 3),
+      50,
+    ])
+  ).sort((a, b) => a - b)
+
+  const possible = new Set<number>()
+  for (const a of scoringDartScores) {
+    for (const b of scoringDartScores) {
+      for (const c of scoringDartScores) {
+        possible.add(a + b + c)
+      }
+    }
+  }
+
+  const impossible: number[] = []
+  for (let s = 2; s <= 180; s++) {
+    if (!possible.has(s)) {
+      impossible.push(s)
+    }
+  }
+  return impossible
+}
 
 describe('scoring', () => {
   describe('calculateLegState', () => {
@@ -88,6 +122,43 @@ describe('scoring', () => {
     test('calculates average correctly', () => {
       expect(calculateThreeDartAverage(300, 10)).toBe(90)
       expect(calculateThreeDartAverage(321, 12)).toBe(80.25)
+    })
+  })
+
+  describe('IMPOSSIBLE_THREE_DART_SCORES', () => {
+    test('matches dynamically computed impossible scores', () => {
+      const computed = computeImpossibleThreeDartScores()
+      expect(IMPOSSIBLE_THREE_DART_SCORES).toEqual(computed)
+    })
+
+    test('all impossible scores are above 160 and at most 180', () => {
+      for (const score of IMPOSSIBLE_THREE_DART_SCORES) {
+        expect(score).toBeGreaterThan(160)
+        expect(score).toBeLessThanOrEqual(180)
+      }
+    })
+
+    test('180 (maximum) is not in the impossible list', () => {
+      expect(IMPOSSIBLE_THREE_DART_SCORES).not.toContain(180)
+    })
+
+    test('0 and 1 are not in the impossible list', () => {
+      expect(IMPOSSIBLE_THREE_DART_SCORES).not.toContain(0)
+      expect(IMPOSSIBLE_THREE_DART_SCORES).not.toContain(1)
+    })
+
+    test('every score in the list is truly impossible to throw with 3 darts', () => {
+      const computed = computeImpossibleThreeDartScores()
+      for (const score of IMPOSSIBLE_THREE_DART_SCORES) {
+        expect(computed).toContain(score)
+      }
+    })
+
+    test('no possible score is missing from the list', () => {
+      const computed = computeImpossibleThreeDartScores()
+      for (const score of computed) {
+        expect(IMPOSSIBLE_THREE_DART_SCORES).toContain(score)
+      }
     })
   })
 

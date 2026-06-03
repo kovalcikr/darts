@@ -9,7 +9,7 @@ import {
   getThrowHistoryAccentClassName,
   type PlayerAccent,
 } from "./scoreboard-display";
-import { CHECKOUT_DART_OPTIONS, getAllowedCheckoutDarts } from "@/app/lib/scoring";
+import { CHECKOUT_DART_OPTIONS, getAllowedCheckoutDarts, IMPOSSIBLE_THREE_DART_SCORES } from "@/app/lib/scoring";
 
 type ScoreBoardProps = {
    tournamentId: string
@@ -127,18 +127,18 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
      const nextScore = previousScore === "0" ? value : previousScore + value;
      const numericScore = Number(nextScore);
 
-     if (numericScore > 180) {
-       return;
-     }
-     if (numericScore === currentPlayerScore && getAllowedCheckoutDarts(currentPlayerScore).length === 0) {
-       return;
-     }
-     if (currentPlayerScore - numericScore == 1) {
-       return;
-     }
-     if (currentPlayerScore < numericScore) {
-       return;
-     }
+      if (numericScore > 180) {
+        return;
+      }
+      if (IMPOSSIBLE_THREE_DART_SCORES.includes(numericScore)) {
+        return;
+      }
+      if (currentPlayerScore - numericScore == 1) {
+        return;
+      }
+      if (currentPlayerScore < numericScore) {
+        return;
+      }
 
      setEnteredScore(nextScore);
    }
