@@ -29,7 +29,10 @@ export function getThrowHistoryAccentClassName(accent: PlayerAccent, undone: boo
     : PLAYER_ACCENT_CLASSES[accent].throwActive
 }
 
-export function buildScoreboardPlayerDisplayNames(playerNames: Record<string, string>) {
+export function buildScoreboardPlayerDisplayNames(
+  playerNames: Record<string, string>,
+  startingPlayerId: string,
+) {
   const entries = Object.entries(playerNames)
   const firstNameCounts = new Map<string, number>()
 
@@ -38,15 +41,20 @@ export function buildScoreboardPlayerDisplayNames(playerNames: Record<string, st
     firstNameCounts.set(firstName.toLocaleLowerCase(), (firstNameCounts.get(firstName.toLocaleLowerCase()) ?? 0) + 1)
   }
 
+  const otherName = (playerId: string) => {
+    const other = entries.find(([id]) => id !== playerId)
+    return other ? other[1] : null
+  }
+
   return Object.fromEntries(
-    entries.map(([playerId, name], index) => {
+    entries.map(([playerId, name]) => {
       const firstName = getFirstName(name)
       const hasDuplicateFirstName = (firstNameCounts.get(firstName.toLocaleLowerCase()) ?? 0) > 1
 
       return [
         playerId,
         hasDuplicateFirstName
-          ? getDisambiguatedName(name, firstName, index)
+          ? getDisambiguatedName(name, otherName(playerId)!, playerId === startingPlayerId)
           : firstName,
       ]
     }),
@@ -57,13 +65,40 @@ function getFirstName(name: string) {
   return name.trim().split(/\s+/)[0] || name
 }
 
-function getDisambiguatedName(name: string, firstName: string, index: number) {
-  const nameParts = name.trim().split(/\s+/)
-  const lastInitial = nameParts.find((_, partIndex) => partIndex > 0)?.charAt(0).toLocaleUpperCase()
+/**
+ * Returns the last word of a full name (the surname),
+ * or null if only a single name is given.
+ */
+function getSurname(name: string) {
+  const parts = name.trim().split(/\s+/)
+  return parts.length > 1 ? parts[parts.length - 1] : null
+}
 
-  if (lastInitial) {
+/**
+ * Produces a display name for scoreboard throw history when first names collide:
+ * - Different surname initials → "First I."
+ * - Same initial, different surnames → full surname (case-insensitive, diacritics matter)
+ * - Same surname or no surname → "First 1" for starting player, "First 2" for the other
+ */
+function getDisambiguatedName(name: string, otherPlayerName: string, isStartingPlayer: boolean) {
+  const firstName = getFirstName(name)
+  const surname = getSurname(name)
+
+  if (!surname) {
+    return `${firstName} ${isStartingPlayer ? 1 : 2}`
+  }
+
+  const otherSurname = getSurname(otherPlayerName)
+  const lastInitial = surname.charAt(0).toLocaleUpperCase()
+  const otherInitial = otherSurname?.charAt(0).toLocaleUpperCase()
+
+  if (lastInitial !== otherInitial) {
     return `${firstName} ${lastInitial}.`
   }
 
-  return `${firstName} ${index + 1}`
+  if (otherSurname && surname.toLowerCase() !== otherSurname.toLowerCase()) {
+    return surname
+  }
+
+  return `${firstName} ${isStartingPlayer ? 1 : 2}`
 }

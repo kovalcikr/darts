@@ -21,6 +21,7 @@ type ScoreBoardProps = {
    throwHistory: ScoreboardThrowHistoryItem[]
    playerNames: Record<string, string>
    playerAccents: Record<string, PlayerAccent>
+   startingPlayerId: string
   }
 
 const DEFAULT_CHECKOUT_DARTS = 3;
@@ -88,7 +89,7 @@ export function CheckoutDartsSelector({
    )
  }
 
-export default function ScoreBoard({ tournamentId, matchId, leg, player, currentPlayerScore, table, throwHistory, playerNames, playerAccents }: ScoreBoardProps) {
+export default function ScoreBoard({ tournamentId, matchId, leg, player, currentPlayerScore, table, throwHistory, playerNames, playerAccents, startingPlayerId }: ScoreBoardProps) {
     const items = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     const [currentScore, setCurrentScore] = useState("0");
     const [dartsCount, setDartsCount] = useState(false);
@@ -96,7 +97,7 @@ export default function ScoreBoard({ tournamentId, matchId, leg, player, current
     const [selectedCheckoutDarts, setSelectedCheckoutDarts] = useState<1 | 2 | 3 | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
    const currentScoreRef = useRef("0");
-   const playerDisplayNames = buildScoreboardPlayerDisplayNames(playerNames);
+   const playerDisplayNames = buildScoreboardPlayerDisplayNames(playerNames, startingPlayerId);
 
    useEffect(() => {
      setHydrated(true);

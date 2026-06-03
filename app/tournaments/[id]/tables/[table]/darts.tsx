@@ -65,24 +65,32 @@ export default async function Darts({ table, matchId, tournamentId }: { table: s
              (
                match.runTo == match.playerBlegs ?
                  <Winner player={match.playerBName} image={match.playerBImage} match={match} leg={fullMatch.currentLeg} table={table} />
-                 :
-                 <ScoreBoard
-                   tournamentId={fullMatch.tournament.id}
-                   matchId={match.id}
-                   leg={fullMatch.currentLeg}
-                   player={fullMatch.nextPlayer}
-                   currentPlayerScore={currentPlayerScore}
-                   table={table}
-                   throwHistory={fullMatch.throwHistory}
-                   playerNames={{
-                     [fullMatch.playerA.id]: fullMatch.playerA.name,
-                     [fullMatch.playerB.id]: fullMatch.playerB.name,
-                   }}
-                   playerAccents={{
-                     [playerLeft.id]: 'left',
-                     [playerRight.id]: 'right',
-                   }}
-                 />
+                  :
+                   (() => {
+                     if (!fullMatch.startingPlayerId) {
+                       throw new Error('ScoreBoard requires startingPlayerId')
+                     }
+                     return (
+                       <ScoreBoard
+                         tournamentId={fullMatch.tournament.id}
+                         matchId={match.id}
+                         leg={fullMatch.currentLeg}
+                         player={fullMatch.nextPlayer}
+                         currentPlayerScore={currentPlayerScore}
+                         table={table}
+                         throwHistory={fullMatch.throwHistory}
+                         playerNames={{
+                           [fullMatch.playerA.id]: fullMatch.playerA.name,
+                           [fullMatch.playerB.id]: fullMatch.playerB.name,
+                         }}
+                         playerAccents={{
+                           [playerLeft.id]: 'left',
+                           [playerRight.id]: 'right',
+                         }}
+                         startingPlayerId={fullMatch.startingPlayerId}
+                       />
+                     )
+                   })()
              )
            }
          </div>
