@@ -51,6 +51,9 @@ export POSTGRES_URL_NON_POOLING="$db_url"
 echo "Running Prisma migrations for Playwright E2E..."
 npm run migrate:test
 
+echo "Building Next.js app for E2E..."
+npm run dev:playwright:e2e:build
+
 echo "Running Playwright E2E tests..."
 npm run test:ui:e2e:runner
 

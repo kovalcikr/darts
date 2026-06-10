@@ -3,11 +3,18 @@ import { getFakeCueScoreSnapshot, resetFakeCueScoreStore, setFakeCueScoreDelay }
 import { NextRequest, NextResponse } from 'next/server'
 
 function isTestCueScoreApiEnabled() {
-  return (
-    process.env.NODE_ENV !== 'production' &&
-    process.env.ENABLE_TEST_API === 'true' &&
-    getCueScoreProviderName() === 'fake'
-  )
+  const fakeProvider = getCueScoreProviderName() === 'fake'
+  const explicitlyEnabled = process.env.ENABLE_TEST_API === 'true'
+
+  if (!fakeProvider || !explicitlyEnabled) {
+    return false
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.ENABLE_TEST_ROUTES_IN_PRODUCTION === 'true'
+  }
+
+  return true
 }
 
 function notFoundResponse() {

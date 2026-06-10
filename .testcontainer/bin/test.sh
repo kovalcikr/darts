@@ -14,6 +14,7 @@ export POSTGRES_PRISMA_URL="postgresql://${POSTGRES_USER:-testuser}:${POSTGRES_P
 export POSTGRES_URL_NON_POOLING="$POSTGRES_PRISMA_URL"
 export CUESCORE_PROVIDER="${CUESCORE_PROVIDER:-fake}"
 export ENABLE_TEST_API="${ENABLE_TEST_API:-true}"
+export ENABLE_TEST_ROUTES_IN_PRODUCTION="${ENABLE_TEST_ROUTES_IN_PRODUCTION:-true}"
 export NODE_OPTIONS="${NODE_OPTIONS:---experimental-vm-modules}"
 
 LOG_DIR="/var/test-logs"
@@ -164,7 +165,27 @@ run_ui() {
   return $rc
 }
 
+build_next_for_e2e() {
+  local build_dir="/app/.next"
+  if [ -f "$build_dir/BUILD_ID" ]; then
+    log "Reusing existing Next.js production build at $build_dir"
+    return 0
+  fi
+  log "Building Next.js app for E2E into $build_dir (cached in .next-test on host)..."
+  set +e
+  local output
+  output=$(NODE_ENV=production npx next build 2>&1)
+  local rc=$?
+  set -e
+  printf '%s\n' "$output" >> "$LOG_FILE"
+  if [ "$rc" -ne 0 ]; then
+    log "next build failed (exit $rc); see $LOG_FILE"
+    return "$rc"
+  fi
+}
+
 run_e2e() {
+  build_next_for_e2e
   log "Running Playwright E2E tests..."
   set +e
   local output
