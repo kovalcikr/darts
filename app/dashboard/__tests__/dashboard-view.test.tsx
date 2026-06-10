@@ -158,6 +158,62 @@ describe('DashboardView', () => {
     expect(playerAImg.compareDocumentPosition(playerBImg) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
+  test('truncates long player names and fits the throw list inside the dashboard card', async () => {
+    const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        match1: {
+          raceTo: 3,
+          scoreA: 1,
+          scoreB: 1,
+          playerA: { playerId: 'pA', name: 'AlexandertheGreatestDartsPlayerWithAnExtremelyLongUnbrokenName', image: '/a.png' },
+          playerB: { playerId: 'pB', name: 'Bernardine-Wollheim-Smythová III of Ceredigion', image: '/b.png' },
+        },
+        matchInfo1: {
+          score: [
+            { playerId: 'pA', _sum: { score: 60 }, _count: { score: 1 } },
+            { playerId: 'pB', _sum: { score: 180 }, _count: { score: 3 } },
+          ],
+          lastThrows: [
+            { playerId: 'pA', score: 100 },
+            { playerId: 'pA', score: 140 },
+            { playerId: 'pA', score: 180 },
+            { playerId: 'pB', score: 45 },
+            { playerId: 'pB', score: 60 },
+            { playerId: 'pB', score: 180 },
+          ],
+        },
+        firstPlayer1: 'pA',
+      }),
+    } as Response)
+    global.fetch = fetchMock
+
+    render(<DashboardView />)
+
+    await screen.findByText('AlexandertheGreatestDartsPlayerWithAnExtremelyLongUnbrokenName')
+
+    const tableCell = document.querySelector('[data-testid="dashboard-table-1"]') as HTMLElement
+    expect(tableCell).not.toBeNull()
+
+    const playerHeadings = Array.from(tableCell.querySelectorAll('h2')).filter(
+      (h) => h.textContent?.includes('AlexandertheGreatest') || h.textContent?.includes('Bernardine'),
+    )
+    expect(playerHeadings.length).toBe(2)
+    playerHeadings.forEach((heading) => {
+      const headingEl = heading as HTMLElement
+      expect(headingEl.className).toContain('min-w-0')
+      expect(headingEl.className).toContain('overflow-hidden')
+      const inner = headingEl.querySelector('span')
+      expect(inner).not.toBeNull()
+      expect((inner as HTMLElement).className).toContain('truncate')
+    })
+
+    const throwContainers = Array.from(tableCell.querySelectorAll('p'))
+    const throwList = throwContainers.find((p) => p.textContent?.match(/100.*140.*180/) || p.textContent?.match(/45.*60.*180/))
+    expect(throwList).toBeDefined()
+    expect((throwList as HTMLElement).className).toContain('truncate')
+  })
+
   test('puts playerB on the left when firstPlayer is playerB (matches scoreboard swap)', async () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
