@@ -110,13 +110,12 @@ run_unit() {
   set +e
   local output
   if [ -n "$FILTER" ]; then
-    output=$(npx jest --silent --testPathIgnorePatterns='/node_modules/|/__integration_tests__/|/tests/ui/|/tests/e2e/|/playwright-report/|/test-results/' -t "$FILTER" 2>&1)
+    output=$(npx jest --silent --testPathIgnorePatterns='/node_modules/|/__integration_tests__/|/tests/ui/|/tests/e2e/|/playwright-report/|/test-results/' -t "$FILTER" 2>&1 | tee -a "$LOG_FILE")
   else
-    output=$(npx jest --silent --testPathIgnorePatterns='/node_modules/|/__integration_tests__/|/tests/ui/|/tests/e2e/|/playwright-report/|/test-results/' 2>&1)
+    output=$(npx jest --silent --testPathIgnorePatterns='/node_modules/|/__integration_tests__/|/tests/ui/|/tests/e2e/|/playwright-report/|/test-results/' 2>&1 | tee -a "$LOG_FILE")
   fi
   local rc=$?
   set -e
-  printf '%s\n' "$output" >> "$LOG_FILE"
   local summary
   summary=$(printf '%s\n' "$output" | extract_jest_summary)
   print_summary_or_tail unit "$rc" "unit tests: ${summary:-no summary}"
@@ -130,14 +129,13 @@ run_integration() {
   set +e
   local output
   if [ -n "$FILTER" ]; then
-    output=$(JEST_ENV=integration npx jest --runInBand --silent -t "$FILTER" 2>&1)
+    output=$(JEST_ENV=integration npx jest --runInBand --silent -t "$FILTER" 2>&1 | tee -a "$LOG_FILE")
   else
-    output=$(JEST_ENV=integration npx jest --runInBand --silent 2>&1)
+    output=$(JEST_ENV=integration npx jest --runInBand --silent 2>&1 | tee -a "$LOG_FILE")
   fi
   local rc=$?
   set -e
   export NODE_OPTIONS="$prev"
-  printf '%s\n' "$output" >> "$LOG_FILE"
   local summary
   summary=$(printf '%s\n' "$output" | extract_jest_summary)
   print_summary_or_tail integration "$rc" "integration tests: ${summary:-no summary}"
@@ -149,13 +147,12 @@ run_ui() {
   set +e
   local output
   if [ -n "$FILTER" ]; then
-    output=$(npx playwright test --reporter=line --output=/var/test-logs/ui-output -g "$FILTER" tests/ui 2>&1)
+    output=$(npx playwright test --reporter=line --output=/var/test-logs/ui-output -g "$FILTER" tests/ui 2>&1 | tee -a "$LOG_FILE")
   else
-    output=$(npx playwright test --reporter=line --output=/var/test-logs/ui-output tests/ui 2>&1)
+    output=$(npx playwright test --reporter=line --output=/var/test-logs/ui-output tests/ui 2>&1 | tee -a "$LOG_FILE")
   fi
   local rc=$?
   set -e
-  printf '%s\n' "$output" >> "$LOG_FILE"
   if printf '%s\n' "$output" | strip_ansi_carriage | grep -qE '^\s*[0-9]+ flaky'; then
     rc=1
   fi
@@ -174,10 +171,9 @@ build_next_for_e2e() {
   log "Building Next.js app for E2E into $build_dir (cached in .next-test on host)..."
   set +e
   local output
-  output=$(NODE_ENV=production npx next build 2>&1)
+  output=$(NODE_ENV=production npx next build 2>&1 | tee -a "$LOG_FILE")
   local rc=$?
   set -e
-  printf '%s\n' "$output" >> "$LOG_FILE"
   if [ "$rc" -ne 0 ]; then
     log "next build failed (exit $rc); see $LOG_FILE"
     return "$rc"
@@ -190,13 +186,12 @@ run_e2e() {
   set +e
   local output
   if [ -n "$FILTER" ]; then
-    output=$(npx playwright test --config=playwright.e2e.config.ts --reporter=line --output=/var/test-logs/e2e-output -g "$FILTER" 2>&1)
+    output=$(npx playwright test --config=playwright.e2e.config.ts --reporter=line --output=/var/test-logs/e2e-output -g "$FILTER" 2>&1 | tee -a "$LOG_FILE")
   else
-    output=$(npx playwright test --config=playwright.e2e.config.ts --reporter=line --output=/var/test-logs/e2e-output 2>&1)
+    output=$(npx playwright test --config=playwright.e2e.config.ts --reporter=line --output=/var/test-logs/e2e-output 2>&1 | tee -a "$LOG_FILE")
   fi
   local rc=$?
   set -e
-  printf '%s\n' "$output" >> "$LOG_FILE"
   if printf '%s\n' "$output" | strip_ansi_carriage | grep -qE '^\s*[0-9]+ flaky'; then
     rc=1
   fi
