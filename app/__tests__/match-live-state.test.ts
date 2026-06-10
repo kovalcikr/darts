@@ -85,6 +85,79 @@ describe('match live state projection', () => {
     });
   });
 
+  test('startingPlayerId reflects the current LEG starter, not the match firstPlayer', async () => {
+    const prisma = prismaMock as any;
+    prisma.match.findUnique.mockResolvedValue({
+      id: 'm1',
+      tournamentId: 't1',
+      playerAId: 'pA',
+      playerBId: 'pB',
+      playerALegs: 1,
+      playerBlegs: 0,
+      firstPlayer: 'pA',
+    });
+    prisma.playerThrow.groupBy
+      .mockResolvedValueOnce([
+        { playerId: 'pA', _sum: { score: 501, darts: 9 } },
+      ])
+      .mockResolvedValueOnce([]);
+    prisma.playerThrow.findMany.mockResolvedValue([]);
+    prisma.matchLiveState.upsert.mockResolvedValue({ matchId: 'm1' });
+
+    const state = await refreshMatchLiveState('m1', '11');
+
+    expect(state).not.toBeNull();
+    expect(state!.leg).toBe(2);
+    expect(state!.startingPlayerId).toBe('pB');
+  });
+
+  test('startingPlayerId alternates back to the match firstPlayer on odd legs', async () => {
+    const prisma = prismaMock as any;
+    prisma.match.findUnique.mockResolvedValue({
+      id: 'm1',
+      tournamentId: 't1',
+      playerAId: 'pA',
+      playerBId: 'pB',
+      playerALegs: 1,
+      playerBlegs: 1,
+      firstPlayer: 'pA',
+    });
+    prisma.playerThrow.groupBy
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    prisma.playerThrow.findMany.mockResolvedValue([]);
+    prisma.matchLiveState.upsert.mockResolvedValue({ matchId: 'm1' });
+
+    const state = await refreshMatchLiveState('m1', '11');
+
+    expect(state).not.toBeNull();
+    expect(state!.leg).toBe(3);
+    expect(state!.startingPlayerId).toBe('pA');
+  });
+
+  test('startingPlayerId is null when firstPlayer is not set', async () => {
+    const prisma = prismaMock as any;
+    prisma.match.findUnique.mockResolvedValue({
+      id: 'm1',
+      tournamentId: 't1',
+      playerAId: 'pA',
+      playerBId: 'pB',
+      playerALegs: 0,
+      playerBlegs: 0,
+      firstPlayer: null,
+    });
+    prisma.playerThrow.groupBy
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    prisma.playerThrow.findMany.mockResolvedValue([]);
+    prisma.matchLiveState.upsert.mockResolvedValue({ matchId: 'm1' });
+
+    const state = await refreshMatchLiveState('m1', '11');
+
+    expect(state).not.toBeNull();
+    expect(state!.startingPlayerId).toBeNull();
+  });
+
   test('returns live states for the requested matches only', async () => {
     const prisma = prismaMock as any;
     prisma.matchLiveState.findMany.mockResolvedValue([{ matchId: 'm1' }]);

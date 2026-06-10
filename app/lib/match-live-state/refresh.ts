@@ -3,6 +3,7 @@
 import prisma from '@/app/lib/db'
 import type { Prisma } from '@/prisma/client'
 import { STARTING_SCORE } from '@/app/lib/scoring'
+import { getLegStarter } from '@/app/lib/leg-turn'
 import type { MatchLiveState } from './model'
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
@@ -56,7 +57,12 @@ export async function refreshMatchLiveState(
     const playerBLegTotals = findLegGroup(legTotals, match.playerBId)
 
     const throwCount = (playerALegTotals?._count?.id ?? 0) + (playerBLegTotals?._count?.id ?? 0)
-    const startingPlayerId = match.firstPlayer
+    const startingPlayerId = getLegStarter({
+        leg,
+        firstPlayer: match.firstPlayer,
+        playerAId: match.playerAId,
+        playerBId: match.playerBId,
+    })
 
     const getNextActivePlayer = () => {
         if (!match.firstPlayer) return null
