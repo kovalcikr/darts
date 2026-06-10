@@ -195,7 +195,7 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
 
 }) {
     return (
-        <div className={`flex flex-col items-center space-y-2 flex-1 p-1 md:p-2 rounded-lg ${active ? "bg-sky-900/50 ring-1 ring-sky-500" : ""}`}>
+        <div className={`flex flex-col items-center space-y-2 flex-1 min-w-0 p-1 md:p-2 rounded-lg ${active ? "bg-sky-900/50 ring-1 ring-sky-500" : ""}`}>
             <img
                 src={photo}
                 alt={`Player ${playerName} - ${playerId}`}
@@ -205,12 +205,12 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
             />
             <h2
                 aria-label={startedLeg ? `${playerName} started this leg` : playerName}
-                className="px-1 text-center text-sm font-bold text-white md:text-xl"
+                className="w-full min-w-0 max-w-full overflow-hidden px-1 text-center text-sm font-bold text-white md:text-xl"
                 title={startedLeg ? `${playerName} started this leg` : playerName}
             >
-                <span className="truncate">{playerName}</span>
+                <span className="block truncate">{playerName}</span>
             </h2>
-            <div className="text-center">
+            <div className="text-center w-full min-w-0">
                 <p
                     aria-label={startedLeg ? `${playerName} started this leg. Legs: ${legsWon}` : undefined}
                     className="flex items-center justify-center gap-1 text-sm md:text-xl text-gray-400"
@@ -221,9 +221,9 @@ function Player({ playerId, playerName, photo, active, legsWon, score, lastThrow
                 </p>
                 <p className="text-sm md:text-xl text-gray-400">Score: <span className="font-semibold text-white text-md md:text-2xl">{score}</span></p>
             </div>
-            <div className="text-center">
+            <div className="text-center w-full min-w-0">
                 <p className="text-xs md:text-lg font-semibold text-gray-400">Throws:</p>
-                <p className="text-xs md:text-lg text-gray-300">
+                <p className="truncate text-xs md:text-lg text-gray-300" title={lastThrows?.join(', ')}>
                     {lastThrows?.map((throwInfo, index) => (
                         <span key={index} className={index == 0 ? "text-sm md:text-xl font-bold text-white" : ""}>{index != 0 && ", "}{throwInfo}</span>
                     ))}
