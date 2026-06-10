@@ -19,6 +19,8 @@
 # next.js
 /.next/
 /.next-dev/
+/.next-test/*
+!/.next-test/.gitkeep
 /out/
 
 # production

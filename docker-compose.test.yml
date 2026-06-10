@@ -27,12 +27,14 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-testpassword}
       - POSTGRES_PRISMA_URL=postgresql://${POSTGRES_USER:-testuser}:${POSTGRES_PASSWORD:-testpassword}@postgres:5432/darts-test
       - POSTGRES_URL_NON_POOLING=postgresql://${POSTGRES_USER:-testuser}:${POSTGRES_PASSWORD:-testpassword}@postgres:5432/darts-test
+      - ENABLE_TEST_ROUTES_IN_PRODUCTION=true
     volumes:
-      - .:/app:ro
+      - .:/app
       - ./.testcontainer/logs:/var/test-logs
       - node_modules:/app/node_modules
       - prisma-generated:/app/prisma/generated
       - next-cache:/app/.next-dev
+      - ./.next-test:/app/.next
     working_dir: /app
     command: ["all"]
 

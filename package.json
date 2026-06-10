@@ -10,6 +10,8 @@
     "dev": "npx dotenv -e .env.development.local -- next dev --webpack",
     "dev:playwright": "CUESCORE_PROVIDER=fake ENABLE_TEST_API=true npx dotenv -e .env.test -- next dev --port 3001 --webpack",
     "dev:playwright:e2e": "CUESCORE_PROVIDER=fake ENABLE_TEST_API=true npx dotenv -e .env.test -- next dev --hostname 127.0.0.1 --port 3002 --webpack",
+    "dev:playwright:e2e:build": "NODE_ENV=production npx next build",
+    "dev:playwright:e2e:start": "CUESCORE_PROVIDER=fake ENABLE_TEST_API=true NODE_ENV=production npx dotenv -e .env.test -- next start --hostname 127.0.0.1 --port 3002",
     "build": "NODE_ENV=production npm run prisma:generate && NODE_ENV=production next build --webpack",
     "start": "next start",
     "lint": "eslint .",

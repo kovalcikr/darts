@@ -31,7 +31,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev:playwright:e2e',
+    command: 'npm run dev:playwright:e2e:start',
     url: `${baseURL}/tournaments`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
