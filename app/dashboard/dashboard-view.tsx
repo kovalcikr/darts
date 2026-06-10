@@ -116,6 +116,7 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firs
             playerBId,
           })
         : null);
+    const firstPlayerIsA = firstPlayer != null && playerAId != null && firstPlayer == playerAId;
     return (
         <div className="relative bg-gray-800 p-2 md:p-4 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col items-center justify-center space-y-2 md:space-y-4" data-testid={`dashboard-table-${tableId}`}>
             <h1 className="absolute top-2 left-2 text-xs md:text-sm font-bold text-gray-500">#{tableId}</h1>
@@ -123,13 +124,33 @@ function TableDashboard({ tableId, match, matchInfo, lastThrows, liveState, firs
                 <div className="w-full flex flex-col sm:flex-row justify-around items-center sm:space-y-4 sm:space-x-2 md:space-x-4">
                     {match && (<>
                         {match.raceTo != match.scoreA && match.raceTo != match.scoreB && (<>
-                            <Player playerId="1" photo={match.playerA.image} playerName={match.playerA.name} legsWon={match.scoreA} score={playerAScore} lastThrows={currentLastThrows?.filter(t => t.playerId == playerAId)?.map(t => t.score)} average={playerAAvgDisplay} active={nextP == playerAId} startedLeg={startingPlayerId == playerAId} />
+                            <Player
+                              playerId="1"
+                              photo={firstPlayerIsA ? match.playerA.image : match.playerB.image}
+                              playerName={firstPlayerIsA ? match.playerA.name : match.playerB.name}
+                              legsWon={firstPlayerIsA ? match.scoreA : match.scoreB}
+                              score={firstPlayerIsA ? playerAScore : playerBScore}
+                              lastThrows={currentLastThrows?.filter(t => t.playerId == (firstPlayerIsA ? playerAId : playerBId))?.map(t => t.score)}
+                              average={firstPlayerIsA ? playerAAvgDisplay : playerBAvgDisplay}
+                              active={nextP == (firstPlayerIsA ? playerAId : playerBId)}
+                              startedLeg={startingPlayerId == (firstPlayerIsA ? playerAId : playerBId)}
+                            />
 
                             <div className="text-center flex-none my-2 sm:my-0">
                                 <h2 className="text-lg md:text-2xl font-bold text-sky-400">VS</h2>
                             </div>
 
-                            <Player playerId="2" photo={match.playerB.image} playerName={match.playerB.name} legsWon={match.scoreB} score={playerBScore} lastThrows={currentLastThrows?.filter(t => t.playerId == playerBId)?.map(t => t.score)} average={playerBAvgDisplay} active={nextP == playerBId} startedLeg={startingPlayerId == playerBId} />
+                            <Player
+                              playerId="2"
+                              photo={firstPlayerIsA ? match.playerB.image : match.playerA.image}
+                              playerName={firstPlayerIsA ? match.playerB.name : match.playerA.name}
+                              legsWon={firstPlayerIsA ? match.scoreB : match.scoreA}
+                              score={firstPlayerIsA ? playerBScore : playerAScore}
+                              lastThrows={currentLastThrows?.filter(t => t.playerId == (firstPlayerIsA ? playerBId : playerAId))?.map(t => t.score)}
+                              average={firstPlayerIsA ? playerBAvgDisplay : playerAAvgDisplay}
+                              active={nextP == (firstPlayerIsA ? playerBId : playerAId)}
+                              startedLeg={startingPlayerId == (firstPlayerIsA ? playerBId : playerAId)}
+                            />
                         </>)
                         }
                         {match.raceTo == match.scoreA && (

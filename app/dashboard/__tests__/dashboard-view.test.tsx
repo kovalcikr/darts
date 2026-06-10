@@ -132,4 +132,54 @@ describe('DashboardView', () => {
     expect(screen.queryByText(/Started leg:/)).toBeNull()
     expect(screen.queryByTestId('dashboard-leg-starter-icon')).toBeNull()
   })
+
+  test('keeps playerA on the left when firstPlayer is playerA', async () => {
+    const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        match1: {
+          raceTo: 3,
+          scoreA: 0,
+          scoreB: 0,
+          playerA: { playerId: 'pA', name: 'Player A', image: '/a.png' },
+          playerB: { playerId: 'pB', name: 'Player B', image: '/b.png' },
+        },
+        matchInfo1: { score: [], lastThrows: [] },
+        firstPlayer1: 'pA',
+      }),
+    } as Response)
+    global.fetch = fetchMock
+
+    render(<DashboardView />)
+
+    const playerAImg = await screen.findByAltText('Player Player A - 1')
+    const playerBImg = screen.getByAltText('Player Player B - 2')
+
+    expect(playerAImg.compareDocumentPosition(playerBImg) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  test('puts playerB on the left when firstPlayer is playerB (matches scoreboard swap)', async () => {
+    const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        match1: {
+          raceTo: 3,
+          scoreA: 0,
+          scoreB: 0,
+          playerA: { playerId: 'pA', name: 'Player A', image: '/a.png' },
+          playerB: { playerId: 'pB', name: 'Player B', image: '/b.png' },
+        },
+        matchInfo1: { score: [], lastThrows: [] },
+        firstPlayer1: 'pB',
+      }),
+    } as Response)
+    global.fetch = fetchMock
+
+    render(<DashboardView />)
+
+    const playerAImg = await screen.findByAltText('Player Player A - 2')
+    const playerBImg = screen.getByAltText('Player Player B - 1')
+
+    expect(playerBImg.compareDocumentPosition(playerAImg) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })
