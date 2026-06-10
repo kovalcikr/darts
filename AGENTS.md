@@ -50,6 +50,20 @@
 - Integration tests require experimental-vm-modules flag
 - ESLint ignores `prisma/generated/**` - don't edit generated files
 
+## Agent skills
+
+### Issue tracker
+
+Issues live as markdown files under `.scratch/` in this repo. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Status tracked via `Status:` line near the top of each issue file; defaults to the five canonical roles. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
 ## Functional Scope
 
 **Darts Tournament Management System** for Relax Darts Cup:
