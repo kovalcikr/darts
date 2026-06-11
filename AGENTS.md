@@ -7,7 +7,7 @@
 
 ## Development Commands
 
-- **Dev server**: `npm run dev` (requires `.env.development.local` with POSTGRES_PRISMA_URL)
+- **Dev server**: `npm run dev` (requires `.env` with POSTGRES_PRISMA_URL; loads `.env.development.local` for overrides)
 - **Unit tests**: `npm test` (runs Jest with dotenv -e .env.test)
 - **Lint**: `npm run lint` (ESLint with Next.js recommended rules)
 - **Build**: `npm run build` (runs prisma:generate before Next.js build)
@@ -35,7 +35,8 @@
 
 ## Environment
 
-- `.env.development.local` required for dev
+- `.env` required for dev (shared with Docker Compose — auto-detected by `docker compose up -d`)
+- `.env.development.local` optional overrides (ADMIN_UI creds, etc.)
 - `.env.test` auto-created from `.env.example` if missing
 - `CUESCORE_PROVIDER=fake` enables local fake provider in development
 
