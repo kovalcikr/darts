@@ -1,7 +1,7 @@
 import { resolveChromiumExecutablePath } from './playwright.browser-path';
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3001';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://app:3000';
 const chromiumExecutablePath = resolveChromiumExecutablePath();
 
 export default defineConfig({
@@ -35,10 +35,4 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: 'npm run dev:playwright',
-    url: `${baseURL}/tournaments`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
 });
