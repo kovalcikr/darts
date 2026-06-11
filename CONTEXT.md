@@ -50,38 +50,66 @@ _Avoid_: API, source
 
 ## Test Environment
 
+**Test Stack**:
+The three-file Docker Compose stack used to run Playwright-driven tests
+(`ui` and `e2e`) against the production build. `docker-compose.yml`
+provides the shared Postgres, `docker-compose.standalone.yaml` provides
+the production App image, and `docker-compose.test.yml` overrides the App
+with test-mode env vars and adds the Test Runner. All three files are
+composed together; services share one network and the runner connects to
+the app over `app:3000`.
+_Avoid_: Test compose, test setup
+
 **Test Runner**:
-The single Docker image and entrypoint script that executes all four test
-families (unit, integration, ui, e2e) for this project. Invoked via
-`docker compose -f docker-compose.test.yml run --rm test <group> [filter]`.
-Sources are bind-mounted read-only at `/app`; writable subpaths are volumes.
+A single Docker image and entrypoint script that runs only the two
+Playwright test families (`ui` and `e2e`). Invoked via
+`docker compose -f docker-compose.yml -f docker-compose.standalone.yaml -f
+docker-compose.test.yml run --rm test <group> [filter]`. Source is
+bind-mounted at `/app` so the runner can pick up test files and
+Playwright configs from the host. The image is self-contained:
+it pins `@playwright/test@1.59.1` and pre-installs the matching
+Chromium browser. The host's own `node_modules` (from the bind-mount)
+provides the Playwright library at runtime; the image's browsers at
+`/root/.cache/ms-playwright/` match because the version is pinned. The runner never generates the Prisma client, talks to
+Postgres, or runs Jest — it only runs Playwright against the App.
 _Avoid_: Test container, docker-test
 
+**App**:
+The production Docker image built from `Dockerfile`, run as a standalone
+container and addressed on the Compose network as `app:3000`. It runs
+`prisma db push` then `node server.js` via its entrypoint. UI and E2E
+tests target this image directly so regressions in the Dockerfile,
+entrypoint, runtime env, or production build are caught end-to-end.
+_Avoid_: Standalone container, prod image
+
 **Test Group**:
-One of `unit | integration | ui | e2e | all`, selected as the first positional
-argument to the test runner. Each group maps to one underlying test tool
-(Jest unit, Jest integration with `JEST_ENV=integration`, Playwright UI,
-Playwright E2E).
+One of `ui | e2e | all`, selected as the first positional argument to the
+test runner. `ui` runs the Playwright UI suite; `e2e` runs the Playwright
+end-to-end suite; `all` runs both in sequence. Unit and integration
+tests are run natively on the host and are not part of the runner.
 _Avoid_: Suite, test type
 
 **Test Filter**:
-An optional second positional argument to the test runner. Forwarded to the
-underlying tool as a test-name pattern: `-t` for Jest, `-g` for Playwright.
-Applies to every group when used with `all`.
+An optional second positional argument to the test runner. Forwarded to
+Playwright as `-g` (test-name pattern). Applies to every group when used
+with `all`.
 _Avoid_: Grep, pattern (in this context)
 
 **Test Log**:
-The full output of a test run, written to `.testcontainer/logs/last.log` on
-the host (and `/var/test-logs/last.log` inside the container). Always
+The full output of a test run, written to `.testcontainer/logs/last.log`
+on the host (and `/var/test-logs/last.log` inside the runner). Always
 preserved across runs. On success the entrypoint prints only a one-line
-summary; on failure it prints the last 20 lines and a hint to read more from
-the log. The agent can `tail -n N .testcontainer/logs/last.log` after a
-failed run to see additional context without rerunning tests.
+summary; on failure it prints the last 20 lines and a hint to read more
+from the log. The agent can `tail -n N .testcontainer/logs/last.log`
+after a failed run to see additional context without rerunning tests.
 _Avoid_: Output, stdout (in this context)
 
-**Sibling Postgres**:
-The Postgres 15 container that the test runner talks to over a user-defined
-Docker network, addressed as `postgres:5432`. Started by
-`docker-compose.test.yml`, not the host. Distinct from the host's
-`docker-compose.yml` Postgres, which is for ad-hoc local development.
-_Avoid_: Test database, postgres service
+**Shared Postgres**:
+The Postgres 15 container at `docker-compose.yml`, addressed as
+`postgres:5432` on the Compose network. The only Postgres in the test
+stack: the App connects to it for queries and runs `prisma db push`
+on startup to apply the schema; the host's dev server connects to it
+when `docker compose up -d` is run. In the test stack, the App waits
+for `service_healthy` before starting; the test runner waits for
+`http://app:3000/tournaments` to respond before launching Playwright.
+_Avoid_: Test database, sibling Postgres, dev Postgres

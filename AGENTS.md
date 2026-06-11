@@ -15,11 +15,13 @@
 
 ## Test Commands
 
-- **Playwright UI tests**: `npm run test:ui` (starts dev:playwright automatically)
-- **Playwright E2E tests**: `npm run test:ui:e2e` (runs `run-playwright-e2e-tests.sh`)
-- **Integration tests**: `npm run test:integration` (requires PostgreSQL, uses `NODE_OPTIONS=--experimental-vm-modules`)
-- **Single unit test**: `npx dotenv -e .env.test -- npx jest -t "test name"`
-- **Integration tests with script**: `sh run-integration-tests.sh` (starts Docker PostgreSQL)
+- **Playwright tests (UI + E2E)**: run only from inside the test container against the standalone App image. The full three-file compose invocation is:
+  ```bash
+  docker compose -f docker-compose.yml -f docker-compose.standalone.yaml -f docker-compose.test.yml run --rm test <ui|e2e|all> [filter]
+  ```
+  The `test:standalone` npm script is a shorthand for the same thing. The container builds the App from `Dockerfile`, waits for `http://app:3000/tournaments` to respond, and runs Playwright. Log: `.testcontainer/logs/last.log`.
+- **Unit tests**: `npm test` (runs Jest with dotenv -e .env.test). Native on the host.
+- **Integration tests**: `npm run test:integration` (requires PostgreSQL, uses `NODE_OPTIONS=--experimental-vm-modules`). Native on the host.
 
 ## Database
 
