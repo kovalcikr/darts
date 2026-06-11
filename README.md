@@ -153,3 +153,61 @@ Secured administrative interface with login:
 - **CueScore integration**: Matches fetched from external CueScore platform
 - **Slovak language**: UI text in Slovak (e.g., "Celkové štatistiky" = "Overall statistics")
 - **Responsive design**: Works on desktop, tablet, and mobile devices
+
+---
+
+## Docker Deployment
+
+A multi-stage `Dockerfile` is provided for production deployment. The image uses `node:24-slim`, Next.js standalone output, and includes Prisma schema push at startup.
+
+### Quick Start
+
+```bash
+# Start PostgreSQL + app together
+npm run standalone
+```
+
+This runs `docker compose -f docker-compose.yml -f docker-compose.standalone.yaml up --build`, which starts PostgreSQL and the built app on port 3000.
+
+### File Breakdown
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Multi-stage build (deps → builder → runner) |
+| `docker-compose.yml` | PostgreSQL service only (for dev) |
+| `docker-compose.standalone.yaml` | App service, merges with `docker-compose.yml` |
+| `entrypoint.sh` | Runs `prisma db push` then starts Next.js |
+| `.dockerignore` | Excludes secrets, artifacts from build context |
+
+### Environment Variables
+
+Supply via `.env` file (auto-read by Docker Compose) or `-e` flags:
+
+```env
+POSTGRES_USER=testuser
+POSTGRES_PASSWORD=testpassword
+POSTGRES_PRISMA_URL=postgresql://user:pass@host:5432/db
+POSTGRES_URL_NON_POOLING=postgresql://user:pass@host:5432/db
+```
+
+Optional: `CUESCORE_USERNAME`, `CUESCORE_PASSWORD`, `ADMIN_UI_USERNAME`, `ADMIN_UI_PASSWORD`.
+
+### Standalone Usage (without Docker Compose)
+
+```bash
+# Build image
+docker build -t darts-app .
+
+# Run with external PostgreSQL
+docker run -p 3000:3000 \
+  -e POSTGRES_PRISMA_URL=postgresql://user:pass@host:5432/darts \
+  -e POSTGRES_URL_NON_POOLING=postgresql://user:pass@host:5432/darts \
+  darts-app
+```
+
+### Architecture
+
+- **Base image**: `node:24.13.0-slim` with OpenSSL (required by Prisma)
+- **Build**: `output: 'standalone'` for minimal production image
+- **User**: Runs as non-root `nextjs` user
+- **Database**: External PostgreSQL — schema synced via `prisma db push` on container startup
