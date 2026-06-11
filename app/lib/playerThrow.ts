@@ -26,7 +26,7 @@ import { calculateThreeDartAverage, getAllowedCheckoutDarts } from "./scoring";
 const STARTING_SCORE = 501;
 
 async function revalidateScoreboard(table) {
-    revalidatePath('/tables/[table]', 'page');
+    revalidatePath(`/tables/${encodeURIComponent(String(table))}`, 'page');
     const cacheTag = `match${table}`
     console.log('revalidating tag', cacheTag)
     revalidateTag(cacheTag, 'max')

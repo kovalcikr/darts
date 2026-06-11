@@ -1,18 +1,21 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
-import { Client } from 'pg'
+import crypto from 'crypto'
 
-const ACTIVE_TOURNAMENT_SETTING_KEY = 'activeTournamentId'
+async function ensureAdminSession(page: Page) {
+  const sessionToken = crypto.createHash('sha256').update('admin\0admin').digest('hex')
+  return page.context().addCookies([
+    { name: 'darts-admin-session', value: sessionToken, domain: 'app', path: '/' },
+  ])
+}
 
-async function clearActiveTournamentSetting() {
-  const connectionString = process.env.POSTGRES_PRISMA_URL
+async function clearActiveTournamentSetting(page: Page) {
+  await ensureAdminSession(page)
+  await page.goto('/admin')
 
-  const client = new Client({ connectionString })
-
-  await client.connect()
-  try {
-    await client.query('delete from "AppSetting" where key = $1', [ACTIVE_TOURNAMENT_SETTING_KEY])
-  } finally {
-    await client.end()
+  const clearButton = page.getByRole('button', { name: 'Clear Active' })
+  if (await clearButton.isVisible()) {
+    await clearButton.click()
+    await page.waitForURL('/admin')
   }
 }
 
@@ -40,7 +43,7 @@ test('dashboard cache revalidation shows new match after startMatch', async ({
 }, testInfo) => {
   const tournamentId = `cache-revalidate-${testInfo.parallelIndex}-${Date.now()}`
 
-  await clearActiveTournamentSetting()
+  await clearActiveTournamentSetting(page)
   await resetFakeCueScore(request, tournamentId)
 
   // Open tournament
@@ -88,7 +91,7 @@ test('dashboard cache revalidation shows updated throw after addThrowAction', as
 }, testInfo) => {
   const tournamentId = `cache-throw-${testInfo.parallelIndex}-${Date.now()}`
 
-  await clearActiveTournamentSetting()
+  await clearActiveTournamentSetting(page)
   await resetFakeCueScore(request, tournamentId)
 
   // Open tournament
@@ -140,7 +143,7 @@ test('dashboard cache revalidation shows restored state after undo', async ({
 }, testInfo) => {
   const tournamentId = `cache-undo-${testInfo.parallelIndex}-${Date.now()}`
 
-  await clearActiveTournamentSetting()
+  await clearActiveTournamentSetting(page)
   await resetFakeCueScore(request, tournamentId)
 
   // Open tournament
@@ -198,7 +201,7 @@ test('dashboard cache invalidation is isolated between tables', async ({
 }, testInfo) => {
   const tournamentId = `cache-multi-${testInfo.parallelIndex}-${Date.now()}`
 
-  await clearActiveTournamentSetting()
+  await clearActiveTournamentSetting(page)
   await resetFakeCueScore(request, tournamentId)
 
   // Open tournament
