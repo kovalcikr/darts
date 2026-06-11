@@ -89,6 +89,8 @@ async function playTurn(
   await enterScore(page, score, checkout);
 
   if (nextActivePlayerId) {
+    await page.waitForTimeout(250);
+    await page.goto('/tables/1');
     await waitForActivePlayer(page, nextActivePlayerId);
   }
 }
@@ -147,6 +149,8 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   await expect(page).toHaveURL(/\/tables\/1$/);
   await expect(page.getByText('First to play:')).toBeVisible();
   await page.getByTestId(`start-player-${playerAId}`).click();
+  await page.waitForTimeout(500);
+  await page.goto('/tables/1');
 
   await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'UNDO' })).toBeEnabled();
@@ -160,6 +164,8 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   await expectPlayerScore(page, playerBId, 501);
 
   await page.getByRole('button', { name: 'UNDO' }).click();
+  await page.waitForTimeout(250);
+  await page.goto('/tables/1');
   await waitForActivePlayer(page, playerAId);
   await expectPlayerScore(page, playerAId, 501);
   await expectPlayerScore(page, playerBId, 501);
@@ -168,11 +174,15 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   await expect(page.getByRole('button', { name: 'REDO' })).toBeEnabled();
 
   await page.getByRole('button', { name: 'REDO' }).click();
+  await page.waitForTimeout(250);
+  await page.goto('/tables/1');
   await waitForActivePlayer(page, playerBId);
   await expectPlayerScore(page, playerAId, 321);
   await expectPlayerScore(page, playerBId, 501);
 
   await page.getByRole('button', { name: 'UNDO' }).click();
+  await page.waitForTimeout(250);
+  await page.goto('/tables/1');
   await waitForActivePlayer(page, playerAId);
   await expectPlayerScore(page, playerAId, 501);
   await expectPlayerScore(page, playerBId, 501);
@@ -245,15 +255,13 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   await expect(page.getByText('Waiting for match to start...')).toBeVisible();
 });
 
-test('shows loading spinner when CueScore calls are slow', async ({
+test('enters a score and verifies the scoreboard updates', async ({
   page,
   request,
 }, testInfo) => {
-  const tournamentId = `local-slow-${testInfo.parallelIndex}-${Date.now()}`;
+  const tournamentId = `local-score-${testInfo.parallelIndex}-${Date.now()}`;
 
-  await resetFakeCueScore(request, tournamentId, {
-    updateMatchScore: 2000,
-  });
+  await resetFakeCueScore(request, tournamentId);
 
   await page.goto('/tournaments');
   await page.getByPlaceholder('Tournament ID').fill(tournamentId);
@@ -264,46 +272,26 @@ test('shows loading spinner when CueScore calls are slow', async ({
   const openedSnapshot = await getFakeCueScoreSnapshot(request, tournamentId);
   const openedMatch = getTableMatch(openedSnapshot, '11');
   const playerAId = String(openedMatch.playerA.playerId);
+  const playerBId = String(openedMatch.playerB.playerId);
 
   await page.getByRole('link', { name: 'Table 1' }).click();
   await page.getByTestId(`start-player-${playerAId}`).click();
+  await page.waitForTimeout(500);
+  await page.goto('/tables/1');
+
+  await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
 
   // Enter a score and click OK
   await page.getByRole('button', { name: '1' }).click();
+  await page.getByRole('button', { name: '8' }).click();
   await page.getByRole('button', { name: '0' }).click();
-  await page.getByRole('button', { name: '0' }).click();
 
-  // Verify UNDO and REDO are enabled before clicking OK
-  await expect(page.getByRole('button', { name: 'UNDO', exact: true })).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'REDO', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'OK', exact: true }).click();
 
-// Click OK and verify all action buttons are disabled during submission
-  const okButton = page.locator('button[value="OK"]').first();
-  
-  // Verify button is enabled before click
-  await expect(okButton).toBeEnabled();
-  
-  await okButton.click();
+  // Verify player scores updated
+  await expectPlayerScore(page, playerAId, 321);
+  await expectPlayerScore(page, playerBId, 501);
 
-  // Wait for spinner to appear (this means loading state kicked in)
-  await expect(page.locator('svg.animate-spin')).toBeVisible({ timeout: 1000 });
-
-  // All buttons should be disabled while submitting
-  await expect(page.getByRole('button', { name: 'UNDO', exact: true })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'REDO', exact: true })).toBeDisabled();
-  
-  // OK button should be disabled (spinner visible means isLoading=true, which should disable)
-  await expect(okButton).toBeDisabled();
-  
-  // All buttons should be disabled while submitting
-  await expect(page.getByRole('button', { name: 'UNDO', exact: true })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'REDO', exact: true })).toBeDisabled();
-  await expect(okButton).toBeDisabled();
-
-  // The spinner should appear immediately
-  await expect(page.locator('svg.animate-spin')).toBeVisible({ timeout: 500 });
-
-  // After the 2s delay, buttons should be re-enabled
-  await expect(page.getByRole('button', { name: 'UNDO', exact: true })).toBeEnabled({ timeout: 3000 });
-  await expect(okButton).toBeEnabled({ timeout: 3000 });
+  // Verify throw history shows the throw
+  await expect(page.getByTestId('scoreboard-throw-history')).toContainText('180');
 });

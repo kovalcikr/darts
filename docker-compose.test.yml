@@ -4,6 +4,8 @@ services:
       CUESCORE_PROVIDER: fake
       ENABLE_TEST_API: "true"
       ENABLE_TEST_ROUTES_IN_PRODUCTION: "true"
+      ADMIN_UI_USERNAME: admin
+      ADMIN_UI_PASSWORD: admin
 
   test:
     build:

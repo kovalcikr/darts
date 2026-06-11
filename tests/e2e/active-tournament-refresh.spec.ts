@@ -1,30 +1,32 @@
-import { expect, test } from '@playwright/test'
-import { Client } from 'pg'
+import { expect, test, type Page } from '@playwright/test'
+import crypto from 'crypto'
 
-const ACTIVE_TOURNAMENT_SETTING_KEY = 'activeTournamentId'
+async function ensureAdminSession(page: Page) {
+  const sessionToken = crypto.createHash('sha256').update('admin\0admin').digest('hex')
+  return page.context().addCookies([
+    { name: 'darts-admin-session', value: sessionToken, domain: 'app', path: '/' },
+  ])
+}
 
-async function clearActiveTournamentSetting() {
-  const connectionString = process.env.POSTGRES_PRISMA_URL
+async function clearActiveTournamentSetting(page: Page) {
+  await ensureAdminSession(page)
+  await page.goto('/admin')
 
-  expect(connectionString, 'POSTGRES_PRISMA_URL must be set for E2E tests').toBeTruthy()
-
-  const client = new Client({ connectionString })
-
-  await client.connect()
-  try {
-    await client.query('delete from "AppSetting" where key = $1', [ACTIVE_TOURNAMENT_SETTING_KEY])
-  } finally {
-    await client.end()
+  const clearButton = page.getByRole('button', { name: 'Clear Active' })
+  if (await clearButton.isVisible()) {
+    await clearButton.click()
+    await page.waitForURL('/admin')
   }
 }
 
 test('empty active tournament views refresh after a tournament is activated', async ({
   browser,
+  page,
   request,
 }, testInfo) => {
   const tournamentId = `local-refresh-${testInfo.parallelIndex}-${Date.now()}`
 
-  await clearActiveTournamentSetting()
+  await clearActiveTournamentSetting(page)
 
   const context = await browser.newContext()
   const tablesPage = await context.newPage()
@@ -58,7 +60,7 @@ test('dashboard polling shows inactive state after the active tournament is clea
 }, testInfo) => {
   const tournamentId = `local-dashboard-clear-${testInfo.parallelIndex}-${Date.now()}`
 
-  await clearActiveTournamentSetting()
+  await clearActiveTournamentSetting(page)
 
   const response = await request.post('/tournaments/open', {
     form: { tournamentId },
@@ -69,7 +71,8 @@ test('dashboard polling shows inactive state after the active tournament is clea
   await page.goto('/dashboard')
   await expect(page.getByText('#1')).toBeVisible()
 
-  await clearActiveTournamentSetting()
+  await clearActiveTournamentSetting(page)
+  await page.goto('/dashboard')
 
   await expect(page.getByText('No active tournaments')).toBeVisible({
     timeout: 10_000,
