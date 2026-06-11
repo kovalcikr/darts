@@ -30,10 +30,7 @@
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules JEST_ENV=integration npx dotenv -e .env.test -- jest --runInBand",
     "test:integration:full": "sh ./run-integration-tests.sh",
     "migrate": "npx dotenv -e .env.development.local -- npx prisma db push && npm run prisma:generate",
-    "migrate:test": "npx dotenv -e .env.test -- npx prisma db push && npm run prisma:generate",
-    "backfill:tournaments": "tsx scripts/backfill-tournament-metadata.ts",
-    "delete:tournament": "tsx scripts/delete-tournament.ts",
-    "delete:tournament:dev": "npx dotenv -e .env.development.local -- npm run delete:tournament --"
+    "migrate:test": "npx dotenv -e .env.test -- npx prisma db push && npm run prisma:generate"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
@@ -69,7 +66,6 @@
     "prisma": "^7.8.0",
     "tailwindcss": "^4.2.4",
     "ts-jest": "^29.4.9",
-    "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0",
     "vercel": "^51.8.0"
