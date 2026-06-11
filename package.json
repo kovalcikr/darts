@@ -7,7 +7,7 @@
     "node": ">=22 <25"
   },
   "scripts": {
-    "dev": "npx dotenv -e .env.development.local -- next dev --webpack",
+    "dev": "docker compose up -d && npm run migrate && npx dotenv -e .env -e .env.development.local -- next dev --webpack",
     "dev:playwright": "CUESCORE_PROVIDER=fake ENABLE_TEST_API=true npx dotenv -e .env.test -- next dev --port 3001 --webpack",
     "dev:playwright:e2e": "CUESCORE_PROVIDER=fake ENABLE_TEST_API=true npx dotenv -e .env.test -- next dev --hostname 127.0.0.1 --port 3002 --webpack",
     "dev:playwright:e2e:build": "NODE_ENV=production npx next build",
@@ -16,11 +16,8 @@
     "start": "next start",
     "lint": "eslint .",
     "prisma:generate": "prisma generate",
-    "studio": "npx dotenv -e .env.development.local -- npx prisma studio",
-    "studio:test": "npx dotenv -e .env.test -- npx prisma studio",
     "pretest": "npm run prisma:generate",
     "test": "npx dotenv -e .env.test -- jest",
-    "test:watch": "npx dotenv -e .env.test -- jest --watch",
     "pretest:ui": "npm run migrate:test",
     "test:ui": "playwright test",
     "test:ui:headed": "playwright test --headed",
@@ -29,7 +26,7 @@
     "pretest:integration": "npm run migrate:test",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules JEST_ENV=integration npx dotenv -e .env.test -- jest --runInBand",
     "test:integration:full": "sh ./run-integration-tests.sh",
-    "migrate": "npx dotenv -e .env.development.local -- npx prisma db push && npm run prisma:generate",
+    "migrate": "npx dotenv -e .env -e .env.development.local -- npx prisma db push && npm run prisma:generate",
     "migrate:test": "npx dotenv -e .env.test -- npx prisma db push && npm run prisma:generate"
   },
   "dependencies": {
