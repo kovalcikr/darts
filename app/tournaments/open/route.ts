@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server'
 import { openActiveTournament } from '../../lib/tournament'
 
 function getBaseUrl(request: Request) {
-  return new URL(request.url).origin
+  const host = request.headers.get('host') ?? new URL(request.url).host
+  const proto = request.headers.get('x-forwarded-proto') ?? 'http'
+  return `${proto}://${host}`
 }
 
 export async function POST(request: Request) {
