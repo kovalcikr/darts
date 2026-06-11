@@ -12,6 +12,8 @@ async function openStartedTableOne(page: Page, testInfo: TestInfo) {
   await expect(page).toHaveURL(/\/tables\/1$/);
   await expect(page.getByText('First to play:')).toBeVisible();
   await page.locator('[data-testid^="start-player-"]').first().click();
+  await page.waitForTimeout(500);
+  await page.goto('/tables/1');
   await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
 }
 
