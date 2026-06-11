@@ -123,9 +123,9 @@ export async function setStartingPlayer(matchId, playerId) {
 export async function startMatch(formData) {
    await setStartingPlayer(formData.get('matchId'), formData.get('firstPlayer'));
    const table = formData.get('table');
-   revalidatePath('/tables/[table]', 'page');
-   revalidateTag(`match${table}`, 'max')
-   redirect(`/tables/${encodeURIComponent(table)}`);
+   revalidatePath(`/tables/${encodeURIComponent(String(table))}`, 'page');
+   revalidateTag(`match${String(table)}`, 'max');
+   redirect(`/tables/${encodeURIComponent(String(table))}?_=${Date.now()}`);
   }
 
   export async function getThrows(matchId: string, leg: number, playerA: string, playerB: string) {
