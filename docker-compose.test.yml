@@ -1,18 +1,9 @@
 services:
-  postgres:
-    image: postgres:15-alpine
-    restart: unless-stopped
+  app:
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-testuser}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-testpassword}
-      - POSTGRES_DB=darts-test
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d darts-test"]
-      interval: 2s
-      timeout: 5s
-      retries: 30
-    volumes:
-      - postgres-test:/var/lib/postgresql/data
+      CUESCORE_PROVIDER: fake
+      ENABLE_TEST_API: "true"
+      ENABLE_TEST_ROUTES_IN_PRODUCTION: "true"
 
   test:
     build:
@@ -20,27 +11,12 @@ services:
       dockerfile: .testcontainer/Dockerfile
     image: darts/test-runner:local
     depends_on:
-      postgres:
+      app:
         condition: service_healthy
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-testuser}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-testpassword}
-      - POSTGRES_PRISMA_URL=postgresql://${POSTGRES_USER:-testuser}:${POSTGRES_PASSWORD:-testpassword}@postgres:5432/darts-test
-      - POSTGRES_URL_NON_POOLING=postgresql://${POSTGRES_USER:-testuser}:${POSTGRES_PASSWORD:-testpassword}@postgres:5432/darts-test
-      - ENABLE_TEST_ROUTES_IN_PRODUCTION=true
+      PLAYWRIGHT_BASE_URL: http://app:3000
     volumes:
       - .:/app
       - ./.testcontainer/logs:/var/test-logs
-      - node_modules:/app/node_modules
-      - prisma-generated:/app/prisma/generated
-      - next-cache:/app/.next-dev
-      - ./.next-test:/app/.next
     working_dir: /app
     command: ["all"]
-
-volumes:
-  postgres-test:
-    name: darts-test-postgres
-  node_modules:
-  prisma-generated:
-  next-cache:
