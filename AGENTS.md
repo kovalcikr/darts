@@ -11,6 +11,7 @@
 - **Unit tests**: `npm test` (runs Jest with dotenv -e .env.test)
 - **Lint**: `npm run lint` (ESLint with Next.js recommended rules)
 - **Build**: `npm run build` (runs prisma:generate before Next.js build)
+- **Docker standalone**: `npm run standalone` (builds and starts PostgreSQL + app in Docker)
 
 ## Test Commands
 
