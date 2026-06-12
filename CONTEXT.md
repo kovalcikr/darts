@@ -51,48 +51,40 @@ _Avoid_: API, source
 ## Test Environment
 
 **Test Stack**:
-The three-file Docker Compose stack used to run Playwright-driven tests
-(`ui` and `e2e`) against the production build. `docker-compose.yml`
-provides the shared Postgres, `docker-compose.standalone.yaml` provides
-the production App image, and `docker-compose.test.yml` overrides the App
-with test-mode env vars and adds the Test Runner. All three files are
-composed together; services share one network and the runner connects to
-the app over `app:3000`.
+The three-file Docker Compose stack used to run Playwright tests against
+the production build. `docker-compose.yml` provides the shared Postgres,
+`docker-compose.standalone.yaml` provides the production App image, and
+`docker-compose.test.yml` overrides the App with test-mode env vars and
+adds the Test Runner. All three files are composed together; services
+share one network and the runner connects to the app over `app:3000`.
 _Avoid_: Test compose, test setup
 
 **Test Runner**:
-A single Docker image and entrypoint script that runs only the two
-Playwright test families (`ui` and `e2e`). Invoked via
+A single Docker image and entrypoint script that runs all Playwright tests
+against the production App image. Invoked via
 `docker compose -f docker-compose.yml -f docker-compose.standalone.yaml -f
-docker-compose.test.yml run --rm test <group> [filter]`. Source is
-bind-mounted at `/app` so the runner can pick up test files and
-Playwright configs from the host. The image is self-contained:
-it pins `@playwright/test@1.59.1` and pre-installs the matching
-Chromium browser. The host's own `node_modules` (from the bind-mount)
-provides the Playwright library at runtime; the image's browsers at
-`/root/.cache/ms-playwright/` match because the version is pinned. The runner never generates the Prisma client, talks to
-Postgres, or runs Jest — it only runs Playwright against the App.
+docker-compose.test.yml run --rm test [filter]`. Source is bind-mounted at
+`/app` so the runner can pick up test files and the Playwright config from
+the host. The image is self-contained: it pins `@playwright/test@1.59.1`
+and pre-installs the matching Chromium browser. The host's own
+`node_modules` (from the bind-mount) provides the Playwright library at
+runtime; the image's browsers at `/root/.cache/ms-playwright/` match
+because the version is pinned. The runner never generates the Prisma
+client, talks to Postgres, or runs Jest — it only runs Playwright against
+the App.
 _Avoid_: Test container, docker-test
 
 **App**:
 The production Docker image built from `Dockerfile`, run as a standalone
 container and addressed on the Compose network as `app:3000`. It runs
-`prisma db push` then `node server.js` via its entrypoint. UI and E2E
+`prisma db push` then `node server.js` via its entrypoint. Playwright
 tests target this image directly so regressions in the Dockerfile,
 entrypoint, runtime env, or production build are caught end-to-end.
 _Avoid_: Standalone container, prod image
 
-**Test Group**:
-One of `ui | e2e | all`, selected as the first positional argument to the
-test runner. `ui` runs the Playwright UI suite; `e2e` runs the Playwright
-end-to-end suite; `all` runs both in sequence. Unit and integration
-tests are run natively on the host and are not part of the runner.
-_Avoid_: Suite, test type
-
 **Test Filter**:
-An optional second positional argument to the test runner. Forwarded to
-Playwright as `-g` (test-name pattern). Applies to every group when used
-with `all`.
+An optional positional argument to the test runner. Forwarded to Playwright
+as `-g` (test-name pattern).
 _Avoid_: Grep, pattern (in this context)
 
 **Test Log**:
