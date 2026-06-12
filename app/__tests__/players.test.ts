@@ -1,8 +1,8 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import { getPlayers } from '../lib/players';
-import * as data from '../lib/data';
+import * as data from '../lib/data/queries';
 
-jest.mock('../lib/data');
+jest.mock('../lib/data/queries');
 
 describe('players', () => {
     beforeEach(() => {

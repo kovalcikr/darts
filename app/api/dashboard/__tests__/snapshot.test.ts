@@ -1,6 +1,6 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals'
 import * as tableMappings from '@/app/lib/table-mappings'
-import * as data from '@/app/lib/data'
+import * as matchLiveState from '@/app/lib/match-live-state'
 import * as match from '@/app/lib/match'
 import * as playerThrow from '@/app/lib/playerThrow'
 
@@ -8,7 +8,7 @@ jest.mock('@/app/lib/table-mappings', () => ({
   getTableIdBySlot: jest.fn().mockResolvedValue('table1'),
 }))
 
-jest.mock('@/app/lib/data', () => ({
+jest.mock('@/app/lib/match-live-state', () => ({
   findMatchLiveStates: jest.fn().mockResolvedValue([]),
 }))
 

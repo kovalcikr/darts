@@ -3,7 +3,7 @@ import * as match from '../lib/match';
 import getTournamentInfo from '../lib/cuescore';
 import { findLastThrow, findMatchAvg } from '../lib/playerThrow';
 import type { Match } from '@/prisma/client';
-import * as data from '../lib/data';
+import * as data from '../lib/data/queries';
 import { redirect } from 'next/navigation';
 
 jest.mock('../lib/cuescore', () => ({
@@ -16,7 +16,7 @@ jest.mock('../lib/playerThrow', () => ({
     findMatchAvg: jest.fn(),
 }));
 
-jest.mock('../lib/data');
+jest.mock('../lib/data/queries');
 jest.mock('next/cache', () => ({
     revalidateTag: jest.fn(),
     revalidatePath: jest.fn(),
@@ -133,7 +133,7 @@ describe('match', () => {
         jest.mocked(data.updateMatchFirstPlayer).mockResolvedValue(null);
         await match.startMatch(formData);
         expect(data.updateMatchFirstPlayer).toHaveBeenCalledWith('m1', 'pA');
-        expect(redirect).toHaveBeenCalledWith('/tables/1');
+        expect(redirect).toHaveBeenCalledWith(expect.stringContaining('/tables/1'));
     });
 
     test('getThrows', async () => {

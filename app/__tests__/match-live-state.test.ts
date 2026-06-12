@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { findMatchLiveStates, refreshMatchLiveState } from '../lib/data';
+import { findMatchLiveStates, refreshMatchLiveState } from '../lib/match-live-state';
 import { prismaMock } from './mocks';
 
 describe('match live state projection', () => {

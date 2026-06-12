@@ -2,7 +2,7 @@ import type { PrismaClient } from '@/prisma/client';
 import prisma from '@/app/lib/db';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
 import { refreshMatchLiveState } from '../../lib/match-live-state/refresh';
-import { upsertMatch } from '@/app/lib/data';
+import { upsertMatch } from '@/app/lib/data/queries';
 
 const prismaTest = prisma as unknown as PrismaClient;
 

@@ -1,21 +1,25 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals'
-import * as data from '@/app/lib/data'
+import * as data from '@/app/lib/data/queries'
+import * as matchLiveState from '@/app/lib/match-live-state'
 import * as cuescore from '@/app/lib/cuescore'
 import prisma from '@/app/lib/db'
 
-jest.mock('@/app/lib/data', () => ({
+jest.mock('@/app/lib/data/queries', () => ({
   aggregatePlayerThrow: jest.fn().mockResolvedValue({ _sum: { score: 0, darts: 0 } }),
   invalidateRedoableThrows: jest.fn().mockResolvedValue(undefined),
   createPlayerThrow: jest.fn().mockResolvedValue(undefined),
   findMatch: jest.fn().mockResolvedValue({ tournamentId: 't1', id: 'm1', playerALegs: 0, playerBlegs: 0, runTo: 3 }),
   updateMatchLegs: jest.fn().mockResolvedValue({}),
-  refreshMatchLiveState: jest.fn().mockResolvedValue(undefined),
   findLastThrow: jest.fn().mockResolvedValue({ id: 'throw1', playerId: 'p1' }),
   findPreviousLegLastThrow: jest.fn().mockResolvedValue(null),
   decrementMatchLegs: jest.fn().mockResolvedValue({}),
   markPlayerThrowUndone: jest.fn().mockResolvedValue(undefined),
   findRedoableThrow: jest.fn().mockResolvedValue(null),
   restorePlayerThrow: jest.fn().mockResolvedValue({ checkout: false }),
+}))
+
+jest.mock('@/app/lib/match-live-state', () => ({
+  refreshMatchLiveState: jest.fn().mockResolvedValue(undefined),
 }))
 
 jest.mock('@/app/lib/cuescore', () => ({

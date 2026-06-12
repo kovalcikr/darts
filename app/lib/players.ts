@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { findPlayersByTournament } from "./data";
+import { findPlayersByTournament } from "./data/queries";
 
 export async function getPlayers(tournaments) : Promise<any> {
     const { playersA, playersB } = await findPlayersByTournament(tournaments);

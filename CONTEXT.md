@@ -38,6 +38,16 @@ The single Tournament currently exposed at fixed live-scoring URLs
 (`/tables`, `/dashboard`). Set by an admin.
 _Avoid_: Current tournament, live tournament
 
+**MatchLiveState**:
+A read-optimised projection of a Match's live scoring state. Stores derived
+fields (remaining score per player, totals, active player, starter, recent
+throws) so live views (Dashboard, Table scoring UI) can render without
+recomputing from raw PlayerThrows. Written by `refreshMatchLiveState` after
+every score entry/undo/redo. Contains zero original data — everything is
+computable from Match and PlayerThrow rows.
+_Avoid_: Live cache, computed state (when clarity matters — it _is_ a cache,
+but "projection" emphasises it's derived, not stale)
+
 **Season**:
 A year-scoped grouping of Tournaments used for aggregate statistics (e.g.
 "Season 2026"). Statistics are computed per season.

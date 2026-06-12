@@ -1,7 +1,7 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import { openTournament, createTournament, getTournaments, getCachedTournaments, openTournamentForm, openActiveTournament } from '../lib/tournament';
 import getTournamentInfo from '../lib/cuescore';
-import * as data from '../lib/data';
+import * as data from '../lib/data/tournament-queries';
 import { setActiveTournament } from '../lib/active-tournament';
 import { redirect } from 'next/navigation';
 
@@ -10,7 +10,7 @@ jest.mock('../lib/cuescore', () => ({
     default: jest.fn(),
 }));
 
-jest.mock('../lib/data');
+jest.mock('../lib/data/tournament-queries');
 jest.mock('../lib/active-tournament', () => ({
     setActiveTournament: jest.fn(),
 }));
