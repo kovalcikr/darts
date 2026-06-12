@@ -149,10 +149,10 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   await expect(page).toHaveURL(/\/tables\/1$/);
   await expect(page.getByText('First to play:')).toBeVisible();
   await page.getByTestId(`start-player-${playerAId}`).click();
-  await page.waitForTimeout(500);
-  await page.goto('/tables/1');
-
-  await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
+  await expect(async () => {
+    await page.goto('/tables/1');
+    await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
+  }).toPass({ timeout: 15000 });
   await expect(page.getByRole('button', { name: 'UNDO' })).toBeEnabled();
   await expect(page.getByTestId('scoreboard-backspace')).toBeEnabled();
   await expect(page.getByRole('button', { name: '1' })).toBeEnabled();
@@ -276,10 +276,10 @@ test('enters a score and verifies the scoreboard updates', async ({
 
   await page.getByRole('link', { name: 'Table 1' }).click();
   await page.getByTestId(`start-player-${playerAId}`).click();
-  await page.waitForTimeout(500);
-  await page.goto('/tables/1');
-
-  await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
+  await expect(async () => {
+    await page.goto('/tables/1');
+    await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible();
+  }).toPass({ timeout: 15000 });
 
   // Enter a score and click OK
   await page.getByRole('button', { name: '1' }).click();
