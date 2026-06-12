@@ -2,7 +2,7 @@ import 'server-only'
 import prisma from "../db";
 import type { Prisma } from '@/prisma/client'
 import { generateLegacyTournamentNamesForSeason } from "../tournament-metadata";
-import { getSyncedMatchLegState } from "./match-operations";
+import { getSyncedMatchLegState } from "./leg-state";
 
 type PrismaTransactionClient = Omit<Prisma.TransactionClient, "$transaction" | "$on" | "$connect" | "$disconnect" | "$use">
 

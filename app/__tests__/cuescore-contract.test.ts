@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, jest, test } from '@jest/globals'
 import { createTournament } from '../lib/tournament'
 import * as match from '../lib/match'
 import getTournamentInfo from '../lib/cuescore'
-import * as data from '../lib/data'
+import * as data from '../lib/data/tournament-queries'
 import { tournament72952399Fixture } from '../../cuescore/fixtures/tournament-72952399'
 
 jest.mock('../lib/cuescore', () => ({
@@ -10,7 +10,7 @@ jest.mock('../lib/cuescore', () => ({
   default: jest.fn(),
 }))
 
-jest.mock('../lib/data')
+jest.mock('../lib/data/tournament-queries')
 jest.mock('next/cache', () => ({
   revalidateTag: jest.fn(),
   revalidatePath: jest.fn(),

@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 
-import { findMatchLiveStates } from "@/app/lib/data";
+import { findMatchLiveStates } from "@/app/lib/match-live-state";
 import { getCuescoreMatchCached, getMatch } from "@/app/lib/match";
 import { findMatchAvg, getPlayerThrowInfo } from "@/app/lib/playerThrow";
 import { getTableIdBySlot } from "@/app/lib/table-mappings";

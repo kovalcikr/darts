@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import getTournamentInfo from "./cuescore";
 import { revalidatePath } from "next/cache";
-import { upsertTournament, findTournamentsBySeason } from "./data";
+import { upsertTournament, findTournamentsBySeason } from "./data/tournament-queries";
 import type { CueScoreTournament } from "./integrations/cuescore/types";
 import { inferTournamentSeason, parseTournamentDate } from "./tournament-metadata";
 import { setActiveTournament } from "./active-tournament";

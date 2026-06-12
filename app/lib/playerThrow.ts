@@ -13,13 +13,13 @@ import {
     findThrowsByMatchAndLeg,
     updateMatchFirstPlayer,
     decrementMatchLegs,
-    refreshMatchLiveState,
     markPlayerThrowUndone,
     findRedoableThrow,
     restorePlayerThrow,
     invalidateRedoableThrows,
-} from "./data";
-import { findMatch } from "./data";
+} from "./data/queries";
+import { findMatch } from "./data/queries";
+import { refreshMatchLiveState } from "./match-live-state";
 import prisma from "./db";
 import { calculateThreeDartAverage, getAllowedCheckoutDarts } from "./scoring";
 

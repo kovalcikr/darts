@@ -7,7 +7,7 @@ import {
     updateMatchFirstPlayer,
     updateMatchLegs,
     decrementMatchLegs,
-} from '@/app/lib/data';
+} from '@/app/lib/data/queries';
 
 const prismaTest = prisma as unknown as PrismaClient;
 

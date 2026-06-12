@@ -1,8 +1,8 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals'
-import * as data from '@/app/lib/data'
+import * as data from '@/app/lib/data/queries'
 import * as cuescore from '@/app/lib/cuescore'
 
-jest.mock('@/app/lib/data', () => ({
+jest.mock('@/app/lib/data/queries', () => ({
   updateMatchFirstPlayer: jest.fn(),
 }))
 

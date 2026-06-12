@@ -1,7 +1,7 @@
 import type { PrismaClient } from '@/prisma/client';
 import prisma from '@/app/lib/db';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
-import { findPlayersByTournament } from '@/app/lib/data';
+import { findPlayersByTournament } from '@/app/lib/data/queries';
 
 const prismaTest = prisma as unknown as PrismaClient;
 
