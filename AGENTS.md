@@ -15,9 +15,9 @@
 
 ## Test Commands
 
-- **Playwright tests (UI + E2E)**: run only from inside the test container against the standalone App image. The full three-file compose invocation is:
+- **Playwright tests (UI + E2E)**: run only from inside the test container against the standalone App image. The three-file compose invocation is:
   ```bash
-  docker compose -f docker-compose.yml -f docker-compose.standalone.yaml -f docker-compose.test.yml run --rm test <ui|e2e|all> [filter]
+  docker compose -f docker-compose.yml -f docker-compose.standalone.yaml -f docker-compose.test.yml run --rm test [filter]
   ```
   The `test:standalone` npm script is a shorthand for the same thing. The container builds the App from `Dockerfile`, waits for `http://app:3000/tournaments` to respond, and runs Playwright. Log: `.testcontainer/logs/last.log`.
 - **Unit tests**: `npm test` (runs Jest with dotenv -e .env.test). Native on the host.

@@ -5,12 +5,13 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://app:3000';
 const chromiumExecutablePath = resolveChromiumExecutablePath();
 
 export default defineConfig({
-  testDir: './tests/ui',
-  fullyParallel: true,
+  testDir: './tests',
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
-  timeout: 30_000,
+  timeout: 90_000,
   use: {
     baseURL,
     trace: 'on-first-retry',

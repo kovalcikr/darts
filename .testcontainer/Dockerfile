@@ -19,4 +19,3 @@ COPY .testcontainer/bin/test.sh /usr/local/bin/test
 RUN chmod +x /usr/local/bin/test
 
 ENTRYPOINT ["/usr/local/bin/test"]
-CMD ["all"]

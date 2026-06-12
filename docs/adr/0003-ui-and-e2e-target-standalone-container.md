@@ -50,7 +50,10 @@ Playwright runner, nothing more.
 - `playwright.config.ts` and `playwright.e2e.config.ts` lose their
   `webServer` blocks; `baseURL` is supplied via `PLAYWRIGHT_BASE_URL`,
   defaulting to `http://app:3000` inside the test stack and overridable
-  for native runs.
+  for native runs. The two configs were later merged into a single
+  `playwright.config.ts` with `testDir: './tests'`, both desktop and
+  mobile projects, serial execution (`workers: 1`, `fullyParallel:
+  false`), and a 90-second global timeout. The E2E config was deleted.
 - `run-playwright-e2e-tests.sh`, `run-integration-tests.sh`,
   `dev:playwright`, `dev:playwright:e2e`, and the `npm run test:ui`
   shortcut are no longer the supported entry points — Playwright is
