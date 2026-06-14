@@ -33,6 +33,14 @@ A registered darts player with a CueScore profile. Identified by CueScore ID
 and a name; has statistics aggregated across Tournaments.
 _Avoid_: User, account, contestant
 
+**PlayerMatchView**:
+A presentation-oriented type holding a Player's name, photo URL, and live
+scoring state (score remaining, darts count, match average, legs won, active
+flag) within a specific Match. Distinct from the domain Player entity — a
+PlayerMatchView is ephemeral and match-scoped.
+_Avoid_: Player (for the match-scoped view — use the domain term for the
+registered entity), PlayerCard, MatchPlayer
+
 **Active Tournament**:
 The single Tournament currently exposed at fixed live-scoring URLs
 (`/tables`, `/dashboard`). Set by an admin.
