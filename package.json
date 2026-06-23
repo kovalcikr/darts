@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "docker compose up -d && npm run migrate && npx dotenv -e .env -e .env.development.local -- next dev --webpack",
     "build": "NODE_ENV=production npm run prisma:generate && NODE_ENV=production next build --webpack",
+    "build:standalone": "docker compose -f docker-compose.yml -f docker-compose.standalone.yaml build",
     "start": "next start",
     "standalone": "docker compose -f docker-compose.yml -f docker-compose.standalone.yaml up --build",
     "test:standalone": "docker compose -f docker-compose.yml -f docker-compose.standalone.yaml -f docker-compose.test.yml run --rm test",
