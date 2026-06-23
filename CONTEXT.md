@@ -66,6 +66,37 @@ The external data source for tournaments, matches, and player profiles. In
 development, a local `fake` provider returns fixture data instead.
 _Avoid_: API, source
 
+**Table**:
+A physical scoreboard station in the venue (a tablet/device mounted where a
+match is played). Identified by its Slot. Renders at `/tables/<slot>` and
+one cell of the Dashboard grid. Has a fixed count per deployment, configured
+globally from the admin section.
+_Avoid_: Scoreboard (for the station — "Scoreboard" is the on-screen UI for
+the current score), Stand, Board
+
+**Slot**:
+The stable numeric identifier of a Table. Baked into `/tables/<slot>` URLs
+and `match<slot>` cache keys. Survives admin edits to the Table Mappings
+without renumbering — removing a Table leaves a gap rather than shifting the
+Slots of the surviving Tables.
+_Avoid_: Index, position, number (when referring to Table identity)
+
+**CueScore Table Name**:
+The upstream identifier (e.g. `11`, `12`, `13`) for the matches CueScore has
+assigned to a particular Table. Distinct from Slot: a Slot identifies the
+physical station; the CueScore Table Name identifies the upstream grouping of
+matches. `MatchLiveState.table` stores this string, not the Slot.
+_Avoid_: Table (when clarity matters — use "CueScore Table Name" for the
+upstream identifier and "Table" for the physical station), TableId
+
+**Table Mapping**:
+A persisted configuration row tying a Slot to a CueScore Table Name. Stored
+together under the `tableMappings` `AppSetting`. Ordered by Slot ASC, gaps
+allowed (a removed Table leaves a hole rather than renumbering survivors).
+The number of Table Mappings IS the number of Tables — there is no separate
+"table count" setting.
+_Avoid_: Table config, table list
+
 ## Test Environment
 
 **Test Stack**:
