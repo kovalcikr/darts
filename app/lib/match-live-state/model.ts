@@ -20,41 +20,16 @@ export type MatchLiveState = {
     }>
 }
 
+export type DashboardTable = {
+    slot: number
+    match: any
+    matchInfo: any
+    liveState: MatchLiveState | null
+    firstPlayer: string | null
+    matchAvgA: number | null
+    matchAvgB: number | null
+}
+
 export type DashboardSnapshot = {
-    match1: any
-    match2: any
-    match3: any
-    match4: any
-    match5: any
-    match6: any
-    matchInfo1: any
-    matchInfo2: any
-    matchInfo3: any
-    matchInfo4: any
-    matchInfo5: any
-    matchInfo6: any
-    liveState1: MatchLiveState | null
-    liveState2: MatchLiveState | null
-    liveState3: MatchLiveState | null
-    liveState4: MatchLiveState | null
-    liveState5: MatchLiveState | null
-    liveState6: MatchLiveState | null
-    firstPlayer1: string | null
-    firstPlayer2: string | null
-    firstPlayer3: string | null
-    firstPlayer4: string | null
-    firstPlayer5: string | null
-    firstPlayer6: string | null
-    matchAvgA1: number | null
-    matchAvgA2: number | null
-    matchAvgA3: number | null
-    matchAvgA4: number | null
-    matchAvgA5: number | null
-    matchAvgA6: number | null
-    matchAvgB1: number | null
-    matchAvgB2: number | null
-    matchAvgB3: number | null
-    matchAvgB4: number | null
-    matchAvgB5: number | null
-    matchAvgB6: number | null
+    tables: DashboardTable[]
 }

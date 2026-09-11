@@ -62,14 +62,28 @@ export default function DashboardView() {
         return <div>Error: {error}</div>;
     }
 
+    const tables = Array.isArray(data?.tables) ? data.tables : [];
+    const columns = tables.length <= 4 ? 2 : 3;
+    const rows = Math.ceil(tables.length / columns);
+
     return (
-        <div className="grid grid-cols-3 grid-rows-2 h-screen w-full bg-gray-900 text-gray-300">
-            <TableDashboard tableId="1" match={data?.match1} matchInfo={data?.matchInfo1?.score} lastThrows={data?.matchInfo1?.lastThrows} liveState={data?.liveState1} firstPlayer={data?.firstPlayer1} avgPlayerA={data?.matchAvgA1} avgPlayerB={data?.matchAvgB1} />
-            <TableDashboard tableId="2" match={data?.match2} matchInfo={data?.matchInfo2?.score} lastThrows={data?.matchInfo2?.lastThrows} liveState={data?.liveState2} firstPlayer={data?.firstPlayer2} avgPlayerA={data?.matchAvgA2} avgPlayerB={data?.matchAvgB2} />
-            <TableDashboard tableId="3" match={data?.match3} matchInfo={data?.matchInfo3?.score} lastThrows={data?.matchInfo3?.lastThrows} liveState={data?.liveState3} firstPlayer={data?.firstPlayer3} avgPlayerA={data?.matchAvgA3} avgPlayerB={data?.matchAvgB3} />
-            <TableDashboard tableId="4" match={data?.match4} matchInfo={data?.matchInfo4?.score} lastThrows={data?.matchInfo4?.lastThrows} liveState={data?.liveState4} firstPlayer={data?.firstPlayer4} avgPlayerA={data?.matchAvgA4} avgPlayerB={data?.matchAvgB4} />
-            <TableDashboard tableId="5" match={data?.match5} matchInfo={data?.matchInfo5?.score} lastThrows={data?.matchInfo5?.lastThrows} liveState={data?.liveState5} firstPlayer={data?.firstPlayer5} avgPlayerA={data?.matchAvgA5} avgPlayerB={data?.matchAvgB5} />
-            <TableDashboard tableId="6" match={data?.match6} matchInfo={data?.matchInfo6?.score} lastThrows={data?.matchInfo6?.lastThrows} liveState={data?.liveState6} firstPlayer={data?.firstPlayer6} avgPlayerA={data?.matchAvgA6} avgPlayerB={data?.matchAvgB6} />
+        <div
+            className={`grid ${columns === 2 ? 'grid-cols-2' : 'grid-cols-3'} h-screen w-full bg-gray-900 text-gray-300`}
+            style={rows > 0 ? { gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` } : undefined}
+        >
+            {tables.map((table) => (
+                <TableDashboard
+                    key={table.slot}
+                    tableId={String(table.slot)}
+                    match={table.match}
+                    matchInfo={table.matchInfo?.score}
+                    lastThrows={table.matchInfo?.lastThrows}
+                    liveState={table.liveState}
+                    firstPlayer={table.firstPlayer}
+                    avgPlayerA={table.matchAvgA}
+                    avgPlayerB={table.matchAvgB}
+                />
+            ))}
         </div>
     );
 }

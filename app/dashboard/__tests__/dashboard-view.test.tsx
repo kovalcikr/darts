@@ -16,6 +16,20 @@ jest.mock('@/app/components/NoActiveTournament', () => ({
 }))
 
 describe('DashboardView', () => {
+  function dashboardData(table: Record<string, any>) {
+    return {
+      tables: [{
+        slot: 1,
+        match: table.match1,
+        matchInfo: table.matchInfo1,
+        liveState: table.liveState1,
+        firstPlayer: table.firstPlayer1,
+        matchAvgA: table.matchAvgA1,
+        matchAvgB: table.matchAvgB1,
+      }],
+    }
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -41,10 +55,65 @@ describe('DashboardView', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/dashboard')
   })
 
-  test('shows the current leg starter from live dashboard state', async () => {
+  test('renders only configured Slots and derives the grid from their count', async () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
       json: async () => ({
+        tables: [1, 3, 7].map((slot) => ({
+          slot,
+          match: null,
+          matchInfo: null,
+          liveState: null,
+          firstPlayer: null,
+          matchAvgA: null,
+          matchAvgB: null,
+        })),
+      }),
+    } as Response)
+    global.fetch = fetchMock
+
+    render(<DashboardView />)
+
+    expect(await screen.findAllByTestId(/dashboard-table-/)).toHaveLength(3)
+    expect(screen.getByTestId('dashboard-table-1')).not.toBeNull()
+    expect(screen.getByTestId('dashboard-table-3')).not.toBeNull()
+    expect(screen.getByTestId('dashboard-table-7')).not.toBeNull()
+    expect(screen.queryByTestId('dashboard-table-2')).toBeNull()
+
+    const grid = document.querySelector('.grid') as HTMLElement
+    expect(grid.className).toContain('grid-cols-2')
+    expect(grid.style.gridTemplateRows).toBe('repeat(2, minmax(0, 1fr))')
+  })
+
+  test('supports the maximum of ten configured Tables without filler cells', async () => {
+    const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        tables: Array.from({ length: 10 }, (_, index) => ({
+          slot: index + 1,
+          match: null,
+          matchInfo: null,
+          liveState: null,
+          firstPlayer: null,
+          matchAvgA: null,
+          matchAvgB: null,
+        })),
+      }),
+    } as Response)
+    global.fetch = fetchMock
+
+    render(<DashboardView />)
+
+    expect(await screen.findAllByTestId(/dashboard-table-/)).toHaveLength(10)
+    const grid = document.querySelector('.grid') as HTMLElement
+    expect(grid.className).toContain('grid-cols-3')
+    expect(grid.style.gridTemplateRows).toBe('repeat(4, minmax(0, 1fr))')
+  })
+
+  test('shows the current leg starter from live dashboard state', async () => {
+    const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
+      ok: true,
+      json: async () => dashboardData({
         match1: {
           raceTo: 3,
           scoreA: 1,
@@ -82,7 +151,7 @@ describe('DashboardView', () => {
   test('derives the dashboard leg starter from first player fallback state', async () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
-      json: async () => ({
+      json: async () => dashboardData({
         match1: {
           raceTo: 3,
           scoreA: 1,
@@ -113,7 +182,7 @@ describe('DashboardView', () => {
   test('does not crash when dashboard starter data is missing', async () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
-      json: async () => ({
+      json: async () => dashboardData({
         match1: {
           raceTo: 3,
           scoreA: 0,
@@ -136,7 +205,7 @@ describe('DashboardView', () => {
   test('keeps playerA on the left when firstPlayer is playerA', async () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
-      json: async () => ({
+      json: async () => dashboardData({
         match1: {
           raceTo: 3,
           scoreA: 0,
@@ -161,7 +230,7 @@ describe('DashboardView', () => {
   test('truncates long player names and fits the throw list inside the dashboard card', async () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
-      json: async () => ({
+      json: async () => dashboardData({
         match1: {
           raceTo: 3,
           scoreA: 1,
@@ -217,7 +286,7 @@ describe('DashboardView', () => {
   test('puts playerB on the left when firstPlayer is playerB (matches scoreboard swap)', async () => {
     const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
       ok: true,
-      json: async () => ({
+      json: async () => dashboardData({
         match1: {
           raceTo: 3,
           scoreA: 0,

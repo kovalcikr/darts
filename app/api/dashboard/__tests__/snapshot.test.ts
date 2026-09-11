@@ -5,7 +5,10 @@ import * as match from '@/app/lib/match'
 import * as playerThrow from '@/app/lib/playerThrow'
 
 jest.mock('@/app/lib/table-mappings', () => ({
-  getTableIdBySlot: jest.fn().mockResolvedValue('table1'),
+  getTableMappings: jest.fn().mockResolvedValue([
+    { slot: 1, cuescoreTableName: 'table1' },
+    { slot: 3, cuescoreTableName: 'table3' },
+  ]),
 }))
 
 jest.mock('@/app/lib/match-live-state', () => ({
@@ -43,19 +46,14 @@ describe('Dashboard caching', () => {
     expect(match.getCuescoreMatchCached).toHaveBeenCalled()
   })
 
-  test('getDashboardTournamentSnapshot returns all expected fields', async () => {
+  test('returns one ordered record per configured mapping and preserves Slots', async () => {
     const result = await getDashboardTournamentSnapshot('t1')
 
-    expect(result).toHaveProperty('match1')
-    expect(result).toHaveProperty('match2')
-    expect(result).toHaveProperty('match3')
-    expect(result).toHaveProperty('match4')
-    expect(result).toHaveProperty('match5')
-    expect(result).toHaveProperty('match6')
-    expect(result).toHaveProperty('liveState1')
-    expect(result).toHaveProperty('liveState2')
-    expect(result).toHaveProperty('matchInfo1')
-    expect(result).toHaveProperty('matchAvgA1')
-    expect(result).toHaveProperty('matchAvgB1')
+    expect(result).toEqual({
+      tables: [
+        expect.objectContaining({ slot: 1, match: null }),
+        expect.objectContaining({ slot: 3, match: null }),
+      ],
+    })
   })
 })

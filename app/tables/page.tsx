@@ -1,23 +1,18 @@
 import Link from 'next/link'
 import NoActiveTournament from '@/app/components/NoActiveTournament'
 import { getActiveTournament } from '@/app/lib/active-tournament'
+import { getTableMappings } from '@/app/lib/table-mappings'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ActiveTournamentTablesPage() {
   const activeTournament = await getActiveTournament()
-  const tables = [
-    { label: 'Table 1', slot: '1' },
-    { label: 'Table 2', slot: '2' },
-    { label: 'Table 3', slot: '3' },
-    { label: 'Table 4', slot: '4' },
-    { label: 'Table 5', slot: '5' },
-    { label: 'Table 6', slot: '6' },
-  ]
 
   if (!activeTournament) {
     return <NoActiveTournament title="No active tournament for tables" />
   }
+
+  const tables = await getTableMappings()
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-300">
@@ -57,7 +52,7 @@ export default async function ActiveTournamentTablesPage() {
                 Scoreboard
               </div>
               <div className="mt-2 text-4xl font-semibold text-white group-hover:text-sky-300">
-                {item.label}
+                Table {item.slot}
               </div>
             </Link>
           ))}
