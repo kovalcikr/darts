@@ -13,6 +13,7 @@ import {
 import prisma from '@/app/lib/db'
 import { isMatchComplete } from '@/app/lib/utils/match'
 import { openActiveTournament } from '@/app/lib/tournament'
+import { validateTableMappings } from '@/app/lib/table-mappings'
 import {
   ADMIN_PASSWORD_ENV,
   ADMIN_SESSION_COOKIE,
@@ -365,6 +366,30 @@ export async function clearActiveTournamentAction(formData: FormData) {
   }
 
   redirectWithNotice(returnTo, 'Active tournament cleared.')
+}
+
+export async function saveTableMappingsAction(formData: FormData) {
+  const returnTo = getReturnTo(formData)
+  await requireAdminSession(returnTo)
+
+  try {
+    const rawMappings = requireString(formData, 'mappings')
+    const mappings = validateTableMappings(JSON.parse(rawMappings))
+    const value = JSON.stringify(mappings)
+
+    await prisma.appSetting.upsert({
+      where: { key: 'tableMappings' },
+      create: { key: 'tableMappings', value },
+      update: { value },
+    })
+
+    revalidateSharedPaths()
+    revalidateActiveTournamentPaths()
+  } catch (error) {
+    redirectWithError(returnTo, getErrorMessage(error))
+  }
+
+  redirectWithNotice(returnTo, 'Table Mappings saved.')
 }
 
 export async function updateTournamentAction(formData: FormData) {

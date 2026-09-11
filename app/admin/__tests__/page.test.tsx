@@ -37,6 +37,7 @@ jest.mock('../actions', () => ({
   updateMatchAction: jest.fn(),
   updateThrowAction: jest.fn(),
   updateTournamentAction: jest.fn(),
+  saveTableMappingsAction: jest.fn(),
 }))
 
 const prismaMock = prisma as unknown as DeepMockProxy<PrismaClient>
@@ -116,6 +117,9 @@ describe('admin page', () => {
     expect(html).toContain('Active')
     expect(html).toContain('Delete Tournament')
     expect(html).toContain('Saved')
+    expect(html).toContain('Tables')
+    expect(html).toContain('CueScore Table Name')
+    expect(html).toContain('Save Table Mappings')
     expect(html).toContain('Relax')
     expect(html).not.toContain('Alice vs Bob')
     expect(html).not.toContain('140 points')

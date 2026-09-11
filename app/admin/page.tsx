@@ -13,6 +13,8 @@ import {
   toggleTournamentGlobalStatsAction,
   updateTournamentAction,
 } from './actions'
+import TableMappingsEditor from './TableMappingsEditor'
+import { getTableMappings } from '@/app/lib/table-mappings'
 import {
   ADMIN_PASSWORD_ENV,
   ADMIN_USERNAME_ENV,
@@ -135,7 +137,7 @@ export default async function AdminPage({
       }
     : undefined
 
-const [tournaments, throwCountsByTournament, activeTournament, tournamentAudits] = await Promise.all([
+const [tournaments, throwCountsByTournament, activeTournament, tournamentAudits, tableMappings] = await Promise.all([
      prisma.tournament.findMany({
        where: tournamentWhere,
        include: {
@@ -155,15 +157,16 @@ const [tournaments, throwCountsByTournament, activeTournament, tournamentAudits]
        },
      }),
      getActiveTournament(),
-     prisma.tournamentAudit.findMany({
+      prisma.tournamentAudit.findMany({
        where: query
          ? {
              tournamentId: { contains: query, mode: 'insensitive' as const },
            }
          : undefined,
        select: { tournamentId: true },
-     }),
-   ])
+      }),
+      getTableMappings(),
+    ])
 
 const throwCountMap = new Map<string, number>(
      throwCountsByTournament.map((item) => [item.tournamentId, item._count.id])
@@ -220,6 +223,21 @@ const throwCountMap = new Map<string, number>(
 
         {notice ? <MessageBanner message={notice} tone="notice" /> : null}
         {error ? <MessageBanner message={error} tone="error" /> : null}
+
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Tables</h2>
+              <p className="mt-1 text-sm text-slate-400">
+                Configure the global Slot to CueScore Table Name mappings for the venue.
+              </p>
+            </div>
+            <span className="rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-sm text-slate-200">
+              {tableMappings.length} tables
+            </span>
+          </div>
+          <TableMappingsEditor mappings={tableMappings} />
+        </section>
 
         <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
