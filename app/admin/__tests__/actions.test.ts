@@ -15,6 +15,7 @@ import {
   restoreThrowAction,
   restoreTournamentAction,
   setActiveTournamentAction,
+  saveTableMappingsAction,
   toggleTournamentGlobalStatsAction,
   updateMatchAction,
   updateThrowAction,
@@ -135,6 +136,80 @@ describe('admin actions', () => {
         sameSite: 'lax',
         path: '/',
       })
+    )
+  })
+
+  test('saves valid table mappings after trimming names', async () => {
+    prismaMock.appSetting.upsert.mockResolvedValue({
+      key: 'tableMappings',
+      value: '[]',
+      updatedAt: new Date(),
+    } as never)
+
+    const formData = buildFormData({
+      mappings: JSON.stringify([
+        { slot: 1, cuescoreTableName: '  Main  ' },
+        { slot: 3, cuescoreTableName: '  Side  ' },
+      ]),
+      returnTo: '/admin',
+    })
+
+    await expectRedirect(
+      () => saveTableMappingsAction(formData),
+      '/admin?notice=Table+Mappings+saved.'
+    )
+
+    expect(prismaMock.appSetting.upsert).toHaveBeenCalledWith({
+      where: { key: 'tableMappings' },
+      create: { key: 'tableMappings', value: JSON.stringify([
+        { slot: 1, cuescoreTableName: 'Main' },
+        { slot: 3, cuescoreTableName: 'Side' },
+      ]) },
+      update: { value: JSON.stringify([
+        { slot: 1, cuescoreTableName: 'Main' },
+        { slot: 3, cuescoreTableName: 'Side' },
+      ]) },
+    })
+  })
+
+  test('rejects an empty table mapping configuration', async () => {
+    const formData = buildFormData({ mappings: '[]', returnTo: '/admin' })
+
+    await expectRedirect(
+      () => saveTableMappingsAction(formData),
+      '/admin?error=At+least+one+Table+Mapping+is+required.'
+    )
+
+    expect(prismaMock.appSetting.upsert).not.toHaveBeenCalled()
+  })
+
+  test('rejects duplicate slots and CueScore Table Names', async () => {
+    const formData = buildFormData({
+      mappings: JSON.stringify([
+        { slot: 1, cuescoreTableName: 'A' },
+        { slot: 1, cuescoreTableName: 'B' },
+      ]),
+      returnTo: '/admin',
+    })
+
+    await expectRedirect(
+      () => saveTableMappingsAction(formData),
+      '/admin?error=Slot+1+is+used+more+than+once.'
+    )
+  })
+
+  test('rejects more than ten table mappings', async () => {
+    const formData = buildFormData({
+      mappings: JSON.stringify(Array.from({ length: 11 }, (_, index) => ({
+        slot: index + 1,
+        cuescoreTableName: String(index + 1),
+      }))),
+      returnTo: '/admin',
+    })
+
+    await expectRedirect(
+      () => saveTableMappingsAction(formData),
+      '/admin?error=A+maximum+of+10+Table+Mappings+is+allowed.'
     )
   })
 

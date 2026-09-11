@@ -21,12 +21,14 @@ export function TextField({
   defaultValue,
   required = false,
   type = 'text',
+  readOnly = false,
 }: {
   label: string
   name: string
   defaultValue?: string | number | null
   required?: boolean
   type?: string
+  readOnly?: boolean
 }) {
   return (
     <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -36,6 +38,7 @@ export function TextField({
         defaultValue={defaultValue ?? ''}
         name={name}
         required={required}
+        readOnly={readOnly}
         type={type}
       />
     </label>
@@ -63,10 +66,12 @@ export function ActionButton({
   children,
   tone = 'primary',
   type = 'submit',
+  onClick,
 }: {
   children: React.ReactNode
   tone?: 'primary' | 'danger' | 'muted' | 'success'
   type?: 'submit' | 'button'
+  onClick?: () => void
 }) {
   const toneClassName =
     tone === 'primary'
@@ -81,6 +86,7 @@ export function ActionButton({
     <button
       className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${toneClassName}`}
       type={type}
+      onClick={onClick}
     >
       {children}
     </button>
