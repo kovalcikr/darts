@@ -21,6 +21,7 @@ import {
   getAdminSessionToken,
   isAdminAuthenticated,
   isAdminConfigured,
+  shouldUseSecureAdminSessionCookie,
   validateAdminCredentials,
 } from './auth'
 
@@ -298,7 +299,7 @@ export async function loginAdminAction(formData: FormData) {
   cookieStore.set(ADMIN_SESSION_COOKIE, sessionToken, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: shouldUseSecureAdminSessionCookie(),
     path: '/',
   })
 
