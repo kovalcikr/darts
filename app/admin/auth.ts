@@ -7,6 +7,10 @@ export const ADMIN_USERNAME_ENV = 'ADMIN_UI_USERNAME'
 export const ADMIN_PASSWORD_ENV = 'ADMIN_UI_PASSWORD'
 export const ADMIN_SESSION_COOKIE = 'darts-admin-session'
 
+export function shouldUseSecureAdminSessionCookie() {
+  return process.env.NODE_ENV === 'production' && process.env.ADMIN_SESSION_COOKIE_SECURE !== 'false'
+}
+
 type AdminCredentials = {
   username: string
   password: string
