@@ -72,6 +72,11 @@ export async function getTableMappings(): Promise<TableMapping[]> {
   }
 }
 
+export async function getTableMappingBySlot(slot: number): Promise<TableMapping | null> {
+  const mappings = await getTableMappings()
+  return mappings.find((mapping) => mapping.slot === slot) ?? null
+}
+
 export async function getTableIdBySlot(slot: number): Promise<string> {
   const mappings = await getTableMappings()
   const mapping = mappings.find((m) => m.slot === slot)
