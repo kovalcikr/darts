@@ -2,24 +2,23 @@ import { Suspense } from 'react'
 import { createMatch, getCuescoreMatch } from '@/app/lib/match'
 import Darts from './[id]/tables/[table]/darts'
 import Wait from './[id]/tables/[table]/wait'
-import { getTableIdBySlot } from '@/app/lib/table-mappings'
+import type { TableMapping } from '@/app/lib/table-mappings'
 
 export default async function TableScoreboardPage({
   encodedTable,
   tournamentId,
+  mapping,
 }: {
   encodedTable: string
   tournamentId: string
+  mapping: TableMapping
 }) {
   const slot = decodeURIComponent(encodedTable)
-
-  // Resolve slot to CueScore table name
-  const cuescoreTableId = await getTableIdBySlot(parseInt(slot, 10))
 
   let match = null
 
   try {
-    const cueScoreMatch = await getCuescoreMatch(tournamentId, cuescoreTableId)
+    const cueScoreMatch = await getCuescoreMatch(tournamentId, mapping.cuescoreTableName)
     match = await createMatch(cueScoreMatch, slot)
   } catch (e) {
     console.log(e)

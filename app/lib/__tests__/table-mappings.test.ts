@@ -5,6 +5,7 @@ import prisma from '@/app/lib/db'
 
 import {
   getTableMappings,
+  getTableMappingBySlot,
   getTableIdBySlot,
   defaultTableMappings,
 } from '../table-mappings'
@@ -139,6 +140,44 @@ describe('table mappings', () => {
       // slots 2-6 fall back to defaults
       expect(await getTableIdBySlot(2)).toBe('12')
       expect(await getTableIdBySlot(6)).toBe('16')
+    })
+  })
+
+  describe('getTableMappingBySlot', () => {
+    test('returns the configured mapping for a Slot', async () => {
+      mockResolved(prismaMock.appSetting.findUnique, {
+        key: 'tableMappings',
+        value: JSON.stringify([
+          { slot: 1, cuescoreTableName: 'table-A' },
+          { slot: 4, cuescoreTableName: 'table-D' },
+        ]),
+      })
+
+      await expect(getTableMappingBySlot(4)).resolves.toEqual({
+        slot: 4,
+        cuescoreTableName: 'table-D',
+      })
+    })
+
+    test('returns null for a Slot absent from a saved configuration', async () => {
+      mockResolved(prismaMock.appSetting.findUnique, {
+        key: 'tableMappings',
+        value: JSON.stringify([
+          { slot: 1, cuescoreTableName: 'table-A' },
+          { slot: 4, cuescoreTableName: 'table-D' },
+        ]),
+      })
+
+      await expect(getTableMappingBySlot(2)).resolves.toBeNull()
+    })
+
+    test('uses the default mapping when no configuration is saved', async () => {
+      mockResolved(prismaMock.appSetting.findUnique, null)
+
+      await expect(getTableMappingBySlot(2)).resolves.toEqual({
+        slot: 2,
+        cuescoreTableName: '12',
+      })
     })
   })
 })
