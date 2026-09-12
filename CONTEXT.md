@@ -90,9 +90,19 @@ _Avoid_: Table (when clarity matters — use "CueScore Table Name" for the
 upstream identifier and "Table" for the physical station), TableId
 
 **Table Mapping**:
-A persisted configuration row tying a Slot to a CueScore Table Name. Stored
-together under the `tableMappings` `AppSetting`. Ordered by Slot ASC, gaps
-allowed (a removed Table leaves a hole rather than renumbering survivors).
+ A global venue configuration row tying a stable Slot to a CueScore Table Name.
+ Admins change the CueScore Table Name, not the identity of an existing Slot.
+ Stored together under the `tableMappings` `AppSetting`, and shared by the
+ Active Tournament. Changes take effect immediately. Ordered by Slot ASC, gaps
+ allowed (a removed Table leaves a hole rather than renumbering survivors); a
+ removed Slot remains a known URL that reports the Table was removed.
+ A valid configuration has at least one mapping, positive unique Slots, and
+ nonblank unique CueScore Table Names. A CueScore Table Name is an opaque
+ upstream string, not necessarily numeric. The configuration supports at most
+ ten Table Mappings. Remapping a Slot with a live Match is allowed, but is
+ warned about because the next refresh may switch its upstream grouping.
+ A deployment with no saved configuration starts with the default six mappings
+ (Slots 1-6 to CueScore Table Names 11-16).
 The number of Table Mappings IS the number of Tables — there is no separate
 "table count" setting.
 _Avoid_: Table config, table list
