@@ -37,9 +37,10 @@ survive admin edits with gaps allowed rather than renumbering.
 - `/tables` menu and Dashboard grid render one card/cell per existing Table
   Mapping, ordered by Slot ASC; gaps don't render. Dashboard grid layout is
   derived from N: `cols = N<=4 ? 2 : 3`, `rows = ceil(N/cols)`,
-  capped at 12 to bound the polling/render cost.
+  capped at 10 to bound the polling/render cost.
 - `getTableIdBySlot` distinguishes "slot exists" from "slot unknown"; unknown
-  slots render a "Table removed" page (not a 404 — the URL was once valid).
+  slots render a "Table removed" page (not a 404 — the URL was once valid), and
+  never fall back to the original default mapping.
 - `MatchLiveState.table` stores the CueScore Table Name (e.g. `11`), not the
   Slot. The column name is a latent smell but is left as-is to avoid an
   orthogonal migration; the CONTEXT.md term "CueScore Table Name" documents
@@ -47,9 +48,25 @@ survive admin edits with gaps allowed rather than renumbering.
 - Admin UI: a new authenticated-only "Tables" section on `/admin` (below the
   tournament list) edits Table Mappings as a single-form list editor inside an
   `EditDisclosure` (matching the tournament card pattern). Existing rows show
-  slot + CueScore table name, with add/remove; new rows are assigned the
-  smallest unused positive Slot on submit. Slots and CueScore table names must
-  be unique within the list.
+  slot + CueScore table name, with add/remove; existing Slot numbers are stable
+  and cannot be edited. New rows are assigned the smallest unused positive Slot
+  on submit. Slots and CueScore table names must be unique within the list.
+- Mapping edits apply immediately to the Active Tournament. This changes which
+  upstream CueScore grouping a physical Slot reads on its next refresh; it does
+  not alter existing Match data.
+- Removing a mapping preserves its Slot as a gap. Its former `/tables/<slot>`
+  URL remains recognizable and reports that the Table was removed rather than
+  silently pointing at another physical station.
+- Saving rejects an empty mapping list, non-positive or duplicate Slots, and
+  blank or duplicate CueScore Table Names, and lists longer than ten mappings.
+- CueScore Table Names are opaque upstream strings. They are not restricted to
+  numeric values; the configured value is preserved as entered after trimming.
+- Remapping a Slot with a live Match is permitted with an admin warning. The
+  next refresh may switch that physical station to the newly configured
+  upstream grouping.
+- A deployment without a saved configuration retains the existing defaults:
+  Slots 1-6 map to CueScore Table Names 11-16. These defaults are only the
+  initial configuration and can be replaced by the admin.
 - The hardcoded `SLOTS = [1, 2, 3, 4, 5, 6]` in `snapshot.ts`, the hardcoded
   list in `tables/page.tsx`, and the six `<TableDashboard>` instances in
   `dashboard-view.tsx` are all removed; they consume `getTableMappings()`
