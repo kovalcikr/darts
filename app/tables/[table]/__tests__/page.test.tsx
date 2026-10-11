@@ -86,10 +86,22 @@ describe('active tournament table page', () => {
     const element = await ActiveTournamentTablePage({
       params: Promise.resolve({ table: '3' }),
     })
+    const html = renderToStaticMarkup(element)
 
-    expect(renderToStaticMarkup(element)).toContain('Table not available')
+    expect(html).toContain('Table 3 removed')
+    expect(html).toContain('href="/tables"')
     expect(getActiveTournament).not.toHaveBeenCalled()
     expect(tableScoreboardMock).not.toHaveBeenCalled()
+  })
+
+  test('renders the removed state without a number for a non-numeric Slot', async () => {
+    tableMappingMock.mockResolvedValue(null)
+
+    const element = await ActiveTournamentTablePage({
+      params: Promise.resolve({ table: 'not-a-table' }),
+    })
+
+    expect(renderToStaticMarkup(element)).toContain('Table removed')
   })
 
   test('renders an empty state when no active tournament is selected', async () => {
@@ -100,7 +112,9 @@ describe('active tournament table page', () => {
     })
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('No active tournament for this table')
+    expect(html).toContain('No active tournament for Table 1')
+    expect(html).toContain('href="/tables"')
+    expect(html).toContain('href="/tables/1"')
     expect(html).not.toContain('Open Admin')
     expect(html).not.toContain('Set an active tournament')
   })

@@ -22,7 +22,7 @@ export default async function TableScoreboardPage({
     match = await createMatch(cueScoreMatch, slot)
   } catch (e) {
     console.log(e)
-    return <Wait id={tournamentId} table={slot} />
+    return <Wait id={tournamentId} slot={slot} />
   }
 
   return (

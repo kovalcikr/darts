@@ -252,7 +252,7 @@ test('opens a tournament, plays a match, and closes it against the CueScore mock
   expect(eventSummary.at(-1)).toBe('finishMatch:3-0');
 
   await page.goto('/tables/1');
-  await expect(page.getByText('Waiting for match to start...')).toBeVisible();
+  await expect(page.getByText('Waiting for a match to start on Table 1...')).toBeVisible();
 });
 
 test('enters a score and verifies the scoreboard updates', async ({

@@ -277,9 +277,9 @@ test('full tournament lifecycle: empty → open → play → finish → close', 
   );
   expect(eventSummary.at(-1)).toBe('finishMatch:3-0');
 
-  // Scoreboard shows "Waiting for match to start..."
+  // Scoreboard shows "Waiting for a match to start on Table 1..."
   await page.goto('/tables/1');
-  await expect(page.getByText('Waiting for match to start...')).toBeVisible();
+  await expect(page.getByText('Waiting for a match to start on Table 1...')).toBeVisible();
 
   // Dashboard table card is empty (no VS/players) when match has finished
   await page.goto('/dashboard');
@@ -300,7 +300,7 @@ test('full tournament lifecycle: empty → open → play → finish → close', 
 
   // Table detail shows "no tournament"
   await page.goto('/tables/1');
-  await expect(page.getByText('No active tournament for this table')).toBeVisible({
+  await expect(page.getByText('No active tournament for Table 1')).toBeVisible({
     timeout: 10_000,
   });
 

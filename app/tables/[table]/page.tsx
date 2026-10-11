@@ -17,7 +17,7 @@ export default async function ActiveTournamentTablePage({
   const mapping = await getTableMappingBySlot(slot)
 
   if (!mapping) {
-    return <TableRemoved />
+    return <TableRemoved slot={Number.isFinite(slot) ? slot : undefined} />
   }
 
   const activeTournament = await getActiveTournament()
@@ -25,7 +25,8 @@ export default async function ActiveTournamentTablePage({
   if (!activeTournament) {
     return (
       <NoActiveTournament
-        title="No active tournament for this table"
+        title={`No active tournament for Table ${slot}`}
+        slot={slot}
       />
     )
   }

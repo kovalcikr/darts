@@ -44,7 +44,7 @@ test('admin mapping changes flow through tables, stable URLs, and dashboard', as
   await expect(page.getByRole('link', { name: `Table ${removedSlot}` })).toHaveCount(0)
 
   await page.goto(`/tables/${removedSlot}`)
-  await expect(page.getByText('Table removed')).toBeVisible()
+  await expect(page.getByText(`Table ${removedSlot} removed`)).toBeVisible()
 
   await page.goto('/dashboard')
   await expect(page.getByTestId(/^dashboard-table-/)).toHaveCount(originalSlots.length - 1)
