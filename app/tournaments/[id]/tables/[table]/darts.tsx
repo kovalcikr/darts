@@ -14,7 +14,7 @@ export default async function Darts({ table, matchId, tournamentId }: { table: s
    const fullMatch = await getFullMatch(matchId);
 
    if (!fullMatch) {
-     return <Wait id={tournamentId ?? ""} table={table} />;
+     return <Wait id={tournamentId ?? ""} slot={table} />;
    }
 
    const match = fullMatch.match;
