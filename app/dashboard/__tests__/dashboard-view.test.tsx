@@ -3,7 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { act, cleanup, render, screen, within } from '@testing-library/react'
 import DashboardView from '../dashboard-view'
 
 jest.mock('next/navigation', () => ({
@@ -35,7 +35,69 @@ describe('DashboardView', () => {
   })
 
   afterEach(() => {
+    jest.useRealTimers()
     cleanup()
+  })
+
+  test('keeps the newer score when an older dashboard poll resolves last', async () => {
+    jest.useFakeTimers()
+
+    let resolveFirstPoll: (response: Response) => void
+    const firstPoll = new Promise<Response>((resolve) => {
+      resolveFirstPoll = resolve
+    })
+    const newScore = 321
+    const oldScore = 501
+
+    const dashboardSnapshot = (playerAScoreLeft: number) => dashboardData({
+      match1: {
+        raceTo: 3,
+        scoreA: 0,
+        scoreB: 0,
+        playerA: { playerId: 'pA', name: 'Player A', image: '/a.png' },
+        playerB: { playerId: 'pB', name: 'Player B', image: '/b.png' },
+      },
+      matchInfo1: { score: [], lastThrows: [] },
+      liveState1: {
+        playerAScoreLeft,
+        playerBScoreLeft: 501,
+        playerATotalScore: 501 - playerAScoreLeft,
+        playerBTotalScore: 0,
+        playerATotalDarts: playerAScoreLeft === 501 ? 0 : 3,
+        playerBTotalDarts: 0,
+        activePlayerId: 'pB',
+        startingPlayerId: 'pA',
+        lastThrows: [],
+      },
+    })
+
+    const fetchMock = jest.fn<typeof fetch>()
+      .mockReturnValueOnce(firstPoll)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => dashboardSnapshot(newScore),
+      } as Response)
+    global.fetch = fetchMock
+
+    render(<DashboardView />)
+
+    await act(async () => {
+      jest.advanceTimersByTime(1_000)
+      await Promise.resolve()
+    })
+
+    expect(screen.getByTestId('dashboard-table-1').textContent).toContain(`Score: ${newScore}`)
+
+    await act(async () => {
+      resolveFirstPoll!({
+        ok: true,
+        json: async () => dashboardSnapshot(oldScore),
+      } as Response)
+      await Promise.resolve()
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(screen.getByTestId('dashboard-table-1').textContent).toContain(`Score: ${newScore}`)
   })
 
   test('renders inactive state when the active tournament disappears while polling', async () => {

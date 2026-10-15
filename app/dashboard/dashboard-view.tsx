@@ -28,10 +28,19 @@ export default function DashboardView() {
 
     useEffect(() => {
         let intervalId: NodeJS.Timeout;
+        let latestRequestId = 0;
+        let isUnmounted = false;
 
         const fetchData = async () => {
+            const requestId = ++latestRequestId;
+
             try {
                 const result = await fetchServerData();
+
+                if (isUnmounted || requestId !== latestRequestId) {
+                    return;
+                }
+
                 setError(null);
 
                 if (result.type === 'inactive') {
@@ -43,6 +52,10 @@ export default function DashboardView() {
                 setData(result.data);
                 setInactive(false);
             } catch (err) {
+                if (isUnmounted || requestId !== latestRequestId) {
+                    return;
+                }
+
                 setError(err.message);
                 setInactive(false);
             }
@@ -51,7 +64,10 @@ export default function DashboardView() {
         fetchData(); // Initial fetch
         intervalId = setInterval(fetchData, 1000); // Poll every second
 
-        return () => clearInterval(intervalId); // Cleanup on unmount
+        return () => {
+            isUnmounted = true;
+            clearInterval(intervalId);
+        };
     }, []);
 
     if (inactive) {
