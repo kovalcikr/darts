@@ -21,6 +21,7 @@ import {
 import { findMatch } from "./data/queries";
 import { refreshMatchLiveState } from "./match-live-state";
 import prisma from "./db";
+import { invalidateSeasonStats } from "./season-stats";
 import { calculateThreeDartAverage, getAllowedCheckoutDarts } from "./scoring";
 
 const STARTING_SCORE = 501;
@@ -58,6 +59,7 @@ export async function addThrowAction(tournamentId, matchId, leg, playerId, score
         }
         await refreshMatchLiveState(matchId, table, tx);
     });
+    invalidateSeasonStats();
     if (closeLeg) {
         await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
@@ -87,6 +89,7 @@ export async function undoThrow(matchId, leg, table) {
         }
         await refreshMatchLiveState(matchId, table, tx);
     });
+    invalidateSeasonStats();
     if (undoCloseLeg && match) {
         await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }
@@ -111,6 +114,7 @@ export async function redoThrow(matchId, table) {
         }
         await refreshMatchLiveState(matchId, table, tx);
     });
+    invalidateSeasonStats();
     if (redoCloseLeg && match) {
         await setScore(match.tournamentId, match.id, match.playerALegs, match.playerBlegs);
     }

@@ -11,6 +11,7 @@ import {
   setActiveTournament,
 } from '@/app/lib/active-tournament'
 import prisma from '@/app/lib/db'
+import { invalidateSeasonStats } from '@/app/lib/season-stats'
 import { isMatchComplete } from '@/app/lib/utils/match'
 import { openActiveTournament } from '@/app/lib/tournament'
 import { validateTableMappings } from '@/app/lib/table-mappings'
@@ -143,6 +144,7 @@ function getErrorMessage(error: unknown) {
 }
 
 function revalidateSharedPaths() {
+  invalidateSeasonStats()
   revalidatePath('/admin')
   revalidatePath('/')
   revalidatePath('/players')

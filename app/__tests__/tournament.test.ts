@@ -3,6 +3,7 @@ import { openTournament, createTournament, getTournaments, getCachedTournaments,
 import getTournamentInfo from '../lib/cuescore';
 import * as data from '../lib/data/tournament-queries';
 import { setActiveTournament } from '../lib/active-tournament';
+import { invalidateSeasonStats } from '../lib/season-stats';
 import { redirect } from 'next/navigation';
 
 jest.mock('../lib/cuescore', () => ({
@@ -11,6 +12,9 @@ jest.mock('../lib/cuescore', () => ({
 }));
 
 jest.mock('../lib/data/tournament-queries');
+jest.mock('../lib/season-stats', () => ({
+    invalidateSeasonStats: jest.fn(),
+}));
 jest.mock('../lib/active-tournament', () => ({
     setActiveTournament: jest.fn(),
 }));
@@ -41,6 +45,7 @@ describe('tournament', () => {
             season: null,
             eventDate: null,
         });
+        expect(invalidateSeasonStats).toHaveBeenCalledTimes(1);
     });
 
     test('open tournament stores event date from cuescore starttime', async () => {
@@ -123,23 +128,23 @@ describe('tournament', () => {
     });
 
     test('get tournaments 2024', async () => {
-        jest.mocked(data.findTournamentsBySeason).mockResolvedValue([{ id: '123', name: 'Relax Darts CUP 13 2024' }] as any);
+        jest.mocked(data.findTournamentIdsBySeason).mockResolvedValue(['123']);
         const tournaments = await getTournaments("2024");
-        expect(data.findTournamentsBySeason).toHaveBeenCalledWith(2024);
+        expect(data.findTournamentIdsBySeason).toHaveBeenCalledWith("2024");
         expect(tournaments).toEqual(['123']);
     });
 
     test('get tournaments 2025', async () => {
-        jest.mocked(data.findTournamentsBySeason).mockResolvedValue([{ id: '456', name: 'Relax Darts CUP 1 2025' }] as any);
+        jest.mocked(data.findTournamentIdsBySeason).mockResolvedValue(['456']);
         const tournaments = await getTournaments("2025");
-        expect(data.findTournamentsBySeason).toHaveBeenCalledWith(2025);
+        expect(data.findTournamentIdsBySeason).toHaveBeenCalledWith("2025");
         expect(tournaments).toEqual(['456']);
     });
 
     test('get tournaments 2026', async () => {
-        jest.mocked(data.findTournamentsBySeason).mockResolvedValue([{ id: '789', name: 'Relax Darts CUP 1 2026' }] as any);
+        jest.mocked(data.findTournamentIdsBySeason).mockResolvedValue(['789']);
         const tournaments = await getTournaments("2026");
-        expect(data.findTournamentsBySeason).toHaveBeenCalledWith(2026);
+        expect(data.findTournamentIdsBySeason).toHaveBeenCalledWith("2026");
         expect(tournaments).toEqual(['789']);
     });
 

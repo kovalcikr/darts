@@ -27,6 +27,7 @@ import {
   setActiveTournament,
 } from '@/app/lib/active-tournament'
 import { openActiveTournament } from '@/app/lib/tournament'
+import { invalidateSeasonStats } from '@/app/lib/season-stats'
 import * as auth from '../auth'
 
 const mockRedirect = jest.fn<(url: string) => never>()
@@ -46,6 +47,10 @@ jest.mock('@/app/lib/active-tournament', () => ({
 
 jest.mock('@/app/lib/tournament', () => ({
   openActiveTournament: jest.fn(),
+}))
+
+jest.mock('@/app/lib/season-stats', () => ({
+  invalidateSeasonStats: jest.fn(),
 }))
 
 jest.mock('next/cache', () => ({
@@ -315,6 +320,7 @@ describe('admin actions', () => {
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/stats/tournaments/t1')
+    expect(invalidateSeasonStats).toHaveBeenCalledTimes(1)
   })
 
   test('deletes tournament with dependent records in a transaction', async () => {

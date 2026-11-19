@@ -18,6 +18,16 @@ export type FindTournamentsBySeasonOptions = {
     includeExcluded?: boolean
 }
 
+export async function findTournamentIdsBySeason(year: string): Promise<string[]> {
+    const season = Number.parseInt(year, 10);
+    if (Number.isNaN(season)) {
+        return [];
+    }
+
+    const tournaments = await findTournamentsBySeason(season);
+    return tournaments.map((tournament) => tournament.id);
+}
+
 export async function upsertTournament(tournamentId: string, tournament: TournamentUpsertInput, tx?: PrismaTransactionClient) {
     const client = getPrismaClient(tx);
     const eventDate =

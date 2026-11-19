@@ -273,3 +273,41 @@ test('dashboard cache invalidation is isolated between tables', async ({
 
   await context.close()
 })
+
+test('season stats show a new throw on the next overview request', async ({
+  page,
+  request,
+}, testInfo) => {
+  const tournamentId = `stats-e2e-2031-${testInfo.parallelIndex}-${Date.now()}`
+
+  await clearActiveTournamentSetting(page)
+  await resetFakeCueScore(request, tournamentId)
+
+  await page.goto('/tournaments')
+  await page.getByPlaceholder('Tournament ID').fill(tournamentId)
+  await page.getByRole('button', { name: 'Otvoriť' }).click()
+
+  await expect(page).toHaveURL(/\/tables$/)
+  await expect(page.getByRole('link', { name: 'Table 1' })).toBeVisible({ timeout: 10_000 })
+
+  await page.goto('/tables/1')
+  const snapshot = await getFakeCueScoreSnapshot(request, tournamentId)
+  const match = snapshot.tournament?.matches.find((m: any) => m.table?.name === '11')
+  expect(match).toBeTruthy()
+  const playerAId = String(match?.playerA?.playerId)
+
+  await page.getByTestId(`start-player-${playerAId}`).click()
+  await expect(page.getByRole('button', { name: 'UNDO' })).toBeVisible()
+
+  await page.goto('/?season=2031')
+  const before = Number(await page.getByTestId('season-stat-throws').textContent())
+
+  await page.goto('/tables/1')
+  await page.getByRole('button', { name: '6' }).click()
+  await page.getByRole('button', { name: '0' }).click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await expect(page.getByTestId(`player-score-${playerAId}`)).toHaveText('441', { timeout: 10_000 })
+
+  await page.goto('/?season=2031')
+  await expect(page.getByTestId('season-stat-throws')).toHaveText(String(before + 1))
+})

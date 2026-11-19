@@ -3,10 +3,11 @@
 import { redirect } from "next/navigation";
 import getTournamentInfo from "./cuescore";
 import { revalidatePath } from "next/cache";
-import { upsertTournament, findTournamentsBySeason } from "./data/tournament-queries";
+import { upsertTournament, findTournamentsBySeason, findTournamentIdsBySeason } from "./data/tournament-queries";
 import type { CueScoreTournament } from "./integrations/cuescore/types";
 import { inferTournamentSeason, parseTournamentDate } from "./tournament-metadata";
 import { setActiveTournament } from "./active-tournament";
+import { invalidateSeasonStats } from "./season-stats";
 
 export async function openTournamentForm(prevState: any, data: FormData) {
     const tournamentId = data.get('tournamentId') as string;
@@ -22,6 +23,7 @@ export async function openTournament(tournamentId: string) {
     const tournament = await getTournamentInfo(tournamentId);
     await createTournament(tournament, tournamentId);
     revalidatePath("/stats/tournaments");
+    invalidateSeasonStats();
 }
 
 export async function openActiveTournament(tournamentId: string) {
@@ -91,14 +93,7 @@ export async function createTournament(tournament: TournamentLike, requestedTour
 }
 
 export async function getTournaments(year: string) {
-    const season = Number.parseInt(year, 10);
-    if (Number.isNaN(season)) {
-        return [];
-    }
-
-    const tournamentIds = await findTournamentsBySeason(season);
-    const tournaments = tournamentIds.map(tournament => tournament.id);
-    return tournaments
+    return findTournamentIdsBySeason(year);
 }
 
 export async function getCachedTournaments(year: string) {
