@@ -2,7 +2,12 @@ import { describe, expect, test, jest, beforeEach } from '@jest/globals'
 import * as data from '@/app/lib/data/queries'
 import * as matchLiveState from '@/app/lib/match-live-state'
 import * as cuescore from '@/app/lib/cuescore'
+import { invalidateSeasonStats } from '@/app/lib/season-stats'
 import prisma from '@/app/lib/db'
+
+jest.mock('@/app/lib/season-stats', () => ({
+  invalidateSeasonStats: jest.fn(),
+}))
 
 jest.mock('@/app/lib/data/queries', () => ({
   aggregatePlayerThrow: jest.fn().mockResolvedValue({ _sum: { score: 0, darts: 0 } }),
@@ -55,6 +60,7 @@ describe('Dashboard caching - playerThrow invalidation', () => {
     await addThrowAction('t1', 'm1', 1, 'p1', 60, 3, '2')
 
     expect(revalidateTag).toHaveBeenCalledWith('match2', 'max')
+    expect(invalidateSeasonStats).toHaveBeenCalledTimes(1)
   })
 
   test('undoThrow invalidates cache for correct table', async () => {
@@ -63,6 +69,7 @@ describe('Dashboard caching - playerThrow invalidation', () => {
     await undoThrow('m1', 1, '4')
 
     expect(revalidateTag).toHaveBeenCalledWith('match4', 'max')
+    expect(invalidateSeasonStats).toHaveBeenCalledTimes(1)
   })
 
   test('redoThrow invalidates cache for correct table', async () => {
@@ -71,5 +78,6 @@ describe('Dashboard caching - playerThrow invalidation', () => {
     await redoThrow('m1', '5')
 
     expect(revalidateTag).toHaveBeenCalledWith('match5', 'max')
+    expect(invalidateSeasonStats).toHaveBeenCalledTimes(1)
   })
 })

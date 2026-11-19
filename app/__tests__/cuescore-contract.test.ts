@@ -12,6 +12,7 @@ jest.mock('../lib/cuescore', () => ({
 
 jest.mock('../lib/data/tournament-queries')
 jest.mock('next/cache', () => ({
+  unstable_cache: jest.fn((fn) => fn),
   revalidateTag: jest.fn(),
   revalidatePath: jest.fn(),
 }))

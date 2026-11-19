@@ -19,6 +19,7 @@ jest.mock('../lib/cuescore', () => ({
     setScore: jest.fn(),
 }));
 jest.mock('next/cache', () => ({
+    unstable_cache: jest.fn((fn) => fn),
     revalidatePath: jest.fn(),
     revalidateTag: jest.fn(),
 }));
@@ -133,7 +134,8 @@ describe('playerThrow', () => {
 
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 2, 1);
         expect(revalidatePath).not.toHaveBeenCalled();
-        expect(revalidateTag).not.toHaveBeenCalled();
+        expect(revalidateTag).not.toHaveBeenCalledWith('match11', 'max');
+        expect(revalidateTag).toHaveBeenCalledWith('season-stats', { expire: 0 });
 
         releaseSetScore!();
         await actionPromise;
@@ -228,7 +230,8 @@ describe('playerThrow', () => {
 
         expect(setScore).toHaveBeenCalledWith('t1', 'm1', 1, 1);
         expect(revalidatePath).not.toHaveBeenCalled();
-        expect(revalidateTag).not.toHaveBeenCalled();
+        expect(revalidateTag).not.toHaveBeenCalledWith('match11', 'max');
+        expect(revalidateTag).toHaveBeenCalledWith('season-stats', { expire: 0 });
 
         releaseSetScore!();
         await actionPromise;

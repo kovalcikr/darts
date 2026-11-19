@@ -1,7 +1,5 @@
 import { randomUUID } from "crypto";
-import prisma from "./lib/db";
-import { getPlayers } from "./lib/players";
-import { getTournaments } from "./lib/tournament";
+import { getSeasonStats } from "./lib/season-stats";
 import Link from "next/link";
 import type { PageSearchParams } from "./lib/next-types";
 import StatsPageShell from "./components/StatsPageShell";
@@ -17,140 +15,13 @@ export default async function Home({
 }) {
   const resolvedSearchParams = await searchParams;
   const season = resolvedSearchParams.season as string || "2026";
-  const tournaments = await getTournaments(season)
-  const matchesCount = await prisma.match.aggregate({
-    _count: {
-      id: true
-    },
-    _sum: {
-      playerALegs: true,
-      playerBlegs: true
-    },
-    where: {
-      tournamentId: {
-        in: tournaments
-      }
-    }
-  })
+  const stats = await getSeasonStats(season)
 
-  const throw180count = await prisma.playerThrow.aggregate({
-    _count: {
-      id: true
-    },
-    where: {
-      tournamentId: {
-        in: tournaments
-      },
-      undoneAt: null,
-      score: 180
-    }
-  })
-
-  const throw171plusCount = await prisma.playerThrow.aggregate({
-    _count: {
-      id: true
-    },
-    where: {
-      tournamentId: {
-        in: tournaments
-      },
-      undoneAt: null,
-      score: {
-        gte: 171,
-        lt: 180
-      }
-    }
-  })
-
-  const throws = await prisma.playerThrow.aggregate({
-    _count: {
-      id: true
-    },
-    _sum: {
-      score: true,
-      darts: true
-    },
-    where: {
-      tournamentId: {
-        in: tournaments
-      },
-      undoneAt: null,
-    }
-  })
-
-  const throwsPerPlayer = await prisma.playerThrow.groupBy({
-    by: ["playerId"],
-    where: {
-      tournamentId: {
-        in: tournaments
-      },
-      undoneAt: null,
-    },
-    _sum: {
-      score: true,
-      darts: true
-    }
-  });
-
-  const players = await getPlayers(tournaments);
-
-  const sortedThrows = throwsPerPlayer
-    .filter(p => players[p.playerId])
-    .sort((a, b) => (b._sum.score / b._sum.darts) - (a._sum.score / a._sum.darts));
-
-  const legs = await prisma.playerThrow.groupBy({
-    by: ["tournamentId", "matchId", "leg", "playerId"],
-    where: {
-      tournamentId: {
-        in: tournaments
-      },
-      undoneAt: null,
-    },
-    _sum: {
-      score: true,
-      darts: true
-    },
-    having: {
-      score: {
-        _sum: {
-          equals: 501
-        }
-      }
-    }
-  })
-  const legsSorted = legs.sort((a, b) => a._sum.darts - b._sum.darts)
-  const bestLeg = legsSorted.length > 0 ? legsSorted.filter(leg => leg._sum.darts == legsSorted[0]._sum.darts) : [];
-
-  const bestCheckoutResult = await prisma.playerThrow.findMany({
-    where: {
-      checkout: true,
-      tournamentId: {
-        in: tournaments
-      },
-      undoneAt: null,
-    },
-    orderBy: {
-      score: "desc"
-    },
-    take: 1
-  })
-
-  const bestCheckouts = bestCheckoutResult.length > 0 ? await prisma.playerThrow.findMany({
-    where: {
-      checkout: true,
-      tournamentId: {
-        in: tournaments
-      },
-      undoneAt: null,
-      score: bestCheckoutResult[0].score
-    }
-  }) : [];
-
-  function Stat({ name, value }) {
+  function Stat({ name, value, testId = undefined }) {
     return (
       <div className="bg-gray-800/50 p-4 rounded-lg text-center ring-1 ring-white/10">
         <div className="text-sm font-medium text-gray-400 uppercase tracking-wider">{name}</div>
-        <div className="mt-1 text-3xl font-semibold text-white">{value}</div>
+        <div className="mt-1 text-3xl font-semibold text-white" data-testid={testId}>{value}</div>
       </div>
     )
   }
@@ -164,7 +35,7 @@ export default async function Home({
           {playerIds.map(pid =>
           (
             <Link key={randomUUID()} href={withSeason(`/players/${pid}`, season)}>
-              <div className="rounded-full bg-sky-600/50 px-3 py-1 text-sm font-semibold text-sky-200 mr-2 mb-2 hover:bg-sky-500/50 transition-colors" >{players[pid]}</div>
+              <div className="rounded-full bg-sky-600/50 px-3 py-1 text-sm font-semibold text-sky-200 mr-2 mb-2 hover:bg-sky-500/50 transition-colors" >{stats.playerNames[pid]}</div>
             </Link>
           ))}
         </div>
@@ -189,22 +60,22 @@ export default async function Home({
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            <Stat name="Hráčov" value={Object.keys(players).length} />
-            <Stat name="Turnajov" value={tournaments.length} />
-            <Stat name="Zápasov" value={matchesCount._count.id} />
-            <Stat name="Legov" value={matchesCount._sum.playerALegs + matchesCount._sum.playerBlegs} />
-            <Stat name="Hodov" value={throws._count.id} />
-            <Stat name="Šípok" value={throws._sum.darts} />
-            <Stat name="180s" value={throw180count._count.id} />
-            <Stat name="170+" value={throw171plusCount._count.id} />
+            <Stat name="Hráčov" value={stats.playerCount} />
+            <Stat name="Turnajov" value={stats.tournamentCount} />
+            <Stat name="Zápasov" value={stats.matchCount} />
+            <Stat name="Legov" value={stats.legCount} />
+            <Stat name="Hodov" value={stats.throwCount} testId="season-stat-throws" />
+            <Stat name="Šípok" value={stats.dartCount} />
+            <Stat name="180s" value={stats.count180} />
+            <Stat name="170+" value={stats.count171Plus} />
           </div>
 
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {sortedThrows.length > 0 && <StatWithNames name="Najlepší priemer" value={(sortedThrows[0]._sum.score / sortedThrows[0]._sum.darts * 3).toFixed(2)} playerIds={[sortedThrows[0].playerId]} />}
-            {bestCheckouts.length > 0 && <StatWithNames name="Najlepší checkout" value={bestCheckouts[0].score}
-              playerIds={Array.from(new Set(bestCheckouts.map(checkout => checkout.playerId)))} />}
-            {bestLeg.length > 0 && <StatWithNames name="Najlepší leg" value={bestLeg[0]._sum.darts}
-              playerIds={Array.from(new Set(bestLeg.map(leg => leg.playerId)))} />}
+            {stats.bestAverage && <StatWithNames name="Najlepší priemer" value={stats.bestAverage.threeDartAverage.toFixed(2)} playerIds={stats.bestAverage.playerIds} />}
+            {stats.bestCheckout && <StatWithNames name="Najlepší checkout" value={stats.bestCheckout.score}
+              playerIds={stats.bestCheckout.playerIds} />}
+            {stats.bestLeg && <StatWithNames name="Najlepší leg" value={stats.bestLeg.darts}
+              playerIds={stats.bestLeg.playerIds} />}
           </div>
     </StatsPageShell>
   )
